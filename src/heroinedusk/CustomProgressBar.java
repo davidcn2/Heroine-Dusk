@@ -143,10 +143,5 @@ public class CustomProgressBar
         progressBar.setValue(barValue);
         
     }
-
-    // Whether to orient progress bar vertically (true) or horizontally (false).
-    public void setVertical(boolean vertical) {
-        this.vertical = vertical;
-    }
     
 }

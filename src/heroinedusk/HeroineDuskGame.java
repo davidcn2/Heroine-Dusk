@@ -1,15 +1,21 @@
 package heroinedusk;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+
 import core.BaseGame;
 
-public class HeroineDuskGame extends BaseGame
+public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
 {
     
     // The class extends the basic functionality of a BaseGame class and creates a new GameScreen object
@@ -19,6 +25,7 @@ public class HeroineDuskGame extends BaseGame
     
     // create:  Creates a new GameScreen object used to set to the main screen when the
     //          application starts.
+    // createSkin:  Sets up the skin.
     
     // Declare regular variables.
     private int windowWidth; // Width to use for stages.
@@ -58,11 +65,16 @@ public class HeroineDuskGame extends BaseGame
         
         // The function sets up the skin.
         
+        // 1.  Configures skin properties for progress bar.
+        // 2.  Configures skin properties for regular font.
+        
         ProgressBarStyle barStyle; // Style associated with progress bar.
         Pixmap pixmap; // Used for images, such as for the progress bar.
         TextureRegionDrawable textureBar; // Drawable object to use for background of progress bar.
+        BitmapFont uiFont; // Reference to BitmapFont resource providing bitmapped font and associated details.
+        Label.LabelStyle uiLabelStyle; // Reference to BitmapFont resource with a color specified.
         
-        // 1.  Set up the background for the progress bar.
+        // 1a.  Set up the background for the progress bar.
         
         // Create pixel map of width and height of 100 by 20, respectively.
         pixmap = new Pixmap(100, 20, Format.RGBA8888);
@@ -83,7 +95,7 @@ public class HeroineDuskGame extends BaseGame
         barStyle = new ProgressBarStyle();
         barStyle.background = textureBar;
         
-        // 2.  Set up the pixel map for the knob portion of the progress bar.
+        // 1b.  Set up the pixel map for the knob portion of the progress bar.
         
         // Create pixel map of width and height of 0 by 20, respectively.
         // Use a width of 0, since no knob will display.
@@ -104,7 +116,7 @@ public class HeroineDuskGame extends BaseGame
         // Add the knob to the style.
         barStyle.knob = textureBar;
         
-        // 3.  Set up the pixel map for the area before the knob portion of the progress bar.
+        // 1c.  Set up the pixel map for the area before the knob portion of the progress bar.
         
         // Create pixel map of width and height of 100 by 20, respectively.
         pixmap = new Pixmap(100, 20, Format.RGBA8888);
@@ -126,6 +138,40 @@ public class HeroineDuskGame extends BaseGame
         
         // Add the progress bar style to the Skin.  Skins allow for storing resources common to multiple screens.
         skin.add("barStyle", barStyle);
+        
+        // 2a.  Set up the regular (ui) font.
+        
+        // Initialize the BitmapFont object with a FileHandle to the FNT file.
+        uiFont = new BitmapFont(Gdx.files.internal("assets/interface/Roboto.fnt"));
+        
+        /*
+        Access the Texture data contained within the BitmapFont object.  Getting a reference to the
+        Texture data allows actions like setting a filter to obtain a smoother appearance when scaling images.
+        
+        Set filter type -- controlling how pixel colors are interpolated when image is
+        rotated or stretched.
+        
+        > Nearest:  To represent each pixel on the screen, the method uses the pixel of the texture (texel) 
+        that best matches to the pixel of the screen.  This is the default filter. As this filter only uses one 
+        texel for every pixel on the screen, the method applies the filter very quickly.  The result is an image 
+        with “hard” borders.
+        
+        > Linear:  To represent each pixel on the screen, the method uses bilinear interpolation, taking 
+        the four closest texels that best match with the screen pixel.  The result is smooth scaling.
+        But, processing costs will also be bigger than GL_NEAREST.
+        */
+        uiFont.getRegion().getTexture().setFilter(TextureFilter.Linear, TextureFilter.Linear);
+        
+        // Add the uiFont object to the Skin.  Skins allow for storing resources common to multiple screens.
+        skin.add("uiFont", uiFont);
+        
+        // 2b.  Initialize Label style.
+        
+        // Create resource with the BitmapFont just produced and a color.
+        uiLabelStyle = new LabelStyle(uiFont, Color.valueOf("DEEED6"));
+        
+        // Add the LabelStyle object to the Skin.
+        skin.add("uiLabelStyle", uiLabelStyle);
         
     }
     

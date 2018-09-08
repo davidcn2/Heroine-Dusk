@@ -14,9 +14,11 @@ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import core.*;
 import java.util.ArrayList;
@@ -62,6 +64,7 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
     private CustomProgressBar progressBar; // Reference to custom progress bar object.
     
     // Declare regular variables.
+    private float timeElapsed; // Number of seconds elapsed since game started.
     
     // Game world dimensions.
     final int mapWidth; // Total map width, in pixels.
@@ -107,6 +110,31 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         progressBar = new CustomProgressBar(game.skin);
         
         
+        CustomLabel instructions; // LibGDX Label object that will display main menu text.
+        instructions = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
+        instructions.addAction_FadePartial();
+        mainStage.addActor(instructions.displayLabel(200, 200));
+        
+        /*
+        // Set up Label object that will display main menu instructions.
+        // Note:  Best practices include avoiding scaling -- use a high-resolution image, instead.
+        instructions = new Label( "This is a test", game.skin, "uiLabelStyle" ); // Add text and style to Label.
+        instructions.setFontScale(2); // Make font appear larger by using setFontScale method.
+        instructions.setPosition(300, 250); // Set coordinates of the Label.
+        
+        // Set up color pause effect for main menu instructions text.
+        instructions.addAction(
+          Actions.forever(
+            Actions.sequence(
+              Actions.color( new Color(1, 1, 0, 1), 0.5f ),
+              Actions.delay( 0.5f ),
+              Actions.color( new Color(0.5f, 0.5f, 0, 1), 0.5f )
+            )));
+        */
+        
+        //mainStage.addActor( instructions ); // Add main menu instructions Label to the scene graph.
+        //uiStage.addActor( instructions ); // Add main menu instructions Label to the scene graph.
+        System.out.println("Instructions");
         
     }
     
@@ -118,10 +146,11 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         /*
         The function occurs during the update phase (render method) and accomplishes the following:
         
-        
+        1.  Updates the time elapsed value.
         */
         
-        
+        // Update time elapsed value.
+        timeElapsed += dt;
         
     }
 
