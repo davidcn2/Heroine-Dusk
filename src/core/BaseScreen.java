@@ -97,6 +97,7 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
              Whenever a resize event occurs, the viewport needs to be informed and updated.
     resume:  Called when the Application is resumed from a paused state, usually when it regains focus.
     show:  Called when the screen becomes the current one for a Game.
+    wakeBaseScreen:  Called when redisplaying the already initialized screen.
 
     LibGDX methods for InputProcessor include:
 
@@ -136,6 +137,8 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
     Custom methods include:
 
     centerLabelUI:  Centers the label in the specified stage.
+    disposeManual:  Allows for manually clearing of LibGDX resources from memory when overriding the 
+      normal dispose method.
     isPaused:  Returns the pause state of the game (true or false).
     setPaused:  Sets the pause state of the game to the passed value.
     togglePaused:  Reverses the pause state of the game (true to false, false to true).
@@ -148,7 +151,7 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
     // A final variable can only be initialized once, either via an initializer or an assignment statement.
 
-    static AssetManager manager; // Loads and stores assets like textures, bitmap fonts, tile maps, sounds, music, ...
+    public AssetManager manager; // Loads and stores assets like textures, bitmap fonts, tile maps, sounds, music, ...
 
     public BaseGame game; // Screen object used for current window.
     // Game objects allow an application to easily have multiple screens.
@@ -161,17 +164,17 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
     // A Table consists of Cell objects, laid out in rows and columns, each Cell containing an Actor.
     Table uiTable; // Table containing main menu elements.
 
-    private int viewHeightMain; // Window height for the main stage.
-    private int viewHeightUI; // Window height for the ui stage.
-    private int viewWidthMain; // Window width for the main stage.
-    private int viewWidthUI; // Window width for the ui stage.
+    protected int viewHeightMain; // Window height for the main stage.
+    protected int viewHeightUI; // Window height for the ui stage.
+    protected int viewWidthMain; // Window width for the main stage.
+    protected int viewWidthUI; // Window width for the ui stage.
 
     private boolean paused; // Whether game paused.
 
     // g = Screen object for current window.
     // windowWidth = Width to use for stages.
     // windowHeight = Height to use for stages.
-    public BaseScreen(BaseGame g, int windowWidth, int WindowHeight)
+    public BaseScreen(BaseGame g, int windowWidth, int windowHeight)
     {
 
         // The constructor of the class:
@@ -193,16 +196,16 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // Set window size values, based on parameters.
         this.viewWidthMain = windowWidth;
         this.viewWidthUI = windowWidth;
-        this.viewHeightMain = WindowHeight;
-        this.viewHeightUI = WindowHeight;
+        this.viewHeightMain = windowHeight;
+        this.viewHeightUI = windowHeight;
 
         // Store Screen object for current window.
         this.game = g;
 
         // Scale each stage and its contents to fit the current window size.
         // If aspect ratio of window does not match stage, fill in extra region with solid black.
-        mainStage = new Stage( new FitViewport(windowWidth, WindowHeight) );
-        uiStage   = new Stage( new FitViewport(windowWidth, WindowHeight) );
+        mainStage = new Stage( new FitViewport(windowWidth, windowHeight) );
+        uiStage   = new Stage( new FitViewport(windowWidth, windowHeight) );
 
         // An InputMultiplexer object is itself an InputProcessor that contains a list of other InputProcessors.
 
@@ -386,22 +389,26 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
     @Override
     public void pause()   {  }
+    
     @Override
     public void resume()  {  }
+    
+    /*
     @Override
     public void dispose()
     {
         
         // The method occurs when removing the screen and allows for clearing of related resources from memory.
-
+        
         // Clear LibGDX objects from memory.
         manager.dispose();
         uiStage.dispose();
         mainStage.dispose();
-        game.dispose();
+        //game.dispose();
         uiTable = null;
         
     }
+    */
 
     @Override
     public void show()    {  }
@@ -409,6 +416,24 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
     @Override
     public void hide()    {  }
 
+    public void disposeManual()
+    {
+        
+        // The method allows for manually clearing of LibGDX resources from memory when overriding the 
+        // normal dispose method.
+
+        // Clear LibGDX objects from memory.
+        
+        // If asset manager initialized, then...
+        if (manager != null)
+            manager.dispose();
+        
+        uiStage.dispose();
+        mainStage.dispose();
+        uiTable = null;
+        
+    }
+    
     // Provide methods required by InputProcessor interface to prevent need to do so in subclasses:  keyDown, keyUp, keyTyped,
     // mouseMoved, scrolled, touchDown, touchDragged, touchUp.
 
@@ -664,6 +689,39 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
         // Returns the new X and Y coordinates of the label.
         return new Point((int)labelX, (int)labelY);
+
+    }
+    
+    public void wakeBaseScreen()
+    {
+
+        // The method gets called when redisplaying the already initialized screen and
+        // accomplishes the following:
+
+        // 1.  Scales each stage and its contents to fit the current window size.
+        // 2.  Sets up the input multiplexer to receive and pass all input data to current class and stages.
+        // 3.  Creates and attaches Table to UI (main menu) stage.
+        // 4.  Clear active ControllerListener objects and activate the listener.
+
+        InputMultiplexer im; // Contains a group of input processors.  The base screen and each
+        // stage get added to the input multiplexer.  When input events occur, the multiplexer
+        // forwards the information to each of the attached objects.
+
+        // Scale each stage and its contents to fit the current window size.
+        // If aspect ratio of window does not match stage, fill in extra region with solid black.
+        mainStage = new Stage( new FitViewport(viewWidthMain, viewHeightMain) );
+        uiStage   = new Stage( new FitViewport(viewWidthUI, viewHeightUI) );
+
+        // An InputMultiplexer object is itself an InputProcessor that contains a list of other InputProcessors.
+
+        // Set up input multiplexer to receive all input data and pass the information along to
+        // the current class and the stages.
+        im = new InputMultiplexer(this, uiStage, mainStage);
+        Gdx.input.setInputProcessor( im );
+
+        uiTable = new Table(); // Create new Table object.
+        uiTable.setFillParent(true); // The method will set the size of the Table to that of the stage.
+        uiStage.addActor(uiTable); // Attach Table to the stage.
 
     }
 

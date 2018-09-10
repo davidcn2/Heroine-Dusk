@@ -1,7 +1,9 @@
 package heroinedusk;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
@@ -18,14 +20,23 @@ import core.BaseGame;
 public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
 {
     
-    // The class extends the basic functionality of a BaseGame class and creates a new GameScreen object
-    // with the Heroine Dusk game.  The Heroine Dusk game launches when the application starts.
+    /*
+    The class extends the basic functionality of a BaseGame class and creates a new GameScreen object
+    with the Heroine Dusk game.  The Heroine Dusk game launches when the application starts.
     
-    // Methods include:
+    Methods include:
     
-    // create:  Creates a new GameScreen object used to set to the main screen when the
-    //          application starts.
-    // createSkin:  Sets up the skin.
+    create:  sets up the skin and initializes and displays the title screen.
+    createSkin:  Sets up the skin.
+    disposeScreens:  Disposes of LibGDX objects in screens.
+    setGameScreen:  Switches to (displays) the main game screen and hides the current.
+    setTitleScreen:  Switches to (displays) the title screen and hides the current.
+    */
+    
+    // Declare object variables.
+    protected final Config config; // Configuration information, including options.
+    private static GameScreen gsMain; // Reference to main game screen.
+    private static TitleScreen tsMain; // Reference to title screen.
     
     // Declare regular variables.
     private int windowWidth; // Width to use for stages.
@@ -42,22 +53,23 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
         
+        // Initialize configuration information, including options.
+        config = new Config(windowWidth, windowHeight);
+        
     }
     
     @Override
     public void create() 
     {
-        // The function creates a new GameScreen object used to go to the main screen
-        // when the application starts.
+        
+        // The function sets up the skin and initializes and displays the title screen.
         
         // Set up the skin.
         createSkin();
-
-        // Create new GameScreen, which will act as the level object.
-        GameScreen gs = new GameScreen(this, windowWidth, windowHeight);
         
-        // Set the screen to the one just created.
-        setScreen( gs );
+        // Initialize and display the title screen.
+        setTitleScreen();
+        
     }
     
     private void createSkin()
@@ -172,6 +184,63 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // Add the LabelStyle object to the Skin.
         skin.add("uiLabelStyle", uiLabelStyle);
+        
+    }
+    
+    protected void disposeScreens()
+    {
+        
+        // The function disposes of LibGDX objects in screens.
+        gsMain.dispose();
+        tsMain.dispose();
+        
+    }
+    
+    protected void setGameScreen()
+    {
+        
+        // The function switches to (displays) the main game screen and hides the current.
+        
+        // If main game screen object initialized, then...
+        if (gsMain == null)
+            {
+            // Main game screen object not initialized yet.
+            // Initialize main game screen object.
+            gsMain = new GameScreen(this, windowWidth, windowHeight, this);
+            }
+        else
+            {
+            // Main game screen object initialized already.
+            // Update multiplexer and display.
+            gsMain.wakeScreen();
+            }
+        
+        // Launch main game screen.
+        setScreen(gsMain);
+        
+    }
+    
+    protected void setTitleScreen()
+    {
+        
+        // The function switches to (displays) the title screen and hides the current.
+        
+        // If title screen object initialized, then...
+        if (tsMain == null)
+            {
+            // Title screen object not initialized yet.
+            // Initialize title screen object.
+            tsMain = new TitleScreen(this, windowWidth, windowHeight, this);
+            }
+        else
+            {
+            // Title screen object initialized already.
+            // Update multiplexer and display.
+            tsMain.wakeScreen();
+            }
+            
+        // Launch title screen.
+        setScreen(tsMain);        
         
     }
     

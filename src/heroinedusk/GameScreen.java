@@ -16,6 +16,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -55,25 +56,32 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
     Methods include:
     
     create:  Sets defaults / lists.  Configures and adds the Actors to the stage.  Sets up TiledMap.
-    render:  Called when the screen should render itself.
+    dispose:  Called when removing the screen and allows for clearing of related resources from memory.
+    recreateDisplay:  Called when redisplaying the already initialized screen.
     update:  Occurs during the update phase (render method) and contains code related to game logic.
+    wakeScreen:  Called when redisplaying the already initialized screen.
     */
     
     // Declare object variables.
-    private Config config; // Configuration information, including options.
+    private AssetMgr assetMgr; // Enhanced asset manager.
+    // private Config config; // Configuration information, including options.
     private CustomProgressBar progressBar; // Reference to custom progress bar object.
+    private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
     
     // Declare regular variables.
     private float timeElapsed; // Number of seconds elapsed since game started.
     
     // Game world dimensions.
-    final int mapWidth; // Total map width, in pixels.
-    final int mapHeight; // Total map height, in pixels.
+    private int mapWidth; // Total map width, in pixels.
+    private int mapHeight; // Total map height, in pixels.
+    private int windowHeight; // Application window height.
+    private int windowWidth; // Application window width.
     
-    // g = Screen object for game window.
+    // g = Reference to base game.
     // windowWidth = Width to use for stages.
     // windowHeight = Height to use for stages.
-    public GameScreen(BaseGame g, int windowWidth, int windowHeight)
+    // hdg = Reference to Heroine Dusk (main) game.
+    public GameScreen(BaseGame g, int windowWidth, int windowHeight, HeroineDuskGame hdg)
     {
         
         // The constructor of the class:
@@ -88,6 +96,13 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         // Set game world dimensions equal to those of the window.
         this.mapWidth = windowWidth;
         this.mapHeight = windowHeight;
+        
+        // Store application window dimensions.
+        this.windowWidth = windowWidth;
+        this.windowHeight = windowHeight;
+        
+        // Store reference to main game class.
+        gameHD = hdg;
         
         // Configure and add the actors to the stage:  background, ground, planes, and stars.
         create();
@@ -104,16 +119,43 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         */
         
         // 1.  Initialize configuration information, including options.
-        config = new Config(mapWidth, mapHeight);
+        //config = new Config(mapWidth, mapHeight);
         
-        // 2.  Initialize the custom progress bar.
+        // 2.  Initialize the asset manager.
+        assetMgr = new AssetMgr();
+        
+        // 3.  Initialize the custom progress bar.
         progressBar = new CustomProgressBar(game.skin);
+        
+        // 4.  Load assets.
+        
+        // 4a.  Display progress bar in center of screen -- update when loading assets.
+        mainStage.addActor(progressBar.displayBarCenter(viewWidthMain, viewHeightMain));
+        
+        // 4b.  Queue images.
+        assetMgr.queueImages("assets/interface/heroine.png");
+        assetMgr.mapImages("assets/interface/heroine.png", "heroine");
+        
+        // 4c.  Load resources and update progress bar.
+        assetMgr.loadResources(progressBar);
+        
+        // 4d.  Hide the progress bar.
+        progressBar.hideBar();
         
         
         CustomLabel instructions; // LibGDX Label object that will display main menu text.
-        instructions = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
+        instructions = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2.0f);
         instructions.addAction_FadePartial();
         mainStage.addActor(instructions.displayLabel(200, 200));
+        
+        BaseActor testActor;
+        Texture testTex;
+        testActor = new BaseActor();
+        testTex = assetMgr.getImage_xRef("heroine");
+        testTex.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+        testActor.setTexture(testTex);
+        testActor.setPosition(50, 50);
+        mainStage.addActor(testActor);
         
         /*
         // Set up Label object that will display main menu instructions.
@@ -134,7 +176,22 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         
         //mainStage.addActor( instructions ); // Add main menu instructions Label to the scene graph.
         //uiStage.addActor( instructions ); // Add main menu instructions Label to the scene graph.
-        System.out.println("Instructions");
+        //System.out.println("Instructions");
+        
+    }
+    
+    @Override
+    public void dispose()
+    {
+        
+        // The method is called when removing the screen and allows for clearing of related resources 
+        // from memory.
+        
+        // Call manual dispose method in superclass.
+        super.disposeManual();
+        
+        // Clear LibGDX objects in other classes.
+        assetMgr.disposeAssetMgr();
         
     }
     
@@ -154,6 +211,41 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         
     }
 
+    private void recreateDisplay()
+    {
+        
+        // The method get called to add back the actors, music, and other elements related to
+        // the current screen when switching from another.  Assumes earlier construction.
+        
+        CustomLabel instructions; // LibGDX Label object that will display main menu text.
+        instructions = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
+        instructions.addAction_FadePartial();
+        mainStage.addActor(instructions.displayLabel(200, 200));
+        
+        BaseActor testActor;
+        Texture testTex;
+        testActor = new BaseActor();
+        testTex = assetMgr.getImage_xRef("heroine");
+        testTex.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+        testActor.setTexture(testTex);
+        testActor.setPosition(50, 50);
+        mainStage.addActor(testActor);
+        
+    }
+    
+    public void wakeScreen()
+    {
+        
+        // The method gets called when redisplaying the already initialized screen.
+        
+        // Wake up the base screen, setting up viewports, input multiplexer, ....
+        wakeBaseScreen();
+        
+        // Add back actors, music, and other elements to the current screen.
+        recreateDisplay();
+        
+    }
+    
     // Handle discrete key events.
     
     // keycode = Code for key pressed.
@@ -184,13 +276,25 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
             // The user pressed the R key.
             
             // Reset the game.
-            game.setScreen( new GameScreen(game, config.getViewWidth(), config.getViewHeight()) );
+            //game.setScreen( new TitleScreen(game, viewWidthMain, viewHeightMain) );
         }
+           
+        // If the user pressed the S key, then...
+        if (keycode == Keys.S)
+        {
+            // The user pressed the S key.
             
+            // Switch to the title screen.
+            gameHD.setTitleScreen();
+        }
+        
         // If the user pressed the Escape key, then...
         if (keycode == Keys.ESCAPE)
         {
             // The user pressed the Escape key.
+            
+            // Dispose of screen related LibGDX objects.
+            gameHD.disposeScreens();
             
             // Exit the game.
             Gdx.app.exit();

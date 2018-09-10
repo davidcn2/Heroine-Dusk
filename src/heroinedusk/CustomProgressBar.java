@@ -1,7 +1,11 @@
 package heroinedusk;
 
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import java.util.HashMap;
+import java.util.Map;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -31,7 +35,9 @@ public class CustomProgressBar
     
     Methods include:
     
-    displayBar:  Displays the progress bar at the passed coordinates.
+    addAction_Fade:  Sets up a fade to nothing effect to use later with the progress bar.
+    displayBar:  Displays the progress bar at the passed coordinates.  Used when first displaying the bar.
+    hideBar:  Uses a fading action to hide the progress bar.
     setBarHeight:  Sets the height of the progress bar.
     setBarWidth:  Sets the width of the progress bar.
     setValue:  Sets the value of the progress bar.
@@ -39,6 +45,7 @@ public class CustomProgressBar
     */
     
     // Declare object variables.
+    private Map<String, Action> actionMapping; // Collection of actions applied to progress bar.
     private final ProgressBar progressBar; // Reference to the LibGDX progress bar.
     
     // Declare regular variables.
@@ -61,6 +68,9 @@ public class CustomProgressBar
         barWidth = 100;
         barHeight = 20;
         
+        // Initialize the hash map for actions.
+        actionMapping = new HashMap<>();
+        
         // 1.  Minimum = 0.0f.
         // 2.  Maximum = 1.0f.
         // 3.  Step Size = 0.01f.
@@ -75,6 +85,23 @@ public class CustomProgressBar
         // 8.  Specify animation duration.
         progressBar.setAnimateDuration(0.25f);
         
+        // 9.  Adds a fade action.
+        addAction_Fade();
+        
+    }
+    
+    private void addAction_Fade()
+    {
+        
+        // The function sets up a fade to nothing effect to use later with the progress bar.
+        
+        // Add action to hash map.
+        actionMapping.putIfAbsent("Fade", 
+            Actions.sequence(
+              Actions.fadeOut(0.5f), 
+              Actions.visible(false)
+            ));
+        
     }
     
     // barX = X-coordinate at which to place the progress bar.
@@ -83,6 +110,7 @@ public class CustomProgressBar
     {
         
         // The function displays the progress bar at the passed coordinates.
+        // Used when first displaying the bar.
         // Example for use:  mainStage.addActor(progressBar.displayBar(200, 200));
         
         // Store location of progress bar.
@@ -115,6 +143,16 @@ public class CustomProgressBar
         
         // Return the progress bar.
         return progressBar;
+        
+    }
+    
+    public void hideBar()
+    {
+        
+        // The function uses a fading action to hide the progress bar.
+        
+        // Implement fading action to hide the progress bar.
+        progressBar.addAction(actionMapping.get("Fade"));
         
     }
     

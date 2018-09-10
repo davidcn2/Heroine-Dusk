@@ -2,10 +2,11 @@ package heroinedusk;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import core.BaseActor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +36,13 @@ public class CustomLabel
     /* 
     The class allows for easy implementation of a label.
     
+    Example of steps to add to stage:
+    
+    CustomLabel mainMenu; // LibGDX Label object that will display main menu text.
+    mainMenu = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
+    mainMenu.addAction_FadePartial();
+    mainStage.addActor(mainMenu.displayLabel(200, 200));
+    
     Methods include:
     
     addAction_FadePartial:  Sets up a color fade effect for the label.
@@ -42,12 +50,11 @@ public class CustomLabel
     */
     
     // Declare object variables.
-    Map<String, Action> actionMapping; // Collection of actions applied to label.
-
+    private Map<String, Action> actionMapping; // Collection of actions applied to label.
     private Label customLabel; // LibGDX Label object that will display text.
     
     // Declare regular variables.
-    private int labelScale; // Scale to use when displaying label.
+    private float labelScale; // Scale to use when displaying label.
     private String labelStyle; // Name of style to use with label.
     private String labelText; // Text to display in label.
     private int posX; // X-coordinate for placement of the label.
@@ -57,7 +64,7 @@ public class CustomLabel
     // labelText = Text to display in label.
     // labelStyle = Name of the style to use.
     // labelScale = Scale to use when displaying label.
-    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, int labelScale)
+    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale)
     {
         
         // The constructor creates a label.
@@ -87,18 +94,8 @@ public class CustomLabel
         // The constructor creates a label.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
         
-        // Initialize the hash map for actions.
-        actionMapping = new HashMap<>();
-        
-        // Store values passed to function.
-        this.labelText = labelText;
-        this.labelStyle = labelStyle;
-        this.labelScale = 1;
-        
-        // Set up Label object using passed properties.
-        // Note:  Best practices include avoiding scaling -- use a high-resolution image, instead.
-        customLabel = new Label( labelText, gameSkin, labelStyle ); // Add text and style to Label.
-        customLabel.setFontScale(1); // Make font appear larger by using setFontScale method.
+        // Call original constructor using a scale of 1.0f.
+        this(gameSkin, labelText, labelStyle, 1.0f);
         
     }
     
@@ -110,18 +107,8 @@ public class CustomLabel
         // The constructor creates a label.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
         
-        // Initialize the hash map for actions.
-        actionMapping = new HashMap<>();
-        
-        // Store values passed to function.
-        this.labelText = labelText;
-        this.labelStyle = "uiLabelStyle";
-        this.labelScale = 1;
-        
-        // Set up Label object using passed properties.
-        // Note:  Best practices include avoiding scaling -- use a high-resolution image, instead.
-        customLabel = new Label( labelText, gameSkin, "uiLabelStyle" ); // Add text and style to Label.
-        customLabel.setFontScale(1); // Make font appear larger by using setFontScale method.
+        // Call original constructor using a style of uiLabelStyle and scale of 1.0f.
+        this(gameSkin, labelText, "uiLabelStyle", 1.0f);
         
     }
     
@@ -144,6 +131,13 @@ public class CustomLabel
         
     }
     
+    // labelEvent = Event logic to apply to label.
+    public void addEvent(InputListener labelEvent)
+    {
+        // The function adds the passed event logic to the label.
+        customLabel.addListener(labelEvent);
+    }
+    
     // posX = X-coordinate for placement of the label.
     // posY = Y-coordinate for placement of the label.
     public Label displayLabel(int posX, int posY)
@@ -154,6 +148,27 @@ public class CustomLabel
         
         // Store location of label.
         this.posX = posX;
+        this.posY = posY;
+        
+        // Set the location of the label.
+        customLabel.setPosition(posX, posY);
+        
+        // Return the label.
+        return customLabel;
+        
+    }
+    
+    // posX = X-coordinate for placement of the label.
+    // posY = Y-coordinate for placement of the label.
+    // stageWidth = Width of stage in which to center label.
+    public Label displayLabelCenterX(int posY, int stageWidth)
+    {
+        
+        // The function centers the label at the passed Y coordinate.
+        // Example for use:  mainStage.addActor(labelTitle.displayLabelCenterX(384, viewWidthMain));
+        
+        // Store location of label.
+        this.posX = stageWidth / 2 - Math.round(customLabel.getWidth()) / 2;
         this.posY = posY;
         
         // Set the location of the label.
