@@ -3,6 +3,7 @@ package heroinedusk;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import core.AssetMgr;
@@ -65,6 +66,9 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     // Declare constants.
     private final int TITLE_MENU_MAIN = 0;
     private final int TITLE_MENU_OPTIONS = 1;
+    private final int TITLE_MENU_LOAD = 2;
+    private final int TITLE_MENU_SAVE = 3;
+    private final int TITLE_MENU_EXIT = 4;
     
     // Game world dimensions.
     private int mapWidth; // Total map width, in pixels.
@@ -115,6 +119,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // Craft event logic to add to passed label.
         labelEvent = new InputListener()
             {
+                boolean ignoreNextExitEvent; // Whether to ignore next exit event (used with touchUp / exit).
                 
                 @Override
                 public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
@@ -129,9 +134,44 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                 @Override
                 public void touchUp(InputEvent event, float x, float y, int pointer, int button)
                 {
-                    System.out.println("touchUp");
+                    
+                    // Update the selected menu item based on the label clicked.
                     menu_selector = label_id;
+                    
+                    // Flag to ignore next exit event.
+                    ignoreNextExitEvent = true;
+                    
+                    // Process logic related to the label clicked.
                     titleLogic();
+                    
+                }
+                
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
+                {
+                    customLabel.colorLabelDark();
+                }
+                
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
+                {
+                    
+                    // If ignoring next exit event, then...
+                    if (ignoreNextExitEvent)
+                        
+                        // Ignoring next exit event.
+                        
+                        // Flag to process next exit event.
+                        ignoreNextExitEvent = false;
+                    
+                    // Otherwise, ...
+                    else
+                        
+                        // Process exit event.
+                        
+                        // Return label to normal color.
+                        customLabel.colorLabelNormal();
+                        
                 }
                 
             };
@@ -148,6 +188,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Declare regular variables.
         int counter; // Used to iterate through menu items.
+        float labelHeight; // Height of current label.
         int menuTop; // Y-coordinate at which to place first item in menu.
         
         // Set defaults.
@@ -160,10 +201,19 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         for (String menuItem : menu)
         {
             // Initialize label with text from current menu item.
-            menuLabels[counter] = new CustomLabel(game.skin, menuItem, "uiLabelStyle", 1.25f);
+            //menuLabels[counter] = new CustomLabel(game.skin, menuItem, "uiLabelStyle", 1.25f);
+            menuLabels[counter] = new CustomLabel(game.skin, menuItem, "uiLabelStyle", 1.0f, 
+              gameHD.config.getTextLineHeight());
+            
+            // Get height of current label.
+            labelHeight = menuLabels[counter].getLabelHeight();
+            
+            // Double label height to simulate a blank line.
+            labelHeight *= 2;
             
             // Add label to scene graph.
-            mainStage.addActor(menuLabels[counter].displayLabelCenterX(menuTop - counter * 60, viewWidthMain));
+            mainStage.addActor(menuLabels[counter].displayLabelCenterX(menuTop - counter * labelHeight, 
+              viewWidthMain));
             
             // Add event to label.
             addEvent(menuLabels[counter], counter);
@@ -323,13 +373,13 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         menu_id = id;
 
         // Reset array containing menu options.
-        menu = new String[4];
+        menu = new String[5];
   
         // If displaying main menu, then...
         if (id == TITLE_MENU_MAIN) 
             {
             // Displaying main menu.
-            ArrayRoutines.addAll(menu, (loadedGame ? "Continue" : "Start"), "Options", "Load", "Save");
+            ArrayRoutines.addAll(menu, (loadedGame ? "CONTINUE" : "START"), "OPTIONS", "LOAD", "SAVE", "EXIT");
             }
   
         // Otherwise, if displaying options menu, then...
@@ -338,26 +388,26 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             // Displaying options menu.
                 
             if (gameHD.config.options.getAnimationsOn())
-                menu[0] = "Animations are on";
+                menu[0] = "ANIMATIONS ARE ON";
             else
-                menu[0] = "Animations are off";
+                menu[0] = "ANIMATIONS ARE OFF";
             
             if (gameHD.config.options.getMusicOn())
-                menu[1] = "Music is on";
+                menu[1] = "MUSIC IS ON";
             else
-                menu[1] = "Music is off";
+                menu[1] = "MUSIC IS OFF";
 
             if (gameHD.config.options.getSfxOn())
-                menu[2] = "Sounds are on";
+                menu[2] = "SOUNDS ARE ON";
             else
-                menu[2] = "Sounds are off";
+                menu[2] = "SOUNDS ARE OFF";
 
             if (gameHD.config.options.getMinimapOn())
-                menu[3] = "Sounds are on";
+                menu[3] = "MINIMAP IS ON";
             else
-                menu[3] = "Sounds are off";
+                menu[3] = "MINIMAP IS OFF";
     
-            menu[4] = "Back";
+            menu[4] = "BACK";
             }
         
         // Initialize menu labels array.
@@ -367,7 +417,33 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     
     private void titleLogic()
     {
-        System.out.println("Selected label " + menu_selector + ": " + menu[menu_selector]);
+        
+        // The function handles logic related to the button clicked (or activated via keypress).
+        
+        // Depending on selection...
+        switch (menu_selector) {
+            
+            case TITLE_MENU_EXIT:
+                
+                // User clicked exit button.
+                
+                // Dispose of screen related LibGDX objects.
+                gameHD.disposeScreens();
+                
+                // Exit the game.
+                Gdx.app.exit();
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                System.out.println("Selected label " + menu_selector + ": " + menu[menu_selector]);
+                
+                // Exit selector.
+                break;
+        } // Depending on selection...
+        
     }
     
     // dt = Time span between the current and last frame in seconds.  Passed / populated automatically.

@@ -143,10 +143,12 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         progressBar.hideBar();
         
         
+        /*
         CustomLabel instructions; // LibGDX Label object that will display main menu text.
         instructions = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2.0f);
         instructions.addAction_FadePartial();
         mainStage.addActor(instructions.displayLabel(200, 200));
+        */
         
         BaseActor testActor;
         Texture testTex;

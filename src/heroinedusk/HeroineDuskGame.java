@@ -154,7 +154,11 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // 2a.  Set up the regular (ui) font.
         
         // Initialize the BitmapFont object with a FileHandle to the FNT file.
-        uiFont = new BitmapFont(Gdx.files.internal("assets/interface/Roboto.fnt"));
+        //uiFont = new BitmapFont(Gdx.files.internal("assets/interface/Roboto.fnt"));
+        uiFont = new BitmapFont(Gdx.files.internal(config.getPrescaleFolder_Interface() + "boxy_bold2.fnt"));
+        
+        // Store text line height.
+        config.setTextLineHeight(uiFont.getXHeight());
         
         /*
         Access the Texture data contained within the BitmapFont object.  Getting a reference to the
@@ -179,8 +183,8 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // 2b.  Initialize Label style.
         
-        // Create resource with the BitmapFont just produced and a color.
-        uiLabelStyle = new LabelStyle(uiFont, Color.valueOf("DEEED6"));
+        // Create resource with the BitmapFont just produced and no color.
+        uiLabelStyle = new LabelStyle(uiFont, null);
         
         // Add the LabelStyle object to the Skin.
         skin.add("uiLabelStyle", uiLabelStyle);
@@ -191,7 +195,15 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     {
         
         // The function disposes of LibGDX objects in screens.
-        gsMain.dispose();
+        
+        // If main game screen initialized, then...
+        if (gsMain != null)
+            
+            // Main game screen initialized.
+            // Dispose of LibGDX objects related to main game screen.
+            gsMain.dispose();
+        
+        // Dispose of LibGDX objects related to title screen.
         tsMain.dispose();
         
     }

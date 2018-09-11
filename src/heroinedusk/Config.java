@@ -38,6 +38,7 @@ public class Config
       // If stretchToScreen = false, uses value in prescale.
     private boolean stretchToScreen; // Whether to stretch images to view / window dimensions.
       // true = Manually scaled images, false = Prescaled images.
+    private float textLineHeight; // Height of each line of text.
     private int viewHeight; // Window height.  Also maintained in BaseScreen.
     private int viewWidth; // Window width.  Also maintained in BaseScreen.
     
@@ -106,12 +107,20 @@ public class Config
         return stretchToScreen;
     }
     
+    public float getTextLineHeight() {
+        return textLineHeight;
+    }
+    
     public int getViewHeight() {
         return viewHeight;
     }
 
     public int getViewWidth() {
         return viewWidth;
+    }
+    
+    public void setTextLineHeight(float textLineHeight) {
+        this.textLineHeight = textLineHeight;
     }
     
 }

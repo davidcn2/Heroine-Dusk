@@ -2,7 +2,6 @@ package heroinedusk;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Action;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -57,18 +56,20 @@ public class CustomLabel
     private float labelScale; // Scale to use when displaying label.
     private String labelStyle; // Name of style to use with label.
     private String labelText; // Text to display in label.
-    private int posX; // X-coordinate for placement of the label.
-    private int posY; // Y-coordinate for placement of the label.
+    private float posX; // X-coordinate for placement of the label.
+    private float posY; // Y-coordinate for placement of the label.
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
     // labelStyle = Name of the style to use.
     // labelScale = Scale to use when displaying label.
-    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale)
+    // textLineHeight = Desired text line height.
+    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
+      float textLineHeight)
     {
         
         // The constructor creates a label.
-        // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
+        // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Initialize the hash map for actions.
         actionMapping = new HashMap<>();
@@ -82,33 +83,38 @@ public class CustomLabel
         // Note:  Best practices include avoiding scaling -- use a high-resolution image, instead.
         customLabel = new Label( labelText, gameSkin, labelStyle ); // Add text and style to Label.
         customLabel.setFontScale(labelScale); // Make font appear larger by using setFontScale method.
+        customLabel.setHeight(textLineHeight); // Set height of label.
+        customLabel.setWrap(true);
+        customLabel.layout();
         
     }
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
     // labelStyle = Name of the style to use.
-    public CustomLabel(Skin gameSkin, String labelText, String labelStyle)
+    // textLineHeight = Desired text line height.
+    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float textLineHeight)
     {
         
         // The constructor creates a label.
-        // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
+        // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Call original constructor using a scale of 1.0f.
-        this(gameSkin, labelText, labelStyle, 1.0f);
+        this(gameSkin, labelText, labelStyle, 1.0f, textLineHeight);
         
     }
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
-    public CustomLabel(Skin gameSkin, String labelText)
+    // textLineHeight = Desired text line height.
+    public CustomLabel(Skin gameSkin, String labelText, float textLineHeight)
     {
         
         // The constructor creates a label.
-        // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
+        // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Call original constructor using a style of uiLabelStyle and scale of 1.0f.
-        this(gameSkin, labelText, "uiLabelStyle", 1.0f);
+        this(gameSkin, labelText, "uiLabelStyle", 1.0f, textLineHeight);
         
     }
     
@@ -138,9 +144,21 @@ public class CustomLabel
         customLabel.addListener(labelEvent);
     }
     
+    public void colorLabelDark()
+    {
+        // The function applies a dark shade to the label.
+        customLabel.setColor(Color.DARK_GRAY);
+    }
+    
+    public void colorLabelNormal()
+    {
+        // The function removes shading from the label.
+        customLabel.setColor(Color.WHITE);
+    }
+    
     // posX = X-coordinate for placement of the label.
     // posY = Y-coordinate for placement of the label.
-    public Label displayLabel(int posX, int posY)
+    public Label displayLabel(float posX, float posY)
     {
         
         // The function displays the label at the passed coordinates.
@@ -161,7 +179,7 @@ public class CustomLabel
     // posX = X-coordinate for placement of the label.
     // posY = Y-coordinate for placement of the label.
     // stageWidth = Width of stage in which to center label.
-    public Label displayLabelCenterX(int posY, int stageWidth)
+    public Label displayLabelCenterX(float posY, int stageWidth)
     {
         
         // The function centers the label at the passed Y coordinate.
@@ -177,6 +195,14 @@ public class CustomLabel
         // Return the label.
         return customLabel;
         
+    }
+    
+    public float getLabelHeight()
+    {
+        // The function returns the label height.
+        
+        // Return the height of the label.
+        return customLabel.getHeight();
     }
     
 }
