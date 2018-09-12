@@ -1,6 +1,8 @@
 package heroinedusk;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -84,8 +86,7 @@ public class CustomLabel
         customLabel = new Label( labelText, gameSkin, labelStyle ); // Add text and style to Label.
         customLabel.setFontScale(labelScale); // Make font appear larger by using setFontScale method.
         customLabel.setHeight(textLineHeight); // Set height of label.
-        customLabel.setWrap(true);
-        customLabel.layout();
+        customLabel.layout(); // Computes and caches any information needed for drawing.
         
     }
     
@@ -144,6 +145,21 @@ public class CustomLabel
         customLabel.addListener(labelEvent);
     }
     
+    // stageWidth = Width of stage in which to center label.
+    public void centerLabel(int stageWidth)
+    {
+        
+        // The function centers a label -- useful when text changes.
+        // Example for use:  labelTitle.centerLabel(viewWidthMain);
+        
+        // Store location of label.
+        this.posX = stageWidth / 2 - customLabel.getWidth() / 2;
+        
+        // Set the location of the label.
+        customLabel.setPosition(this.posX, this.posY);
+        
+    }
+    
     public void colorLabelDark()
     {
         // The function applies a dark shade to the label.
@@ -197,12 +213,73 @@ public class CustomLabel
         
     }
     
+    // Getters and setters below...
+    
+    public Label getLabel()
+    {
+        // The function returns a reference to the label object.
+        return customLabel;
+    }
+    
     public float getLabelHeight()
     {
         // The function returns the label height.
         
         // Return the height of the label.
         return customLabel.getHeight();
+    }
+    
+    public String getLabelText()
+    {
+        // The function returns the label text.
+        
+        // Return the text of the label.
+        return labelText;
+    }
+    
+    // text = Text to display in label.
+    // bitmapFont = BitmapFont upon which to base measurements.
+    public void setLabelText(String labelText, BitmapFont bitmapFont)
+    {
+        
+        // The function updates the text of the label.
+        // Example for use:  labelTitle.setLabelText("Hello World", gameHD.skin.getFont("uiFont"));
+        
+        GlyphLayout glyphLayout; // Get a glyph layout to have access to font information related to
+          // current text.
+        
+        // Initialize glyph layout.
+        glyphLayout = new GlyphLayout();
+        
+        // Configure glyph layout based on current font and text.
+        glyphLayout.setText(bitmapFont, labelText);
+        
+        // Reset width of label, based on new text.
+        customLabel.setWidth(glyphLayout.width);
+        
+        // Store new text.
+        this.labelText = labelText;
+        
+        // Update text of actual label.
+        customLabel.setText(labelText);
+        
+    }
+    
+    // text = Text to display in label.
+    // bitmapFont = BitmapFont upon which to base measurements.
+    // stageWidth = Width of stage in which to center label.
+    public void setLabelText_Center(String labelText, BitmapFont bitmapFont, int stageWidth)
+    {
+        
+        // The function updates the text of and centers the label.
+        // Example for use:  labelTitle.setLabelTextCenter("Hello World", gameHD.skin.getFont("uiFont"), viewWidthMain);
+        
+        // Update text of the label.
+        setLabelText(labelText, bitmapFont);
+        
+        // Center the label.
+        centerLabel(stageWidth);
+        
     }
     
 }

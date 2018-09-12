@@ -32,6 +32,15 @@ public class Options
         this.animation = animation;
     }
 
+    public void AnimationsReverse()
+    {
+        animation = !animation;
+    }
+
+    public String getAnimationsText() {
+        return animation ? "ANIMATIONS ARE ON" : "ANIMATIONS ARE OFF";
+    }
+    
     public boolean getMusicOn() {
         return music;
     }
@@ -41,6 +50,15 @@ public class Options
         this.music = music;
     }
 
+    public void MusicReverse()
+    {
+        music = !music;
+    }
+    
+    public String getMusicText() {
+        return music ? "MUSIC IS ON" : "MUSIC IS OFF";
+    }
+    
     public boolean getSfxOn() {
         return sfx;
     }
@@ -50,6 +68,15 @@ public class Options
         this.sfx = sfx;
     }
     
+    public void SfxReverse()
+    {
+        sfx = !sfx;
+    }
+
+    public String getSfxText() {
+        return sfx ? "SOUNDS ARE ON" : "SOUNDS ARE OFF";
+    }
+    
     public boolean getMinimapOn() {
         return minimap;
     }
@@ -57,6 +84,15 @@ public class Options
     // minimap = Whether minimap turns on.
     public void MinimapOn(boolean minimap) {
         this.minimap = minimap;
+    }
+    
+    public void MinimapReverse()
+    {
+        minimap = !minimap;
+    }
+    
+    public String getMinimapText() {
+        return minimap ? "MINIMAP IS ON" : "MINIMAP IS OFF";
     }
     
 }

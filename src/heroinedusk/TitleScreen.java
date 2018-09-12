@@ -2,14 +2,17 @@ package heroinedusk;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import core.AssetMgr;
 import core.BaseActor;
 import core.BaseGame;
 import core.BaseScreen;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import routines.ArrayRoutines;
 
 /*
@@ -53,17 +56,26 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel menuLabels[]; // Collection of menu labels.
     private CustomProgressBar progressBar; // Reference to custom progress bar object.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
+    private ArrayList<Label> removeList; // Array of Label objects to remove from screen.
     
     // Declare regular variables.
     final private boolean initialized; // Whether screen initialized.
     private boolean loadedGame; // Whether a loaded game.
-    private int menu_id; // Menu type displayed.
+    private int menu_id; // Menu type displayed.  Set to -1 when initializing each time screen loads.
     private int menu_selector; // Menu item selected.  Base 0.
+    private int menu_selector_keys; // Menu item navigated to via key presses.  Base 0.
     private String menu[]; // List of current menu selections / text.
     private int windowHeight; // Application window height.
     private int windowWidth; // Application window width.
     
     // Declare constants.
+    private final int MENU_ID_MAIN = 0;
+    private final int MENU_ID_OPTIONS = 1;
+    private final int OPTIONS_MENU_ANIMATIONS = 0;
+    private final int OPTIONS_MENU_MUSIC = 1;
+    private final int OPTIONS_MENU_SOUNDS = 2;
+    private final int OPTIONS_MENU_MINIMAP = 3;
+    private final int OPTIONS_MENU_BACK = 4;
     private final int TITLE_MENU_MAIN = 0;
     private final int TITLE_MENU_OPTIONS = 1;
     private final int TITLE_MENU_LOAD = 2;
@@ -97,6 +109,9 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store application window dimensions.
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
+        
+        // Set menu identifier to indicate performing initial display.
+        this.menu_id = -1;
         
         // Store reference to main game class.
         gameHD = hdg;
@@ -190,6 +205,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         int counter; // Used to iterate through menu items.
         float labelHeight; // Height of current label.
         int menuTop; // Y-coordinate at which to place first item in menu.
+        String menuItemAdj; // Menu item, adjusted to display selection where necessary.
         
         // Set defaults.
         counter = 0;
@@ -200,9 +216,18 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // Loop through menu items.
         for (String menuItem : menu)
         {
+            
+            // If selected matches current item, then...
+            if (counter == menu_selector_keys)
+                // Selected matches current item.
+                menuItemAdj = "[ " + menuItem + " ]";
+            else
+                // Selected differs from current item.
+                menuItemAdj = menuItem;
+            
             // Initialize label with text from current menu item.
             //menuLabels[counter] = new CustomLabel(game.skin, menuItem, "uiLabelStyle", 1.25f);
-            menuLabels[counter] = new CustomLabel(game.skin, menuItem, "uiLabelStyle", 1.0f, 
+            menuLabels[counter] = new CustomLabel(game.skin, menuItemAdj, "uiLabelStyle", 1.0f, 
               gameHD.config.getTextLineHeight());
             
             // Get height of current label.
@@ -220,6 +245,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             
             // Increment counter.
             counter++;
+            
         }
         
     }
@@ -233,18 +259,15 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
         */
         
-        // Declare object variables.
-        Texture backgroundTex; // Texture used when loading image for background.
-        
         // 1.  Set defaults.
         this.menu_id = -1;
+        this.menu_selector = 0;
+        this.menu_selector_keys = 0;
         this.loadedGame = false;
         
-        // 2.  Initialize arrays.
+        // 2.  Initialize arrays and array lists.
         this.menu = new String[4];
-        
-        // 3.  Update the menu list to contain those of the main menu.
-        title_set_menu(TITLE_MENU_MAIN);
+        removeList = new ArrayList<>();
         
         // If NOT initialized yet, then...
         if (initialized == false)
@@ -252,17 +275,17 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         {
             // NOT initialized yet.
             
-            // 4.  Initialize the asset manager.
+            // 3.  Initialize the asset manager.
             assetMgr = new AssetMgr();
 
-            // 5.  Initialize the custom progress bar.
+            // 4.  Initialize the custom progress bar.
             progressBar = new CustomProgressBar(game.skin);
 
-            // 6.  Load assets.
+            // 5.  Load assets.
             loadAssets();
         }
         
-        // 7.  Configure and add the background Actor.
+        // 6.  Configure and add the background Actor.
         
         // Create new BaseActor for the background.
         background = new BaseActor();
@@ -279,16 +302,9 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the background Actor to the scene graph.
         mainStage.addActor( background );
         
-        // 8.  Configure and add the objects related to the main menu.
-        
-        /*
-        CustomLabel instructions; // LibGDX Label object that will display main menu text.
-        instructions = new CustomLabel(game.skin, "Start", "uiLabelStyle", 1);
-        instructions.addEvent();
-        mainStage.addActor(instructions.displayLabelCenterX(menuTop, viewWidthMain));
-        */
-        buildMenu();
-        
+        // 7.  Update the menu list to contain those of the main menu.
+        // Calling the function also builds / displays the menu.
+        title_set_menu(TITLE_MENU_MAIN);
         
     }
     
@@ -366,9 +382,26 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Identifier passed for different menu type...
         
-        // Reset to first possible menu selection.
+        // If displaying menu for second or later time (reset count each time screen is displayed), then...
+        if (menu_id >= 0)
+        
+            {
+            // Displaying menu for second or later time (during current display of screen).
+            
+            // Add current menu labels to list of actors to destroy.
+            for (CustomLabel customLabel : menuLabels)
+                {
+                removeList.add(customLabel.getLabel());
+                }
+            
+            // Reinitialize menu labels array.
+            menuLabels = new CustomLabel[menu.length];
+            }
+        
+        // Reset to first possible menu selection / navigation item.
         menu_selector = 0;
-  
+        menu_selector_keys = 0;
+        
         // Update menu type to the one passed.
         menu_id = id;
 
@@ -413,6 +446,9 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // Initialize menu labels array.
         menuLabels = new CustomLabel[menu.length];
         
+        // Display the menu.
+        buildMenu();
+        
     }
     
     private void titleLogic()
@@ -420,29 +456,204 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // The function handles logic related to the button clicked (or activated via keypress).
         
-        // Depending on selection...
-        switch (menu_selector) {
+        String menuItemText; // Text to display for menu item.
+        
+        // If viewing main menu, then...
+        if (menu_id == MENU_ID_MAIN)
             
-            case TITLE_MENU_EXIT:
+            {
+            // Viewing main menu.
+        
+            // Depending on selection...
+            switch (menu_selector) {
+
+                case TITLE_MENU_MAIN:
+
+                    // User clicked start or continue button.
+
+                    // Switch to the game screen.
+                    gameHD.setGameScreen(false);
+
+                    // Exit selector.
+                    break;
+
+                case TITLE_MENU_OPTIONS:
+
+                    // User clicked options button.
+
+                    // Update the menu list to contain those of the options.
+                    // Calling the function also builds / displays the menu.
+                    title_set_menu(TITLE_MENU_OPTIONS);
+
+                    // Exit selector.
+                    break;
+
+                case TITLE_MENU_LOAD:
+
+                    // User clicked load button.
+                    
+                    // Exit selector.
+                    break;
+
+                case TITLE_MENU_SAVE:
+
+                    // User clicked save button.
+                    
+                    // Exit selector.
+                    break;
+
+                case TITLE_MENU_EXIT:
+
+                    // User clicked exit button.
+
+                    // Dispose of screen related LibGDX objects.
+                    gameHD.disposeScreens();
+
+                    // Exit the game.
+                    Gdx.app.exit();
+
+                    // Exit selector.
+                    break;
+
+                default:
+
+                    // Displayed when button functionality not in place yet.
+                    System.out.println("Selected label " + menu_selector + ": " + menu[menu_selector]);
+
+                    // Exit selector.
+                    break;
+
+                } // Depending on selection...
+            
+            } // Viewing main menu...
+        
+        // Otherwise, if viewing options menu, then...
+        else if (menu_id == MENU_ID_OPTIONS)
+        
+            {
+            // Viewing options menu.
                 
-                // User clicked exit button.
-                
-                // Dispose of screen related LibGDX objects.
-                gameHD.disposeScreens();
-                
-                // Exit the game.
-                Gdx.app.exit();
-                
-                // Exit selector.
-                break;
-                
-            default:
-                
-                System.out.println("Selected label " + menu_selector + ": " + menu[menu_selector]);
-                
-                // Exit selector.
-                break;
-        } // Depending on selection...
+            // Depending on selection...
+            switch (menu_selector) {
+
+                case OPTIONS_MENU_ANIMATIONS:
+
+                    // User clicked animations button.
+
+                    // Reverse animations flag.
+                    gameHD.config.options.AnimationsReverse();
+
+                    // Get base text to display.
+                    menuItemText = gameHD.config.options.getAnimationsText();
+                    
+                    // If current menu item via key navigation, then...
+                    if (menu_selector_keys == OPTIONS_MENU_ANIMATIONS)
+                        
+                        // Current menu item via key navigation.
+                        // Adjust text.
+                        menuItemText = "[ " + menuItemText + " ]";
+                        
+                    // Update and recenter label.
+                    menuLabels[menu_selector].setLabelText_Center(menuItemText, gameHD.skin.getFont("uiFont"), 
+                      viewWidthMain);
+                    
+                    // Exit selector.
+                    break;
+
+                case OPTIONS_MENU_MUSIC:
+
+                    // User clicked music button.
+
+                    // Reverse music flag.
+                    gameHD.config.options.MusicReverse();
+
+                    // Get base text to display.
+                    menuItemText = gameHD.config.options.getMusicText();
+                    
+                    // If current menu item via key navigation, then...
+                    if (menu_selector_keys == OPTIONS_MENU_MUSIC)
+                        
+                        // Current menu item via key navigation.
+                        // Adjust text.
+                        menuItemText = "[ " + menuItemText + " ]";
+                    
+                    // Update and recenter label.
+                    menuLabels[menu_selector].setLabelText_Center(menuItemText, gameHD.skin.getFont("uiFont"), 
+                      viewWidthMain);
+                    
+                    // Exit selector.
+                    break;
+
+                case OPTIONS_MENU_SOUNDS:
+
+                    // User clicked sounds button.
+                    
+                    // Reverse sounds flag.
+                    gameHD.config.options.SfxReverse();
+                    
+                    // Get base text to display.
+                    menuItemText = gameHD.config.options.getSfxText();
+                    
+                    // If current menu item via key navigation, then...
+                    if (menu_selector_keys == OPTIONS_MENU_SOUNDS)
+                        
+                        // Current menu item via key navigation.
+                        // Adjust text.
+                        menuItemText = "[ " + menuItemText + " ]";
+                    
+                    // Update and recenter label.
+                    menuLabels[menu_selector].setLabelText_Center(menuItemText, gameHD.skin.getFont("uiFont"), 
+                      viewWidthMain);
+
+                    // Exit selector.
+                    break;
+                    
+                case OPTIONS_MENU_MINIMAP:
+
+                    // User clicked minimap button.
+                    
+                    // Reverse minimap flag.
+                    gameHD.config.options.MinimapReverse();
+                    
+                    // Get base text to display.
+                    menuItemText = gameHD.config.options.getMinimapText();
+                    
+                    // If current menu item via key navigation, then...
+                    if (menu_selector_keys == OPTIONS_MENU_MINIMAP)
+                        
+                        // Current menu item via key navigation.
+                        // Adjust text.
+                        menuItemText = "[ " + menuItemText + " ]";
+                    
+                    // Update and recenter label.
+                    menuLabels[menu_selector].setLabelText_Center(menuItemText, gameHD.skin.getFont("uiFont"), 
+                      viewWidthMain);
+
+                    // Exit selector.
+                    break;
+                    
+                case OPTIONS_MENU_BACK:
+
+                    // User clicked back button.
+
+                    // Update the menu list to contain those of the main menu.
+                    // Calling the function also builds / displays the menu.
+                    title_set_menu(TITLE_MENU_MAIN);
+
+                    // Exit selector.
+                    break;
+
+                default:
+
+                    // Displayed when button functionality not in place yet.
+                    System.out.println("Selected label " + menu_selector + ": " + menu[menu_selector]);
+
+                    // Exit selector.
+                    break;
+
+                } // Depending on selection...
+            
+            }
         
     }
     
@@ -453,10 +664,16 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
         /*
         The function occurs during the update phase (render method) and accomplishes the following:
+         */
         
+        // Loop through Label objects in removal list.
+        removeList.forEach((customLabel) -> {
+            // Remove the Label from its Stage and parent list.
+            customLabel.remove();
+        });
         
-        */
-        
+        // Clear Label removal list.
+        removeList.clear();
         
     }
     
@@ -484,15 +701,115 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 1.  
         
+        int menu_selector_keys_prev; // Previously navigated to menu item.  Base 0.
+        String menu_text_prev; // Text from previously navigated to menu item (contains brackets).
+        
         // InputProcessor methods for handling discrete input.
             
+        // Depending on key pressed, ...
+        switch (keycode)
+        {
+            // If the user pressed the S key, then...
+            case Keys.S:
+                
+                // The user pressed the S key.
+            
+                // Switch to the game screen.
+                gameHD.setGameScreen(false);
+                
+                // Exit checks.
+                break;
+                
+            // If the user pressed the up arrow key, then...
+            case Keys.UP:
+                
+                // The user pressed the up arrow key.
+                
+                // Store previously navigated to menu item.
+                menu_selector_keys_prev = menu_selector_keys;
+                
+                // Adjust navigation selection.
+                menu_selector_keys--;
+                
+                // If past beginning of selections, then...
+                if (menu_selector_keys < 0)
+                    // Past beginning of selections.
+                    // Adjust navigation selection.
+                    menu_selector_keys = menu.length - 1;
+                
+                // Store text of previously navigated to menu item.
+                menu_text_prev = menuLabels[menu_selector_keys_prev].getLabelText();
+                
+                // Remove brackets from previously navigated to menu item.
+                menu_text_prev = menu_text_prev.substring(2, menu_text_prev.length() - 2);
+                
+                // Adjust text of menu items to reflect navigation.
+                menuLabels[menu_selector_keys_prev].setLabelText_Center(menu_text_prev, 
+                  gameHD.skin.getFont("uiFont"), viewWidthMain);
+                menuLabels[menu_selector_keys].setLabelText_Center("[ " + 
+                  menuLabels[menu_selector_keys].getLabelText() + " ]", 
+                  gameHD.skin.getFont("uiFont"), viewWidthMain);
+                
+                // Exit checks.
+                break;
+                
+            // If the user pressed the down arrow key, then...
+            case Keys.DOWN:
+                
+                // The user pressed the down arrow key.
+                
+                // Store previously navigated to menu item.
+                menu_selector_keys_prev = menu_selector_keys;
+                
+                // Adjust navigation selection.
+                menu_selector_keys++;
+                
+                // If past beginning of selections, then...
+                if (menu_selector_keys == menu.length)
+                    // Past end of selections.
+                    // Adjust navigation selection.
+                    menu_selector_keys = 0;
+                
+                // Store text of previously navigated to menu item.
+                menu_text_prev = menuLabels[menu_selector_keys_prev].getLabelText();
+                
+                // Remove brackets from previously navigated to menu item.
+                menu_text_prev = menu_text_prev.substring(2, menu_text_prev.length() - 2);
+                
+                // Adjust text of menu items to reflect navigation.
+                menuLabels[menu_selector_keys_prev].setLabelText_Center(menu_text_prev, 
+                  gameHD.skin.getFont("uiFont"), viewWidthMain);
+                menuLabels[menu_selector_keys].setLabelText_Center("[ " + 
+                  menuLabels[menu_selector_keys].getLabelText() + " ]", 
+                  gameHD.skin.getFont("uiFont"), viewWidthMain);
+                
+                // Exit checks.
+                break;
+                
+            // If the user pressed the enter / return key, then...
+            case Keys.ENTER:
+                
+                // The user pressed the enter / return key.
+                
+                // Select the item -- emulate a mouse click.
+                menu_selector = menu_selector_keys;
+                titleLogic();
+                
+            // Otherwise...
+            default:
+                
+                // Exit checks.
+                break;
+                
+        }
+        
         // If the user pressed the S key, then...
         if (keycode == Keys.S)
         {
             // The user pressed the S key.
             
             // Switch to the game screen.
-            gameHD.setGameScreen();
+            gameHD.setGameScreen(false);
         }
         
         // Return a value.

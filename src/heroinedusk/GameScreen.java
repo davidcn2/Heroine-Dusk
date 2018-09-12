@@ -143,6 +143,9 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         progressBar.hideBar();
         
         
+        // Temporary...
+        recreateDisplay();
+        
         /*
         CustomLabel instructions; // LibGDX Label object that will display main menu text.
         instructions = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2.0f);
@@ -150,6 +153,7 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         mainStage.addActor(instructions.displayLabel(200, 200));
         */
         
+        /*
         BaseActor testActor;
         Texture testTex;
         testActor = new BaseActor();
@@ -158,6 +162,7 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         testActor.setTexture(testTex);
         testActor.setPosition(50, 50);
         mainStage.addActor(testActor);
+        */
         
         /*
         // Set up Label object that will display main menu instructions.
@@ -220,9 +225,9 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         // the current screen when switching from another.  Assumes earlier construction.
         
         CustomLabel instructions; // LibGDX Label object that will display main menu text.
-        instructions = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
-        instructions.addAction_FadePartial();
-        mainStage.addActor(instructions.displayLabel(200, 200));
+        instructions = new CustomLabel(game.skin, "GAME SCREEN", "uiLabelStyle", 2);
+        //instructions.addAction_FadePartial();
+        mainStage.addActor(instructions.displayLabel(200, 400));
         
         BaseActor testActor;
         Texture testTex;

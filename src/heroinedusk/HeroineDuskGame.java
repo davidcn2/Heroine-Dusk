@@ -208,7 +208,8 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
     }
     
-    protected void setGameScreen()
+    // resetGame = Whether to reset game.
+    protected void setGameScreen(boolean resetGame)
     {
         
         // The function switches to (displays) the main game screen and hides the current.
