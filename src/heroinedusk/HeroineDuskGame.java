@@ -1,9 +1,7 @@
 package heroinedusk;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
@@ -36,9 +34,11 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     // Declare object variables.
     protected final Config config; // Configuration information, including options.
     private static GameScreen gsMain; // Reference to main game screen.
+    protected final Shop shopInfo; // Contains message-related information, mostly used for shops.
     private static TitleScreen tsMain; // Reference to title screen.
     
     // Declare regular variables.
+    protected int gameState; // Game state.  See enumerated values in HeroineEnum for more details.
     private int windowWidth; // Width to use for stages.
     private int windowHeight; // Height to use for stages.
     
@@ -56,6 +56,9 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // Initialize configuration information, including options.
         config = new Config(windowWidth, windowHeight);
         
+        // Initialize the shops and other messaging information.
+        shopInfo = new Shop();
+        
     }
     
     @Override
@@ -63,6 +66,9 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     {
         
         // The function sets up the skin and initializes and displays the title screen.
+        
+        // Set defaults.
+        gameState = HeroineEnum.GameState.STATE_TITLE.getValue();
         
         // Set up the skin.
         createSkin();
