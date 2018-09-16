@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import core.AssetMgr;
 
 import core.BaseGame;
 
@@ -32,13 +33,18 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     */
     
     // Declare object variables.
+    protected AssetMgr assetMgr; // Enhanced asset manager.
+    protected Avatar avatar; // Player information.
     protected final Config config; // Configuration information, including options.
+    protected Dialog dialog; // Contains information related to current dialog window.
+    private static DialogScreen dsMain; // Reference to dialog screen.
     private static GameScreen gsMain; // Reference to main game screen.
-    protected final Shop shopInfo; // Contains message-related information, mostly used for shops.
+    protected Shops shopInfo; // Contains message-related information, mostly used for shops.
+    protected Sounds sounds; // Contains logic related to playing sounds and music.
     private static TitleScreen tsMain; // Reference to title screen.
     
     // Declare regular variables.
-    protected int gameState; // Game state.  See enumerated values in HeroineEnum for more details.
+    protected HeroineEnum.GameState gameState; // Game state.  See enumerated values in HeroineEnum for more details.
     private int windowWidth; // Width to use for stages.
     private int windowHeight; // Height to use for stages.
     
@@ -56,8 +62,17 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // Initialize configuration information, including options.
         config = new Config(windowWidth, windowHeight);
         
-        // Initialize the shops and other messaging information.
-        shopInfo = new Shop();
+        // Initialize the asset manager.
+        assetMgr = new AssetMgr();
+        
+        // Initialize player information.
+        avatar = new Avatar();
+        
+        // Initialize the array containing shops and other messaging information.
+        shopInfo = new Shops(this);
+        
+        // Initialize current dialog window information.
+        dialog = new Dialog();
         
     }
     
@@ -68,7 +83,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // The function sets up the skin and initializes and displays the title screen.
         
         // Set defaults.
-        gameState = HeroineEnum.GameState.STATE_TITLE.getValue();
+        gameState = HeroineEnum.GameState.STATE_TITLE;
         
         // Set up the skin.
         createSkin();
@@ -161,7 +176,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // Initialize the BitmapFont object with a FileHandle to the FNT file.
         //uiFont = new BitmapFont(Gdx.files.internal("assets/interface/Roboto.fnt"));
-        uiFont = new BitmapFont(Gdx.files.internal(config.getPrescaleFolder_Interface() + "boxy_bold2.fnt"));
+        uiFont = new BitmapFont(Gdx.files.internal(config.getPrescaleFolder_Interface() + "boxy_bold.fnt"));
         
         // Store text line height.
         config.setTextLineHeight(uiFont.getXHeight());
@@ -201,6 +216,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     {
         
         // The function disposes of LibGDX objects in screens.
+        // The function also disposes of additional LibGDX, such as those related to sounds and music.
         
         // If main game screen initialized, then...
         if (gsMain != null)
@@ -211,6 +227,25 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // Dispose of LibGDX objects related to title screen.
         tsMain.dispose();
+        
+        // Dispose of sound and music objects.
+        sounds.disposeSounds();
+        
+        // Clear LibGDX asset manager.
+        assetMgr.disposeAssetMgr();
+        
+    }
+    
+    protected void setDialogScreen()
+    {
+        
+        // The function switches to (displays) the dialog screen and hides the current.
+        
+        // Initialize dialog screen object.
+        dsMain = new DialogScreen(this, windowWidth, windowHeight, this);
+        
+        // Launch dialog screen.
+        setScreen(dsMain);
         
     }
     

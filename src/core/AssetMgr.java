@@ -2,9 +2,13 @@ package core;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.utils.Array;
 import heroinedusk.CustomProgressBar;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -197,6 +201,23 @@ public class AssetMgr
         
     }
     
+    // imageMapList = Collection of items (key, value pairs) to add to hash map for images in asset manager.
+    public void mapImages(ArrayList<String> imageMapList)
+    {
+        
+        // The function adds cross reference (hash mapping) values to provide a simpler way of referencing
+        // items in the asset manager.
+        
+        String [] imageMapPairs; // List of (relative) image paths.
+        
+        // Convert from ArrayList to standard array.
+        imageMapPairs = imageMapList.toArray(new String[imageMapList.size()]);
+        
+        // Add the cross reference (hash mapping) values.
+        mapImages(imageMapPairs);
+        
+    }
+    
     // elements = List of images to load.  Must include full path and extension.  Example:  "assets\apple.png", "assets\orange.png".
     public void queueImages(String ... elements)
     {
@@ -240,6 +261,52 @@ public class AssetMgr
         {
             // Add current element in loop to queue.
             manager.load(element, Texture.class, param);
+        }
+        
+    }
+    
+    // elements = List of images to load.  Must include full path and extension.  Example:  "assets\apple.png", "assets\orange.png".
+    public void queueImages(ArrayList<String> imagePathList)
+    {
+        
+        // The function adds the passed images to the asset manager for future loading.
+        
+        String [] imagePath; // List of (relative) image paths.
+        
+        // Convert from ArrayList to standard array.
+        imagePath = imagePathList.toArray(new String[imagePathList.size()]);
+        
+        // Add the passed images to the asset manager for future loading.
+        queueImages(imagePath);
+        
+    }
+    
+    // elements = List of music to load.  Must include full path and extension.  Example:  "assets\symphony1.wav", "assets\symphony2.wav".
+    public void queueMusic(String ... elements)
+    {
+        
+        // The function adds the passed music to the asset manager for future loading.
+        
+        // Loop through each element passed to function.
+        for (String element : elements)
+        {
+            // Add current element in loop to queue.
+            manager.load(element, Music.class);
+        }
+        
+    }
+    
+    // elements = List of sounds to load.  Must include full path and extension.  Example:  "assets\beep.wav", "assets\click.wav".
+    public void queueSounds(String ... elements)
+    {
+        
+        // The function adds the passed sounds to the asset manager for future loading.
+        
+        // Loop through each element passed to function.
+        for (String element : elements)
+        {
+            // Add current element in loop to queue.
+            manager.load(element, Sound.class);
         }
         
     }

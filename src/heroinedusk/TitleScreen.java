@@ -6,13 +6,10 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import core.AssetMgr;
 import core.BaseActor;
 import core.BaseGame;
 import core.BaseScreen;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 import routines.ArrayRoutines;
 
 /*
@@ -51,7 +48,6 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     */
     
     // Declare object variables.
-    private AssetMgr assetMgr; // Enhanced asset manager.
     private BaseActor background; // BaseActor object that will act as the background.
     private CustomLabel menuLabels[]; // Collection of menu labels.
     private CustomProgressBar progressBar; // Reference to custom progress bar object.
@@ -121,6 +117,61 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Update as initialized.
         this.initialized  = true;
+        
+    }
+    
+    public final void create()
+    {
+        
+        /* 
+        The function occurs during the startup / create phase and accomplishes the following:
+        
+        
+        */
+        
+        // 1.  Set defaults.
+        this.menu_id = -1;
+        this.menu_selector = 0;
+        this.menu_selector_keys = 0;
+        this.loadedGame = false;
+        
+        // 2.  Initialize arrays and array lists.
+        this.menu = new String[4];
+        removeList = new ArrayList<>();
+        
+        // If NOT initialized yet, then...
+        if (initialized == false)
+        
+        {
+            // NOT initialized yet.
+            
+            // 3.  Initialize the custom progress bar.
+            progressBar = new CustomProgressBar(game.skin);
+
+            // 4.  Load assets.
+            loadAssets();
+        }
+        
+        // 5.  Configure and add the background Actor.
+        
+        // Create new BaseActor for the background.
+        background = new BaseActor();
+        
+        // Name background actor.
+        background.setActorName("Background");
+        
+        // Assign the Texture to the background Actor.
+        background.setTexture(gameHD.assetMgr.getImage_xRef(HeroineEnum.ImgBackgroundEnum.IMG_BACK_TITLE.getValue_Key()));
+        
+        // Position the background with its lower left corner at the corresponding location in the screen.
+        background.setPosition( 0, 0 );
+        
+        // Add the background Actor to the scene graph.
+        mainStage.addActor( background );
+        
+        // 7.  Update the menu list to contain those of the main menu.
+        // Calling the function also builds / displays the menu.
+        title_set_menu(TITLE_MENU_MAIN);
         
     }
     
@@ -234,7 +285,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             labelHeight = menuLabels[counter].getLabelHeight();
             
             // Double label height to simulate a blank line.
-            labelHeight *= 2;
+            labelHeight *= 1.25;
             
             // Add label to scene graph.
             mainStage.addActor(menuLabels[counter].displayLabelCenterX(menuTop - counter * labelHeight, 
@@ -250,64 +301,6 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
-    public final void create()
-    {
-        
-        /* 
-        The function occurs during the startup / create phase and accomplishes the following:
-        
-        
-        */
-        
-        // 1.  Set defaults.
-        this.menu_id = -1;
-        this.menu_selector = 0;
-        this.menu_selector_keys = 0;
-        this.loadedGame = false;
-        
-        // 2.  Initialize arrays and array lists.
-        this.menu = new String[4];
-        removeList = new ArrayList<>();
-        
-        // If NOT initialized yet, then...
-        if (initialized == false)
-        
-        {
-            // NOT initialized yet.
-            
-            // 3.  Initialize the asset manager.
-            assetMgr = new AssetMgr();
-
-            // 4.  Initialize the custom progress bar.
-            progressBar = new CustomProgressBar(game.skin);
-
-            // 5.  Load assets.
-            loadAssets();
-        }
-        
-        // 6.  Configure and add the background Actor.
-        
-        // Create new BaseActor for the background.
-        background = new BaseActor();
-        
-        // Name background actor.
-        background.setActorName("Background");
-        
-        // Assign the Texture to the background Actor.
-        background.setTexture(assetMgr.getImage_xRef("title"));
-        
-        // Position the background with its lower left corner at the corresponding location in the screen.
-        background.setPosition( 0, 0 );
-        
-        // Add the background Actor to the scene graph.
-        mainStage.addActor( background );
-        
-        // 7.  Update the menu list to contain those of the main menu.
-        // Calling the function also builds / displays the menu.
-        title_set_menu(TITLE_MENU_MAIN);
-        
-    }
-    
     @Override
     public void dispose()
     {
@@ -318,9 +311,6 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // Call manual dispose method in superclass.
         super.disposeManual();
         
-        // Clear LibGDX objects in other classes.
-        assetMgr.disposeAssetMgr();
-        
     }
     
     private void loadAssets()
@@ -329,11 +319,17 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // The function loads the assets based on the current size of the application window.
         // Nothing occurs if assets already loaded for the current size.
         
-        // Declare constants.
-        final String imageKey = "title"; // Key to associate with image.
+        // Declare object variables.
+        ArrayList<String> imageMapList; // List of image paths and keys (path, key, path, key, ...) for later 
+          // addition to hash map.
+        ArrayList<String> imagePathList; // List of paths to images to load.
         
         // Declare regular variables.
         String imagePath; // Path to image to load.
+        
+        // Initialize array list.
+        imageMapList = new ArrayList<>();
+        imagePathList = new ArrayList<>();
         
         // If using a manually scaled size, then...
         if (gameHD.config.getStretchToScreen())
@@ -341,8 +337,19 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             {
             // Using a manually scaled size.
             
-            // Specify image path.
-            imagePath = "assets/backgrounds/title.png";
+            // Loop through background image enumerations.
+            for (HeroineEnum.ImgBackgroundEnum imgEnum : HeroineEnum.ImgBackgroundEnum.values())
+                
+                {
+                // Specify image path.
+                imagePath = "assets/backgrounds/" + imgEnum.getValue_File();
+
+                // Add to lists.
+                imageMapList.add(imagePath);
+                imageMapList.add(imgEnum.getValue_Key());
+                imagePathList.add(imagePath);
+                }
+            
             }
         
         else
@@ -350,21 +357,45 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             {
             // Using a prescaled size.
             
-            // Specify image path.
-            imagePath = gameHD.config.getPrescaleFolder_Backgrounds() + "title.png";
+            // Loop through background image enumerations.
+            for (HeroineEnum.ImgBackgroundEnum imgEnum : HeroineEnum.ImgBackgroundEnum.values())
+                
+                {
+                // Specify image path.
+                imagePath = gameHD.config.getPrescaleFolder_Backgrounds() + imgEnum.getValue_File();
+
+                // Add to lists.
+                imageMapList.add(imagePath);
+                imageMapList.add(imgEnum.getValue_Key());
+                imagePathList.add(imagePath);
+                }
+                
             }
         
         // 1.  Display progress bar in center of screen -- update when loading assets.
-        mainStage.addActor(progressBar.displayBarCenter(viewWidthMain, viewHeightMain));
+        uiStage.addActor(progressBar.displayBarCenter(viewWidthMain, viewHeightMain));
         
         // 2.  Queue images.
-        assetMgr.queueImages(imagePath);
-        assetMgr.mapImages(imagePath, imageKey);
+        gameHD.assetMgr.queueImages(imagePathList);
+        gameHD.assetMgr.mapImages(imageMapList);
         
-        // 3.  Load resources and update progress bar.
-        assetMgr.loadResources(progressBar);
+        // 3.  Queue sounds.
         
-        // 4.  Hide the progress bar.
+        // Loop through sounds (via enumerations).
+        for (HeroineEnum.SoundEnum sound : HeroineEnum.SoundEnum.values()) {
+        
+            // Add sound to queue.
+            gameHD.assetMgr.queueSounds(sound.getValue_FilePath());
+            
+        }
+        
+        // 4.  Load resources and update progress bar.
+        gameHD.assetMgr.loadResources(progressBar);
+        
+        // 5.  Handle post-processing.
+        gameHD.sounds = new Sounds(gameHD);
+        
+        // 6.  Hide the progress bar.
         progressBar.hideBar();
         
     }
@@ -471,8 +502,21 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
 
                     // User clicked start or continue button.
 
-                    // Switch to the game screen.
-                    gameHD.setGameScreen(false);
+                    // Update the game state.
+                    gameHD.gameState = HeroineEnum.GameState.STATE_DIALOG;
+                    
+                    // Set shop location.
+                    gameHD.shopInfo.shop_set(HeroineEnum.ShopEnum.SHOP_A_NIGHTMARE);
+                    // gameHD.shopInfo.shop_set(HeroineEnum.ShopEnum.SHOP_WOODSMAN);
+                    
+                    // Update text next to third dialog option.
+                    gameHD.dialog.options[2].msg1 = "Wake up";
+                    
+                    // (Possibly) start music. ** To Do **
+                    // mazemap_set_music(atlas.maps[mazemap.current_id].music);
+                    
+                    // Switch to the dialog screen.
+                    gameHD.setDialogScreen();
 
                     // Exit selector.
                     break;
@@ -807,6 +851,8 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         if (keycode == Keys.S)
         {
             // The user pressed the S key.
+            
+            gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
             
             // Switch to the game screen.
             gameHD.setGameScreen(false);
