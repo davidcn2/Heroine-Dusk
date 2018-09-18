@@ -320,16 +320,28 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // Nothing occurs if assets already loaded for the current size.
         
         // Declare object variables.
+        ArrayList<String> atlasKeyList; // List of atlas keys.
+        ArrayList<String> atlasMapList; // List of atlas paths and keys (path, key, path, key, ...) for later 
+          // addition to hash map.
+        ArrayList<String> atlasPathList; // List of paths to atlases to load.
         ArrayList<String> imageMapList; // List of image paths and keys (path, key, path, key, ...) for later 
           // addition to hash map.
         ArrayList<String> imagePathList; // List of paths to images to load.
         
         // Declare regular variables.
-        String imagePath; // Path to image to load.
+        String imagePath; // Path to image / atlas to load.
         
         // Initialize array list.
+        atlasKeyList = new ArrayList<>();
+        atlasMapList = new ArrayList<>();
+        atlasPathList = new ArrayList<>();
         imageMapList = new ArrayList<>();
         imagePathList = new ArrayList<>();
+        
+        // 1.  Display progress bar in center of screen -- update when loading assets.
+        uiStage.addActor(progressBar.displayBarCenter(viewWidthMain, viewHeightMain));
+        
+        // 2.  Store values in lists.
         
         // If using a manually scaled size, then...
         if (gameHD.config.getStretchToScreen())
@@ -348,6 +360,35 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                 imageMapList.add(imagePath);
                 imageMapList.add(imgEnum.getValue_Key());
                 imagePathList.add(imagePath);
+                }
+            
+            // Loop through interface image enumerations.
+            for (HeroineEnum.ImgInterfaceEnum imgEnum : HeroineEnum.ImgInterfaceEnum.values())
+                
+                {
+                // Specify image path.
+                imagePath = "assets/interface/" + imgEnum.getValue_File();
+
+                // Add to lists.
+                imageMapList.add(imagePath);
+                imageMapList.add(imgEnum.getValue_Key());
+                imagePathList.add(imagePath);
+                
+                // Specify atlas path.
+                imagePath = "assets/interface/" + imgEnum.getValue_AtlasFile();
+                
+                // If atlas exists then, ...
+                if (imagePath.length() > 0)
+                    {
+                    // Atlas exists.
+                        
+                    // Add to atlas lists.
+                    atlasKeyList.add(imgEnum.getValue_AtlasKey());
+                    atlasMapList.add(imagePath);
+                    atlasMapList.add(imgEnum.getValue_AtlasKey());
+                    atlasPathList.add(imagePath);
+                    }
+                    
                 }
             
             }
@@ -369,17 +410,47 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                 imageMapList.add(imgEnum.getValue_Key());
                 imagePathList.add(imagePath);
                 }
+            
+            // Loop through interface image enumerations.
+            for (HeroineEnum.ImgInterfaceEnum imgEnum : HeroineEnum.ImgInterfaceEnum.values())
+                
+                {
+                // Specify image path.
+                imagePath = gameHD.config.getPrescaleFolder_Interface() + imgEnum.getValue_File();
+
+                // Add to lists.
+                imageMapList.add(imagePath);
+                imageMapList.add(imgEnum.getValue_Key());
+                imagePathList.add(imagePath);
+                
+                // Specify atlas path.
+                imagePath = gameHD.config.getPrescaleFolder_Interface() + imgEnum.getValue_AtlasFile();
+                
+                // If atlas exists then, ...
+                if (imgEnum.getValue_AtlasFile().length() > 0)
+                    {
+                    // Atlas exists.
+                        
+                    // Add to atlas list.
+                    atlasKeyList.add(imgEnum.getValue_AtlasKey());
+                    atlasMapList.add(imagePath);
+                    atlasMapList.add(imgEnum.getValue_AtlasKey());
+                    atlasPathList.add(imagePath);
+                    }
+                
+                }
                 
             }
         
-        // 1.  Display progress bar in center of screen -- update when loading assets.
-        uiStage.addActor(progressBar.displayBarCenter(viewWidthMain, viewHeightMain));
-        
-        // 2.  Queue images.
+        // 3.  Queue images.
         gameHD.assetMgr.queueImages(imagePathList);
         gameHD.assetMgr.mapImages(imageMapList);
         
-        // 3.  Queue sounds.
+        // 4.  Queue atlases.
+        gameHD.assetMgr.queueAtlases(atlasPathList);
+        gameHD.assetMgr.mapAtlases(atlasMapList);
+        
+        // 5.  Queue sounds.
         
         // Loop through sounds (via enumerations).
         for (HeroineEnum.SoundEnum sound : HeroineEnum.SoundEnum.values()) {
@@ -389,13 +460,18 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             
         }
         
-        // 4.  Load resources and update progress bar.
+        // 6.  Load resources and update progress bar.
         gameHD.assetMgr.loadResources(progressBar);
         
-        // 5.  Handle post-processing.
+        // 7.  Handle post-processing.
+        
+        // Initialize sounds.
         gameHD.sounds = new Sounds(gameHD);
         
-        // 6.  Hide the progress bar.
+        // Load texture regions related to atlases.
+        gameHD.assetMgr.loadTextureRegions(atlasKeyList);
+        
+        // 8.  Hide the progress bar.
         progressBar.hideBar();
         
     }
@@ -506,11 +582,12 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                     gameHD.gameState = HeroineEnum.GameState.STATE_DIALOG;
                     
                     // Set shop location.
-                    gameHD.shopInfo.shop_set(HeroineEnum.ShopEnum.SHOP_A_NIGHTMARE);
+                    //gameHD.shopInfo.shop_set(HeroineEnum.ShopEnum.SHOP_A_NIGHTMARE);
                     // gameHD.shopInfo.shop_set(HeroineEnum.ShopEnum.SHOP_WOODSMAN);
+                    gameHD.shopInfo.shop_set(HeroineEnum.ShopEnum.SHOP_CEDAR_ARMS);
                     
                     // Update text next to third dialog option.
-                    gameHD.dialog.options[2].msg1 = "Wake up";
+                    //gameHD.dialog.options[2].msg1 = "Wake up";
                     
                     // (Possibly) start music. ** To Do **
                     // mazemap_set_music(atlas.maps[mazemap.current_id].music);

@@ -19,12 +19,13 @@ public class HeroineEnum
     3.  FacingEnum:  Enumerations related to direction player is facing.
     4.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
     5.  ImgBackgroundEnum:  Enumerations related to background images.
-    6.  ListEnum:  Enumerations related to list types.
-    7.  ShopEnum:  Enumerations related to shops / locations.
-    8.  ShopTypeEnum:  Enumerations related to shop / location types.
-    9.  SoundsEnum:  Enumerations related to sounds.
-    10.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    11:  WeaponEnum:  Enumerations related to weapons.
+    6.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
+    7.  ListEnum:  Enumerations related to list types.
+    8.  ShopEnum:  Enumerations related to shops / locations.
+    9.  ShopTypeEnum:  Enumerations related to shop / location types.
+    10.  SoundsEnum:  Enumerations related to sounds.
+    11.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    12:  WeaponEnum:  Enumerations related to weapons.
     */
     
     // Enumerations related to armors.
@@ -122,19 +123,22 @@ public class HeroineEnum
     public enum DialogButtonEnum 
     {
         
-        DIALOG_BUTTON_NONE (0), // No button.
-        DIALOG_BUTTON_BUY (1), // Buy button.
-        DIALOG_BUTTON_EXIT (2) // Exit button.
+        DIALOG_BUTTON_NONE (0, ""), // No button.
+        DIALOG_BUTTON_BUY (1, "dialog_buttonO"), // Buy button.
+        DIALOG_BUTTON_EXIT (2, "dialog_buttonX") // Exit button.
         ; // semicolon needed when fields / methods follow
 
-        private final int dialogButtonEnum; // Enumerations related to direction player is facing.
+        private final int dialogButtonEnum; // Enumerations related to dialog buttons.
+        private final String dialogButtonKey; // Key associated with texture -- used with asset manager and textureRegions hash map.
         private static final Map dialogButtonMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         
-        // facingEnum = Value to associate.
-        private DialogButtonEnum(int dialogButtonEnum) 
+        // dialogButtonEnum = Value to associate.
+        // dialogButtonKey = Key associated with texture -- used with asset manager and textureRegions hash map.
+        private DialogButtonEnum(int dialogButtonEnum, String dialogButtonKey) 
         {
             // The constructor sets the numeric values for each enumeration.
             this.dialogButtonEnum = dialogButtonEnum;
+            this.dialogButtonKey = dialogButtonKey;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -157,6 +161,15 @@ public class HeroineEnum
             
             // Return the numeric value for the enumeration.
             return dialogButtonEnum;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the key associated with texture.
+            // Example for use:  int x = HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key();
+            
+            // Return the key associated with the texture.
+            return dialogButtonKey;
         }
         
         // dialogButton = Numeric value to convert to text.
@@ -282,12 +295,12 @@ public class HeroineEnum
         IMG_BACK_TITLE (4, "title.png", "title") // Title (menu) background.
         ; // semicolon needed when fields / methods follow
 
-        private final int imgBackgroundEnum; // Enumerations related to sounds.
+        private final int imgBackgroundEnum; // Enumerations related to background images.
         private final String imgFile; // Filename (just name and extension, no path).
         private final String imgKey; // Key associated with image -- used with asset manager hash map.
         private static final Map imgBackgroundMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         
-        // soundEnum = Value to associate.
+        // imgBackgroundEnum = Value to associate.
         // imgFile = Filename (just name and extension, no path).
         // imgKey = Key associated with image -- used with asset manager hash map.
         private ImgBackgroundEnum(int imgBackgroundEnum, String imgFile, String imgKey) 
@@ -343,6 +356,109 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (ImgBackgroundEnum) imgBackgroundMap.get(imgBackground);
+        }
+        
+    }
+    
+    // Enumerations related to interface images -- except fonts.
+    public enum ImgInterfaceEnum 
+    {
+        
+        IMG_INTERFACE_ACTION_BTN (0, "action_buttons.png", "", "action_btn", ""), // Action buttons.
+        IMG_INTERFACE_DIALOG_BTN (1, "dialog_buttons.png", "dialog_buttons.atlas", "dialog_btn", "dialog_btn_atlas"), // Dialog buttons.
+        IMG_INTERFACE_HEROINE (2, "heroine.png", "", "heroine", ""), // Heroine -- character pictures.
+        IMG_INTERFACE_INFO_BTN (3, "info_button.png", "", "info_btn", ""), // Information button.
+        IMG_INTERFACE_MINIMAP (4, "minimap.png", "", "minimap", ""), // Minimap icons.
+        IMG_INTERFACE_MINIMAP_CURSOR (4, "minimap_cursor.png", "", "minimap_cursor", ""), // Minimap cursor.
+        IMG_INTERFACE_SELECT (4, "select.png", "", "select", "") // Button selection.
+        ; // semicolon needed when fields / methods follow
+
+        private final int imgInterfaceEnum; // Enumerations related to interface images.
+        private final String imgAtlasFile; // Filename (just name and extension, no path) for atlas.
+        private final String imgAtlasKey; // Key associated with atlas -- used with asset manager hash map.
+        private final String imgFile; // Filename (just name and extension, no path).
+        private final String imgKey; // Key associated with image -- used with asset manager hash map.
+        private static final Map imgInterfaceMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // imgInterfaceEnum = Value to associate.
+        // imgFile = Filename (just name and extension, no path).
+        // imgAtlasFile = Filename (just name and extension, no path) for atlas.
+        // imgKey = Key associated with image -- used with asset manager hash map.
+        // imgAtlasKey = Key associated with atlas -- used with asset manager hash map.
+        private ImgInterfaceEnum(int imgInterfaceEnum, String imgFile, String imgAtlasFile, String imgKey, 
+          String imgAtlasKey) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.imgInterfaceEnum = imgInterfaceEnum;
+            this.imgFile = imgFile;
+            this.imgAtlasFile = imgAtlasFile;
+            this.imgKey = imgKey;
+            this.imgAtlasKey = imgAtlasKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ImgInterfaceEnum imgInterfaceEnum : ImgInterfaceEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                imgInterfaceMap.put(imgInterfaceEnum.imgInterfaceEnum, imgInterfaceEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_DIALOG_BTN.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return imgInterfaceEnum;
+        }
+        
+        public String getValue_AtlasFile() 
+        {
+            // The function returns the filename (just name and extension, no path).
+            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasFile();
+            
+            // Return the filename (just name and extension, no path).
+            return imgAtlasFile;
+        }
+        
+        public String getValue_AtlasKey() 
+        {
+            // The function returns the atlas key -- used with the asset manager hash map.
+            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasKey();
+            
+            // Return the atlas key.
+            return imgAtlasKey;
+        }
+        
+        public String getValue_File() 
+        {
+            // The function returns the filename (just name and extension, no path).
+            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_File();
+            
+            // Return the filename (just name and extension, no path).
+            return imgFile;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the image key -- used with the asset manager hash map.
+            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_Key();
+            
+            // Return the image key.
+            return imgKey;
+        }
+        
+        // imgInterface = Numeric value to convert to text.
+        public static ImgInterfaceEnum valueOf(int imgInterface) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ImgInterfaceEnum) imgInterfaceMap.get(imgInterface);
         }
         
     }

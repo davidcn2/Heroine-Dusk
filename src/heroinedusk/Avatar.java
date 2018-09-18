@@ -49,7 +49,7 @@ public class Avatar
         max_hp = 25;
         mp = 4;
         max_mp = 4;
-        gold = 0;
+        gold = 80000; // 0;
         bonus_atk = 0;
         bonus_def = 0;
         spellbook = HeroineEnum.SpellEnum.NO_SPELL;

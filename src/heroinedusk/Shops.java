@@ -424,6 +424,9 @@ public class Shops
         // Update shop / location.
         gameHD.dialog.shop_id = shop_id;
         
+        // Pass reference to current shop to dialog.
+        gameHD.dialog.shop = shopList.get(shop_id.getValue());
+        
         // Update shop name.
         gameHD.dialog.title = shopList.get(shop_id.getValue()).getMsgGroupName();
         
@@ -618,6 +621,7 @@ public class Shops
             {
             // Flag item as buyable.
             can_buy = true;
+            System.out.println("Has gold and not disabled");
             }
         
         // If player can buy item, then...

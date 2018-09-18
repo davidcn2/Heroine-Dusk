@@ -6,8 +6,11 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
-import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import heroinedusk.CustomProgressBar;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -66,8 +69,13 @@ public class AssetMgr
     public AssetManager manager; // Loads and stores assets like textures, bitmap fonts, tile maps, 
       // sounds, music, ...
     @SuppressWarnings("FieldMayBeFinal")
+    private Map<String, String> assetMapping_Atlases; // Cross reference between asset names and keys -- 
+      // for atlases in asset manager.
+    @SuppressWarnings("FieldMayBeFinal")
     private Map<String, String> assetMapping_Textures; // Cross reference between asset names and keys -- 
       // for textures in asset manager.
+    private final Map<String, Rectangle2D.Float> textureRegionRects; // Contains rects related to texture regions in atlases.  Keys same as in atlas files.
+    private final Map<String, TextureRegion> textureRegions; // Contains texture regions related to atlases (same keys as in the atlas files).
     
     public AssetMgr()
     {
@@ -78,7 +86,10 @@ public class AssetMgr
         manager = new AssetManager();
         
         // Initialize the hash maps.
+        assetMapping_Atlases = new HashMap<>();
         assetMapping_Textures = new HashMap<>();
+        textureRegions = new HashMap<>();
+        textureRegionRects = new HashMap<>();
         
     }
     
@@ -87,6 +98,34 @@ public class AssetMgr
         
         // The function clears the asset manager from memory.
         manager.dispose();
+        
+    }
+    
+    // key = Key value in asset manager for Atlas to return.
+    public TextureAtlas getAtlas(String key)
+    {
+        
+        // The function returns the Atlas from the asset manager with the passed key.
+        
+        // Return Atlas.
+        return manager.get(key, TextureAtlas.class);
+        
+    }
+    
+    // xref_Key = Key value to use in cross reference when getting Atlas from asset manager.
+    public TextureAtlas getAtlas_xRef(String xref_Key)
+    {
+        
+        // The function returns the Atlas from the asset manager based on the name in the
+        // cross reference (class-specific hash map) tied to the key passed.
+        
+        String xref_Value; // Value in cross reference -- matches to key in asset manager.
+        
+        // Determine cross reference value based on passed key.
+        xref_Value = assetMapping_Atlases.get(xref_Key);
+        
+        // Return Atlas.
+        return manager.get(xref_Value, TextureAtlas.class);
         
     }
     
@@ -165,6 +204,89 @@ public class AssetMgr
         
     }
     
+    // atlasKeyList = List of atlas keys.
+    public void loadTextureRegions(ArrayList<String> atlasKeyList)
+    {
+        
+        // The function loads all texture regions associated with the passed atlases.
+        // The function populates the hash maps with the texture regions and related rectangles.
+        
+        // Loop through atlases.
+        for (String atlasKey : atlasKeyList)
+        {
+            
+            System.out.println("Loading texture regions for: " + atlasKey);
+        
+            // Loop through texture regions in atlas.
+            for (AtlasRegion region : getAtlas_xRef(atlasKey).getRegions())  
+            {
+                
+                // Add current texture region to hash map.
+                textureRegions.put(region.name, region);
+                
+                // Add rectangle for current texture region to hash map.
+                textureRegionRects.put(region.name, new Rectangle2D.Float((float)region.getRegionX(), 
+                  (float)region.getRegionY(), (float)region.getRegionWidth(), (float)region.getRegionHeight()));
+                
+            }
+        
+        }
+        
+    }
+    
+    // elements = Collection of items (key, value pairs) to add to hash map for atlases in asset manager.
+    public void mapAtlases(String ... elements)
+    {
+        
+        // The function adds cross reference (hash mapping) values to provide a simpler way of referencing
+        // items in the asset manager.
+        // The function populates the hash map specifically used for Atlas objects.
+        // Pass values in the format / order:  asset name (when loading to manager), key value.
+        
+        // Example:  mapImages("assets/images/lasers.atlas", "lasers", "assets/images/rocks.atlas", "rocks");
+        
+        int elementCount; // Number of elements passed.  Divide by two to get number of pairs.
+        int elementCounter; // Used to iterate through elements.
+        int pairCount; // Number of hash pairs passed.
+        
+        // Set defaults.
+        elementCounter = 0;
+        
+        // Count number of items passed.
+        elementCount = elements.length;
+        
+        // Determine number of pairs.
+        pairCount = elementCount / 2;
+        
+        // Loop through pairs.
+        for (int pairCounter = 1; pairCounter <= pairCount; pairCounter++)
+            {
+            // Add current pair to hash map.
+            assetMapping_Atlases.put(elements[elementCounter + 1], elements[elementCounter]);
+            
+            // Increment element counter.
+            elementCounter += 2;
+            }
+        
+    }
+    
+    // atlasMapList = Collection of items (key, value pairs) to add to hash map for atlases in asset manager.
+    public void mapAtlases(ArrayList<String> atlasMapList)
+    {
+        
+        // The function adds cross reference (hash mapping) values to provide a simpler way of referencing
+        // atlas items in the asset manager.
+        
+        String [] atlasMapPairs; // List of (relative) atlas paths.
+        
+        // Convert from ArrayList to standard array.
+        atlasMapPairs = atlasMapList.toArray(new String[atlasMapList.size()]);
+        
+        // Add the cross reference (hash mapping) values.
+        mapAtlases(atlasMapPairs);
+        
+    }
+    
     // elements = Collection of items (key, value pairs) to add to hash map for images in asset manager.
     public void mapImages(String ... elements)
     {
@@ -215,6 +337,39 @@ public class AssetMgr
         
         // Add the cross reference (hash mapping) values.
         mapImages(imageMapPairs);
+        
+    }
+    
+    // elements = List of atlases to load.  Must include full path and extension.  Example:  "assets\apples.atlas", "assets\oranges.atlas".
+    public void queueAtlases(String ... elements)
+    {
+        
+        // The function adds the passed atlases to the asset manager for future loading.
+        // The atlases contain the parameters, such as how to handle scaling.
+        
+        // Loop through each element passed to function.
+        for (String element : elements)
+        {
+            // Add current element in loop to queue.
+            manager.load(element, TextureAtlas.class);
+        }
+        
+    }
+    
+    // elements = List of atlases to load.  Must include full path and extension.  Example:  "assets\apples.atlas", "assets\oranges.atlas".
+    public void queueAtlases(ArrayList<String> imagePathList)
+    {
+        
+        // The function adds the passed atlases to the asset manager for future loading.
+        // The atlases contain the parameters, such as how to handle scaling.
+        
+        String [] imagePath; // List of (relative) image paths.
+        
+        // Convert from ArrayList to standard array.
+        imagePath = imagePathList.toArray(new String[imagePathList.size()]);
+        
+        // Add the passed atlases to the asset manager for future loading.
+        queueAtlases(imagePath);
         
     }
     
@@ -308,6 +463,30 @@ public class AssetMgr
             // Add current element in loop to queue.
             manager.load(element, Sound.class);
         }
+        
+    }
+    
+    // Getters and setters below...
+    
+    // regionKey = Key (as relates to hash map) for Rectangle2D to return.
+    public Rectangle2D.Float getTextureRegionRect(String regionKey)
+    {
+        
+        // The function returns the rect structure related to the texture region identified by the passed key.
+        
+        // Return the rect structure.
+        return textureRegionRects.get(regionKey);
+        
+    }
+    
+    // regionKey = Key (as relates to hash map) for texture region to return.
+    public TextureRegion getTextureRegion(String regionKey)
+    {
+        
+        // The function returns the texture region in the hash map with the passed key.
+        
+        // Return the texture region in the hash map with the passed key.
+        return textureRegions.get(regionKey);
         
     }
     

@@ -242,7 +242,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // The function switches to (displays) the dialog screen and hides the current.
         
         // Initialize dialog screen object.
-        dsMain = new DialogScreen(this, windowWidth, windowHeight, this);
+        dsMain = new DialogScreen(this, windowWidth, windowHeight, this, dialog);
         
         // Launch dialog screen.
         setScreen(dsMain);
