@@ -236,6 +236,15 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
     }
     
+    protected void renderDialogScreen()
+    {
+        
+        // Renders the dialog screen, incorporating any necessary updates.
+        
+        dsMain.render();
+        
+    }
+    
     protected void setDialogScreen()
     {
         

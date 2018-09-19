@@ -57,6 +57,7 @@ public class CustomLabel
     
     // Declare object variables.
     private Map<String, Action> actionMapping; // Collection of actions applied to label.
+    private BitmapFont bitmapFont; // BitmapFont used for the label.
     private Label customLabel; // LibGDX Label object that will display text.
     
     // Declare regular variables.
@@ -65,6 +66,8 @@ public class CustomLabel
     private String labelText; // Text to display in label.
     private float posX; // X-coordinate for placement of the label.
     private float posY; // Y-coordinate for placement of the label.
+    private float stageHeight; // Height of the stage.  Helpful for centering and relative positioning.
+    private float stageWidth; // Width of the stage.  Helpful for centering and relative positioning.
     
     // Constructors below...
     
@@ -73,8 +76,9 @@ public class CustomLabel
     // labelStyle = Name of the style to use.
     // labelScale = Scale to use when displaying label.
     // textLineHeight = Desired text line height.
+    // fontSkinKey = Key to font in skin.
     public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
-      float textLineHeight)
+      float textLineHeight, String fontSkinKey)
     {
         
         // The constructor creates a label.
@@ -88,6 +92,10 @@ public class CustomLabel
         this.labelStyle = labelStyle;
         this.labelScale = labelScale;
         
+        // If key to font in skin passed (not null), then...
+        if (fontSkinKey != null)
+            bitmapFont = gameSkin.get(fontSkinKey, BitmapFont.class);
+            
         // Set up Label object using passed properties.
         // Note:  Best practices include avoiding scaling -- use a high-resolution image, instead.
         customLabel = new Label( labelText, gameSkin, labelStyle ); // Add text and style to Label.
@@ -101,28 +109,31 @@ public class CustomLabel
     // labelText = Text to display in label.
     // labelStyle = Name of the style to use.
     // textLineHeight = Desired text line height.
-    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float textLineHeight)
+    // fontSkinKey = Key to font in skin.
+    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float textLineHeight, 
+      String fontSkinKey)
     {
         
         // The constructor creates a label.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Call original constructor using a scale of 1.0f.
-        this(gameSkin, labelText, labelStyle, 1.0f, textLineHeight);
+        this(gameSkin, labelText, labelStyle, 1.0f, textLineHeight, fontSkinKey);
         
     }
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
     // textLineHeight = Desired text line height.
-    public CustomLabel(Skin gameSkin, String labelText, float textLineHeight)
+    // fontSkinKey = Key to font in skin.
+    public CustomLabel(Skin gameSkin, String labelText, float textLineHeight, String fontSkinKey)
     {
         
         // The constructor creates a label.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Call original constructor using a style of uiLabelStyle and scale of 1.0f.
-        this(gameSkin, labelText, "uiLabelStyle", 1.0f, textLineHeight);
+        this(gameSkin, labelText, "uiLabelStyle", 1.0f, textLineHeight, fontSkinKey);
         
     }
     
@@ -133,9 +144,11 @@ public class CustomLabel
     // textLineHeight = Desired text line height.
     // align = Text alignment desired.  Maps to one of the AlignEnum values.
     // whichStage = Reference to stage to which to add label.
+    // fontSkinKey = Key to font in skin.
     // elements = Provides values for posX, posY, and stageWidth, as needed, based on alignment.
     public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
-      float textLineHeight, AlignEnum align, Stage whichStage, float ... elements)
+      float textLineHeight, AlignEnum align, Stage whichStage, String fontSkinKey,
+      float ... elements)
     {
         
         /*
@@ -144,7 +157,7 @@ public class CustomLabel
         
         // Notes about elements...
         For left alignment, 0 = posX.
-        For center alignment, 0 = posY, 1 = stageWidth.
+        For center alignment, 0 = posY.
         For right alignment, 0 = posX (rightmost edge), 1 = posY.
         
         posX = For left alignment, leftmost position of label.  Use null for centering (ignored).
@@ -154,7 +167,11 @@ public class CustomLabel
         */
 
         // Initialize label with passed properties.
-        this(gameSkin, labelText.toUpperCase(), labelStyle, labelScale, textLineHeight);
+        this(gameSkin, labelText.toUpperCase(), labelStyle, labelScale, textLineHeight, fontSkinKey);
+        
+        // Store stage width and height.
+        this.stageWidth = whichStage.getWidth();
+        this.stageHeight = whichStage.getHeight();
         
         // Depending on alignment, ...
         switch (align)
@@ -174,7 +191,7 @@ public class CustomLabel
                 // Align text to the center.
                 
                 // Add label to scene graph, aligning text to the center.
-                whichStage.addActor(displayLabelCenterX(elements[0], (int)elements[1]));
+                whichStage.addActor(displayLabelCenterX(elements[0], (int)this.stageWidth));
                 
                 // Exit selector.
                 break;
@@ -215,10 +232,11 @@ public class CustomLabel
     //   Null = No relative positioning for x-coordinate.
     // adjPosY = Adjustment of y-coordinate, relative to corner specified in alignRelative.
     //   Null = No relative positioning for y-coordinate.
+    // fontSkinKey = Key to font in skin.
     // elements = Provides values for posX, posY, and stageWidth, as needed, based on enum values.
     public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
       float textLineHeight, AlignEnum align, PosRelativeEnum posRelative, Stage whichStage, 
-      Float adjPosX, Float adjPosY, float ... elements)
+      Float adjPosX, Float adjPosY, String fontSkinKey, float ... elements)
     {
         
         /*
@@ -234,7 +252,7 @@ public class CustomLabel
         Notes about elements...
         
         For left alignment, 0 = posX.
-        For center alignment, 0 = posY, 1 = stageWidth.
+        For center alignment, 0 = posY.
         For right alignment, 0 = posX (rightmost edge), 1 = posY.
         
         posX = For left alignment, leftmost position of label.  Use null for centering (ignored).
@@ -244,7 +262,7 @@ public class CustomLabel
         */
 
         // Initialize label with passed properties.
-        this(gameSkin, labelText.toUpperCase(), labelStyle, labelScale, textLineHeight);
+        this(gameSkin, labelText.toUpperCase(), labelStyle, labelScale, textLineHeight, fontSkinKey);
         
         // Declare variables -- must happen after calling other constructor.
         float labelPosX; // X-coordinate to pass to function displaying label.
@@ -253,6 +271,10 @@ public class CustomLabel
         // Set defaults.
         labelPosX = 0;
         labelPosY = 0;
+        
+        // Store stage width and height.
+        this.stageWidth = whichStage.getWidth();
+        this.stageHeight = whichStage.getHeight();
         
         // Depending on alignment, ...
         switch (align)
@@ -340,7 +362,7 @@ public class CustomLabel
                 
                 // If necessary, replace x-coordinate with relative position.
                 if (adjPosX != null)
-                    labelPosX = whichStage.getWidth() + adjPosX;
+                    labelPosX = this.stageWidth + adjPosX;
                 
                 // If necessary, replace y-coordinate with relative position.
                 if (adjPosY != null)
@@ -359,7 +381,7 @@ public class CustomLabel
                 
                 // If necessary, replace y-coordinate with relative position.
                 if (adjPosY != null)
-                    labelPosY = whichStage.getHeight() - customLabel.getHeight() + adjPosY;
+                    labelPosY = this.stageHeight - customLabel.getHeight() + adjPosY;
                 
                 // Exit selector.
                 break;
@@ -370,11 +392,11 @@ public class CustomLabel
                 
                 // If necessary, replace x-coordinate with relative position.
                 if (adjPosX != null)
-                    labelPosX = whichStage.getWidth() + adjPosX;
+                    labelPosX = this.stageWidth + adjPosX;
                 
                 // If necessary, replace y-coordinate with relative position.
                 if (adjPosY != null)
-                    labelPosY = whichStage.getHeight() - customLabel.getHeight() + adjPosY;
+                    labelPosY = this.stageHeight - customLabel.getHeight() + adjPosY;
                 
                 // Exit selector.
                 break;
@@ -388,9 +410,9 @@ public class CustomLabel
                 
         } // Depending on relative positioning...
         
-        System.out.println("Label height: " + customLabel.getHeight());
-        System.out.println("Label pos x: " + labelPosX);
-        System.out.println("Label pos y: " + labelPosY);
+        //System.out.println("Label height: " + customLabel.getHeight());
+        //System.out.println("Label pos x: " + labelPosX);
+        //System.out.println("Label pos y: " + labelPosY);
         
         // Depending on alignment, ...
         switch (align)
@@ -410,7 +432,7 @@ public class CustomLabel
                 // Align text to the center.
                 
                 // Add label to scene graph, aligning text to the center.
-                whichStage.addActor(displayLabelCenterX(labelPosY, (int)elements[1]));
+                whichStage.addActor(displayLabelCenterX(labelPosY, (int)this.stageWidth));
                 
                 // Exit selector.
                 break;
@@ -545,6 +567,30 @@ public class CustomLabel
     
     // Methods below...
     
+    public void addAction_Fade()
+    {
+        
+        // The function sets up a fade effect for the label.
+        // Fade out over the course of 1.0 seconds after 2.0 elapse.
+        // Note that the function first displays the label.
+        
+        // Add action to hash map.
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("Fade", 
+          Actions.sequence(
+            Actions.fadeIn(0.0f), 
+            Actions.visible(true),
+            Actions.delay(2.0f), 
+            Actions.fadeOut(1.0f), 
+            Actions.visible(false)
+          ));
+        
+        // Set up fade effect for the label.
+        customLabel.addAction(actionMapping.get("Fade"));
+        
+    }
+    
     public void addAction_FadePartial()
     {
         
@@ -571,8 +617,43 @@ public class CustomLabel
         customLabel.addListener(labelEvent);
     }
     
+    // visible = Whether to display label.
+    public void applyAction_Visible(boolean visible)
+    {
+        
+        // Depending on the passed parameter, the function either instantly displays or hides the label.
+        
+        // Add display action to hash map.
+        actionMapping.putIfAbsent("Visible", 
+          Actions.sequence(Actions.fadeIn(0.0f), Actions.visible(true)));
+        
+        // Add display action to hash map.
+        actionMapping.putIfAbsent("Invisible", 
+          Actions.sequence(Actions.visible(false)));
+        
+        // If displaying label, then...
+        if (visible)
+            
+        {
+            // Displaying label.
+            
+            // Display label.
+            customLabel.addAction(actionMapping.get("Visible"));
+        }
+        
+        else
+            
+        {
+            // Hiding label.
+            
+            // Display label.
+            customLabel.addAction(actionMapping.get("Invisible"));
+        }
+        
+    }    
+            
     // stageWidth = Width of stage in which to center label.
-    public void centerLabel(int stageWidth)
+    public void centerLabel(float stageWidth)
     {
         
         // The function centers a label -- useful when text changes.
@@ -642,7 +723,7 @@ public class CustomLabel
     // posX = X-coordinate for placement of the label.
     // posY = Y-coordinate for placement of the label.
     // stageWidth = Width of stage in which to center label.
-    public final Label displayLabelCenterX(float posY, int stageWidth)
+    public final Label displayLabelCenterX(float posY, float stageWidth)
     {
         
         // The function centers the label at the passed Y coordinate.
@@ -684,12 +765,38 @@ public class CustomLabel
         return labelText;
     }
     
+    public void removeActions()
+    {
+        
+        // The function removes all actions from the label.
+        
+        // Loop through actions in hash map.
+        actionMapping.values().forEach((action) -> {
+            // Remove action from label.
+            customLabel.removeAction(action);
+        });
+        
+        // Reinitialize the hash map for actions.
+        actionMapping = new HashMap<>();
+        
+    }
+    
+    public void removeActor()    
+    {
+        
+        // The function removes the actor associated with the label.
+        
+        // Remove actor.
+        customLabel.remove();
+        
+    }
+    
     // text = Text to display in label.
     // bitmapFont = BitmapFont upon which to base measurements.
     public void setLabelText(String labelText, BitmapFont bitmapFont)
     {
         
-        // The function updates the text of the label.
+        // The function updates the text of the label, using the passed bitmap font.
         // Example for use:  labelTitle.setLabelText("Hello World", gameHD.skin.getFont("uiFont"));
         
         GlyphLayout glyphLayout; // Get a glyph layout to have access to font information related to
@@ -712,13 +819,24 @@ public class CustomLabel
         
     }
     
+    // labelText = Text to display in label.
+    public void setLabelText(String labelText)
+    {
+        
+        // The function updates the text of the label, using the existing bitmap font.
+        
+        // Computes and caches any information needed for drawing.
+        setLabelText(labelText, bitmapFont);
+        
+    }
+    
     // text = Text to display in label.
     // bitmapFont = BitmapFont upon which to base measurements.
     // stageWidth = Width of stage in which to center label.
-    public void setLabelText_Center(String labelText, BitmapFont bitmapFont, int stageWidth)
+    public void setLabelText_Center(String labelText, BitmapFont bitmapFont, float stageWidth)
     {
         
-        // The function updates the text of and centers the label.
+        // The function updates the text of and centers the label, using the passed bitmap font.
         // Example for use:  labelTitle.setLabelTextCenter("Hello World", gameHD.skin.getFont("uiFont"), viewWidthMain);
         
         // Update text of the label.
@@ -726,6 +844,19 @@ public class CustomLabel
         
         // Center the label.
         centerLabel(stageWidth);
+        
+    }
+    
+    // labelText = Text to display in label.
+    // stageWidth = Width of stage in which to center label.
+    public void setLabelText_Center(String labelText, float stageWidth)
+    {
+        
+        // The function updates the text of the label and centers the revised object across the screen.
+        // The function uses the existing bitmap font.
+        
+        // Update and recenter label text.
+        setLabelText_Center(labelText, bitmapFont, stageWidth);
         
     }
     

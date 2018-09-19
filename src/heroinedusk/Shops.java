@@ -156,8 +156,8 @@ public class Shops
         
     }
     
-    // slot = Slot / item number in shop.
-    private void shop_act(int slot)
+    // slot = Slot / item number in shop.  Base 0.
+    protected void shop_act(int slot)
     {
         
         // The function performs an action based on the slot (button) clicked.
@@ -258,7 +258,7 @@ public class Shops
             // Player owns sufficient gold.
                 
             // Subtract cost from player gold.
-            gameHD.avatar.adjGold(cost);
+            gameHD.avatar.adjGold(-cost);
             
             // Play purchase sound.
             gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
@@ -268,6 +268,7 @@ public class Shops
             
             // Adjust dialog message.
             gameHD.dialog.message = "Bought " + armor_id.getValue_CleanText();
+            gameHD.dialog.fadeMessage = true;
             
             // Rebuild dialog.
             shop_reset();
@@ -288,7 +289,7 @@ public class Shops
             // Player owns sufficient gold.
                 
             // Subtract cost from player gold.
-            gameHD.avatar.adjGold(cost);
+            gameHD.avatar.adjGold(-cost);
             
             // Play purchase sound.
             gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
@@ -298,6 +299,7 @@ public class Shops
             
             // Adjust dialog message.
             gameHD.dialog.message = "You have rested";
+            gameHD.dialog.fadeMessage = true;
             
             // Rebuild dialog.
             shop_reset();
@@ -323,7 +325,7 @@ public class Shops
             // Player owns sufficient gold.
                 
             // Subtract cost from player gold.
-            gameHD.avatar.adjGold(cost);
+            gameHD.avatar.adjGold(-cost);
             
             // Play purchase sound.
             gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
@@ -333,6 +335,7 @@ public class Shops
             
             // Adjust dialog message.
             gameHD.dialog.message = "Learned " + spell_id.getValue_CleanText();
+            gameHD.dialog.fadeMessage = true;
             
             // Rebuild dialog.
             shop_reset();
@@ -358,7 +361,7 @@ public class Shops
             // Player owns sufficient gold.
                 
             // Subtract cost from player gold.
-            gameHD.avatar.adjGold(cost);
+            gameHD.avatar.adjGold(-cost);
             
             // Play purchase sound.
             gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
@@ -368,6 +371,7 @@ public class Shops
             
             // Adjust dialog message.
             gameHD.dialog.message = "Bought " + weapon_id.getValue_CleanText();
+            gameHD.dialog.fadeMessage = true;
             
             // Rebuild dialog.
             shop_reset();
@@ -405,8 +409,15 @@ public class Shops
     {
         // The function rebuilds the dialog using the active shop identifier.
         
+        // Reset dialog.
+        gameHD.dialog.resetDialog();
+        
         // Rebuild dialog.
         shop_set(gameHD.dialog.shop_id);
+        
+        // Render dialog screen.
+        gameHD.renderDialogScreen();
+        
     }
     
     // shop_id = Shop / location for which to display information.
@@ -522,10 +533,10 @@ public class Shops
             
         }
         
-        System.out.println("Option 0, Msg 1: " + gameHD.dialog.options[0].msg1);
-        System.out.println("Option 0, Msg 2: " + gameHD.dialog.options[0].msg2);
-        System.out.println("Option 1, Msg 1: " + gameHD.dialog.options[1].msg1);
-        System.out.println("Option 1, Msg 2: " + gameHD.dialog.options[1].msg2);
+        //System.out.println("Option 0, Msg 1: " + gameHD.dialog.options[0].msg1);
+        //System.out.println("Option 0, Msg 2: " + gameHD.dialog.options[0].msg2);
+        //System.out.println("Option 1, Msg 1: " + gameHD.dialog.options[1].msg1);
+        //System.out.println("Option 1, Msg 2: " + gameHD.dialog.options[1].msg2);
         
     }
     
@@ -621,7 +632,6 @@ public class Shops
             {
             // Flag item as buyable.
             can_buy = true;
-            System.out.println("Has gold and not disabled");
             }
         
         // If player can buy item, then...

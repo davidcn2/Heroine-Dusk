@@ -180,26 +180,50 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     public void addEvent(CustomLabel customLabel, int label_id)
     {
         
-        InputListener labelEvent; // Event to add to passed label.
+        // The function adds events to the passed custom label.
+        // Events include:  touchDown, touchUp, enter, and exit.
+        
+        InputListener labelEvent; // Events to add to passed custom label.
         
         // Craft event logic to add to passed label.
         labelEvent = new InputListener()
             {
+                
                 boolean ignoreNextExitEvent; // Whether to ignore next exit event (used with touchUp / exit).
                 
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
                 @Override
                 public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
                 {
-                // Occurs when user press down mouse on label.
-                // Event (touchDown) necessary to reach touchUp.
                     
-                // Return a value.
-                return true;
+                    // The function occurs when the user touches the screen or presses a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS. 
+                    // Notes:  Occurs when user press down mouse on label.
+                    // Notes:  Event (touchDown) necessary to reach touchUp.
+                    
+                    // Return a value.
+                    return true;
+                    
                 }
                 
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
                 @Override
                 public void touchUp(InputEvent event, float x, float y, int pointer, int button)
                 {
+                    
+                    // The function occurs when the user lifts a finger or released a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
+                    // Notes:  Occurs when user releases mouse on label.
                     
                     // Update the selected menu item based on the label clicked.
                     menu_selector = label_id;
@@ -212,15 +236,40 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                     
                 }
                 
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // fromActor = Reference to actor losing focus.
                 @Override
                 public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
                 {
+                    
+                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
+                    
+                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                    // (pointer will be -1).
+                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
+                    
+                    // Apply a dark shade to the label.
                     customLabel.colorLabelDark();
+                    
                 }
                 
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // toActor = Reference to actor gaining focus.
                 @Override
                 public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
                 {
+                    
+                    // The function occurs when the mouse cursor or a finger touch is moved out of the actor.
+                    
+                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                    // (pointer will be -1).
+                    // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
                     
                     // If ignoring next exit event, then...
                     if (ignoreNextExitEvent)
@@ -240,7 +289,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                 }
                 
-            };
+            }; // End ... InputListener.
         
         // Add event to label.
         customLabel.addEvent(labelEvent);
@@ -279,7 +328,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             // Initialize label with text from current menu item.
             //menuLabels[counter] = new CustomLabel(game.skin, menuItem, "uiLabelStyle", 1.25f);
             menuLabels[counter] = new CustomLabel(game.skin, menuItemAdj, "uiLabelStyle", 1.0f, 
-              gameHD.config.getTextLineHeight());
+              gameHD.config.getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key());
             
             // Get height of current label.
             labelHeight = menuLabels[counter].getLabelHeight();
@@ -638,8 +687,8 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
 
                 default:
 
-                    // Displayed when button functionality not in place yet.
-                    System.out.println("Selected label " + menu_selector + ": " + menu[menu_selector]);
+                    // Unknown button type selected.
+                    System.out.println("Warning:  Unknown main menu option selected!");
 
                     // Exit selector.
                     break;
@@ -766,8 +815,8 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
 
                 default:
 
-                    // Displayed when button functionality not in place yet.
-                    System.out.println("Selected label " + menu_selector + ": " + menu[menu_selector]);
+                    // Unknown options menu button selected.
+                    System.out.println("Warning:  Unknown options button selected!");
 
                     // Exit selector.
                     break;

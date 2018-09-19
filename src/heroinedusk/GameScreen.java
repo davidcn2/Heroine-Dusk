@@ -206,7 +206,8 @@ public class GameScreen extends BaseScreen // Extends the BaseScreen class.
         // the current screen when switching from another.  Assumes earlier construction.
         
         CustomLabel instructions; // LibGDX Label object that will display main menu text.
-        instructions = new CustomLabel(game.skin, "GAME SCREEN", "uiLabelStyle", 2);
+        instructions = new CustomLabel(game.skin, "GAME SCREEN", "uiLabelStyle", 2, 
+         HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         //instructions.addAction_FadePartial();
         mainStage.addActor(instructions.displayLabel(200, 400));
         

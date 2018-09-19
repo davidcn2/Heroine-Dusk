@@ -17,15 +17,16 @@ public class HeroineEnum
     1.  ArmorEnum:  Enumerations related to armors.
     2.  DialogButtonEnum:  Enumerations related to dialog buttons.
     3.  FacingEnum:  Enumerations related to direction player is facing.
-    4.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
-    5.  ImgBackgroundEnum:  Enumerations related to background images.
-    6.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
-    7.  ListEnum:  Enumerations related to list types.
-    8.  ShopEnum:  Enumerations related to shops / locations.
-    9.  ShopTypeEnum:  Enumerations related to shop / location types.
-    10.  SoundsEnum:  Enumerations related to sounds.
-    11.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    12:  WeaponEnum:  Enumerations related to weapons.
+    4.  FontEnum:  Enumerations related to fonts.
+    5.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
+    6.  ImgBackgroundEnum:  Enumerations related to background images.
+    7.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
+    8.  ListEnum:  Enumerations related to list types.
+    9.  ShopEnum:  Enumerations related to shops / locations.
+    10.  ShopTypeEnum:  Enumerations related to shop / location types.
+    11.  SoundsEnum:  Enumerations related to sounds.
+    12.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    13:  WeaponEnum:  Enumerations related to weapons.
     */
     
     // Enumerations related to armors.
@@ -165,7 +166,7 @@ public class HeroineEnum
         
         public String getValue_Key() 
         {
-            // The function returns the key associated with texture.
+            // The function returns the key associated with the texture.
             // Example for use:  int x = HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key();
             
             // Return the key associated with the texture.
@@ -228,6 +229,67 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (FacingEnum) facingMap.get(facing);
+        }
+        
+    }
+    
+    // Enumerations related to fonts.
+    public enum FontEnum 
+    {
+        
+        FONT_UI (0, "uiFont"), // Regular font.
+        FONT_RED (1, "uiFontRed") // Red font.
+        ; // semicolon needed when fields / methods follow
+
+        private final int fontEnum; // Enumerations related to dialog buttons.
+        private final String fontSkinKey; // Key associated with font -- used with Skin.
+        private static final Map fontMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // fontEnum = Value to associate.
+        // fontSkinKey = Key associated with font -- used with Skin.
+        private FontEnum(int fontEnum, String fontSkinKey) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.fontEnum = fontEnum;
+            this.fontSkinKey = fontSkinKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (FontEnum fontEnum : FontEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                fontMap.put(fontEnum.fontEnum, fontEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.FontEnum.FONT_UI.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return fontEnum;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the key associated with the font.
+            // Example for use:  int x = HeroineEnum.FontEnum.FONT_UI.getValue_Key();
+            
+            // Return the key associated with the font.
+            return fontSkinKey;
+        }
+        
+        // font = Numeric value to convert to text.
+        public static FontEnum valueOf(int font) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (FontEnum) fontMap.get(font);
         }
         
     }

@@ -17,6 +17,7 @@ public class Dialog
     
     // Declare regular variables.
     protected int buttonCount; // Number of buttons of type Buy and Exit.
+    protected boolean fadeMessage; // Whether to fade next display of message.
     protected boolean items_for_sale; // Whether dialog related to items being offered for sale.
     protected String message; // Dialog message.
     protected int select_pos; // Selected button -- base 0.  Examples:  0, 1, 2.
@@ -33,17 +34,12 @@ public class Dialog
         // The constructor sets defaults and initializes arrays.
         
         // Set defaults.
-        buttonCount = -1; // Not determined yet.
-        optionCount = 0;
+        fadeMessage = false;
         message = "";
         title = "";
-        select_pos = 2; // Exit or similar button.
         
-        // Initialize arrays.
-        options = new Option[3]; 
-        
-        // Most shops should use the exit button as the third option.
-        options[2] = new Option(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_EXIT, 2, "Exit", "");
+        // Reset dialog.
+        resetDialog();
         
     }
     
@@ -92,8 +88,8 @@ public class Dialog
         // Add option.
         options[optionCount] = new Option(button, optionCount, msg1, msg2);
         
-        System.out.println("Adding option - " + optionCount + ": button: " + button + ", msg1: " + msg1 + 
-          ", msg2: " + msg2);
+        //System.out.println("Adding option - " + optionCount + ": button: " + button + ", msg1: " + msg1 + 
+        //  ", msg2: " + msg2);
         
         // Increment option count.
         optionCount++;
@@ -145,6 +141,24 @@ public class Dialog
         
         // Return count of buttons.
         return buttonCount;
+        
+    }
+    
+    public final void resetDialog()
+    {
+        
+        // The function resets most aspects of the dialog.
+        
+        // Set defaults.
+        buttonCount = -1; // Not determined yet.
+        optionCount = 0;
+        select_pos = 2; // Exit or similar button.
+        
+        // Initialize arrays.
+        options = new Option[3];
+        
+        // Most shops should use the exit button as the third option.
+        options[2] = new Option(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_EXIT, 2, "Exit", "");
         
     }
     

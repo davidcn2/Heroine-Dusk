@@ -3,6 +3,9 @@ package heroinedusk;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import core.AssetMgr;
 import core.BaseActor;
@@ -51,13 +54,16 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
     private ArrayList<CustomLabel> buttonLabels; // List of labels for buttons.
     private ArrayList<BaseActor> buttons; // List of base actors for buttons.
     private final Dialog dialog; // Reference to dialog object.
+    private CustomLabel dialogMsgLabel; // Label displaying dialog message.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
+    private CustomLabel goldLabel; // Label displaying player gold.
     private ArrayList<Label> removeList; // Array of Label objects to remove from screen.
     private BaseActor selector; // Base actor for the selector.
     private CustomLabel titleLabel; // Label displaying dialog title.
     
     // Declare regular variables.
     final private boolean initialized; // Whether screen initialized.
+    private ArrayList<Integer> labelCountList; // Number of labels per button.
     private int windowHeight; // Application window height.
     private int windowWidth; // Application window width.
     
@@ -116,29 +122,11 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         ArrayList<CustomLabel> buttonLabelCurr; // Label(s) for button message(s) for current option in loop.
         
         // Declare regular variables.
+        float adjPosY; // Adjustment factor (y-position) to use with relative positioning and label placement.
         String backgroundKey; // Key to background image in hash map (in asset manager).
-        float bottomY; // Y-coordinate of bottom of first button shown vertically.
-        float bottomY_Labels; // Y-coordinate of bottom of first label shown vertically.
-        int buttonCount; // Number of buttons of type buy or exit.
-        int buttonCounter; // Used to increment through buttons while adding them.
-        float buttonHeight; // Button height.
-        float buttonPosY; // Y-coordinate of bottom of current button.
-        float buttonPosY_Middle; // Y-coordinate of middle of current button.
-        float buttonWidth; // Button width.
-        int labelCountCurr; // Number of labels for current option.
-        float labelHeight; // Height (total) of label(s) for current option.
-        float labelHeightAdj; // Height of a single label added to space between.
-        float labelHeightSingle; // Height of a single label.
-        float labelPosX; // X-coordinate of left edge of labels.
-        float labelPosY; // Y-coordinate of bottom of current label.
-        
-        // Declare constants.
-        final float buttonPosX = 12.0f; // X-coordinate of buttons.
-        final float buttonDistanceVert = 18.0f; // Distance between buttons, vertically.
-        final float labelDistanceVert = 11.0f; // Distance between labels, vertically.
         
         // 1.  Set defaults.
-        buttonCounter = 0;
+        // No defaults currently.
         
         // 2.  Initialize arrays and array lists.
         buttonLabels = new ArrayList<>();
@@ -175,201 +163,95 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
             info_render_gold();
             }
         
-        System.out.println("Title: " + dialog.title);
-        
         // 4.  Render the title label.
         titleLabel = new CustomLabel(game.skin, dialog.title, "uiLabelStyle", 1.0f, 
           gameHD.config.getTextLineHeight(), CustomLabel.AlignEnum.ALIGN_CENTER, 
-          CustomLabel.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, -12f, 0, viewWidthMain);
+          CustomLabel.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, -12f, 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0, viewWidthMain);
         
         // 5.  Render the buttons and associated labels.
+        renderButtons();
         
-        // Count buttons.
-        buttonCount = gameHD.dialog.countButtons();
+        // 6.  Render the dialog message.
         
-        // Store button height and width.
-        buttonHeight = gameHD.assetMgr.getTextureRegionRect(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key()).height;
-        buttonWidth = gameHD.assetMgr.getTextureRegionRect(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key()).width;
+        // Calculate adjustment factor -- amount below top of screen for bottom of label.
+        adjPosY = -(mainStage.getHeight() * 0.25f + gameHD.config.getTextLineHeight());
         
-        // Store x-coordinate of left edge of labels.
-        labelPosX = buttonWidth + buttonPosX + 24f;
+        // Create and display label containing dialog message.
+        dialogMsgLabel = new CustomLabel(game.skin, dialog.message, "uiLabelStyle", 1.0f, 
+          gameHD.config.getTextLineHeight(), CustomLabel.AlignEnum.ALIGN_CENTER, 
+          CustomLabel.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, adjPosY, 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0, viewWidthMain);
         
-        // Calculate y-coordinate of bottom edge of buttons.
-        // Top edge = (Button height x count) + (distance between x (count - 1)).
-        // Bottom edge = Top edge - button height.
-        // Bottom edge = (Button height x (count - 1) + (distance between x (count - 1)).
-        // aka Buttom edge = (Button height x distance between) x (count - 1).
-        // LibGDX = Bottom edge.
-        bottomY = (buttonHeight + buttonDistanceVert) * (buttonCount - 1) + 5f;
+    }
+    
+    // button = Reference to BaseActor for the button.
+    // buttonNbr = Button number, base 0.  -1 = Selector.
+    public void addEvent(BaseActor button, int buttonNbr)
+    {
         
-        // Loop through options to get to buttons and text.
-        for (Dialog.Option option : gameHD.dialog.options)
-            
-        {
-            
-            // If buy or exit button, then...
-            if (option.button == HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY || 
-                option.button == HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_EXIT)
-                
+        // The function adds events to the passed button (BaseActor).
+        // Events include touchDown and touchUp.
+        
+        InputListener buttonEvent; // Events to add to passed button (BaseActor).
+        
+        // Craft event logic to add to passed button (BaseActor).
+        buttonEvent = new InputListener()
             {
                 
-                // Buy or exit button.
-                
-                // Create new BaseActor for the button.
-                button = new BaseActor();
-                
-                // Name actor associated with button.
-                button.setActorName("button" + option.buttonNbr);
-                
-                // Assign the Texture to the background Actor.
-                button.setTextureRegion(gameHD.assetMgr.getTextureRegion(option.button.getValue_Key()));
-                
-                // Calculate bottom and middle y-coordinates of current button.
-                buttonPosY = bottomY - (buttonCounter * (buttonHeight + buttonDistanceVert));
-                buttonPosY_Middle = buttonPosY + (buttonHeight / 2);
-                
-                // Position the background with its lower left corner at the corresponding location in the screen.
-                button.setPosition( buttonPosX, buttonPosY);
-                
-                // Add the background Actor to the scene graph.
-                mainStage.addActor( button );
-                
-                // Add button to array list.
-                buttons.add(button);
-                
-                // If current button selected, then...
-                if (option.buttonNbr == gameHD.dialog.select_pos)
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
                 {
                     
-                    // Current button selected.
+                    // The function occurs when the user touches the screen or presses a mouse button.
                     
-                    System.out.println("Current button selected.");
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS. 
+                    // Notes:  Occurs when user press down mouse on button.
+                    // Notes:  Event (touchDown) necessary to reach touchUp.
                     
-                    // Create new BaseActor for the selector.
-                    selector = new BaseActor();
-                    
-                    // Name actor associated with the selector.
-                    selector.setActorName("selector");
-                    
-                    // Assign the Texture to the selector Actor.
-                    selector.setTexture(gameHD.assetMgr.getImage_xRef(HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_SELECT.getValue_Key()));
-                    
-                    // Position the background with its lower left corner at the corresponding location in the screen.
-                    //selector.setPosition( ?, ? );
-                    
-                    // Add the background Actor to the scene graph.
-                    //mainStage.addActor( selector );
+                    // Return a value.
+                    return true;
                     
                 }
                 
-                // Reset label count and height.
-                labelCountCurr = 0;
-                labelHeight = 0;
-                
-                // Initialize array list for button label(s) for current option.
-                buttonLabelCurr = new ArrayList<>();
-                
-                // If first of two possible messages exists for button, then...
-                if (option.msg1.length() > 0)
-                    
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public void touchUp(InputEvent event, float x, float y, int pointer, int button)
                 {
                     
-                    // First of two possible messages exists for button.
+                    // The function occurs when the user lifts a finger or released a mouse button.
                     
-                    // Create button label.
-                    buttonLabelCurr.add(new CustomLabel(game.skin, option.msg1.toUpperCase(), "uiLabelStyle", 1.0f, 
-                      gameHD.config.getTextLineHeight()));
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
+                    // Notes:  Occurs when user releases mouse on button.
                     
-                    // Add height of current label.
-                    labelHeight += buttonLabelCurr.get(0).getLabelHeight();
+                    // If processing an event from a regular button and NOT the selector, then...
+                    if (buttonNbr > -1)
                     
-                    // Increment label count -- for current option / button.
-                    labelCountCurr++;
-                     
-                }
-                
-                // If second of two possible messages exists for button, then...
-                if (option.msg2.length() > 0)
+                        {
+                        // Processing an event from a regular button and NOT the selector.
+                            
+                        // Update the selected button number based on the one clicked.
+                        gameHD.dialog.select_pos = buttonNbr;
+                        }
                     
-                {
-                    
-                    // Second of two possible messages exists for button.
-                    
-                    // Create button label.
-                    buttonLabelCurr.add(new CustomLabel(game.skin, option.msg2.toUpperCase(), "uiLabelStyle", 1.0f, 
-                      gameHD.config.getTextLineHeight()));
-                    
-                    // Add height of current label.
-                    labelHeight += buttonLabelCurr.get(labelCountCurr).getLabelHeight();
-                    
-                    // Increment label count -- for current option / button.
-                    labelCountCurr++;
-                     
-                }
-                
-                // If one label exists for current option / button, then...
-                if (labelCountCurr == 1)
-                {
-                    // One label exists for current option / button.
-                    
-                    // Calculate y-coordinate of bottom of message (label) for current option / button.
-                    bottomY_Labels = buttonPosY_Middle - labelHeight / 2;
-                    
-                    // Add current label to scene graph.
-                    mainStage.addActor(buttonLabelCurr.get(0).displayLabel(labelPosX, bottomY_Labels));
-                    
-                    // Add current label to array list.
-                    buttonLabels.add(buttonLabelCurr.get(0));
+                    // Process logic related to the label clicked.
+                    gameHD.shopInfo.shop_act(buttonNbr);
                     
                 }
                 
-                // If more than one message exists for current option / button, then...
-                else if (labelCountCurr > 1)
-                    
-                {
-                    
-                    // More than one message exists for current option / button.
-                    
-                    // Calculate y-coordinate of bottom of first message (label) for current option / button.
-                    
-                    // Store height of a single label.
-                    labelHeightSingle = buttonLabelCurr.get(0).getLabelHeight();
-                    
-                    // Calculate height of a single label added to space in between.
-                    labelHeightAdj = labelHeightSingle + labelDistanceVert;
-                    
-                    // Bottom edge = Middle of button + ((0.5 * (label count - 1)) * distance between) + (label height * (0.5 * (label count - 1)))
-                    bottomY_Labels = buttonPosY_Middle + ((0.5f * (labelCountCurr - 1f)) * labelDistanceVert) + 
-                      (labelHeightSingle * (0.5f * (labelCountCurr - 2f)));
-                    
-                    // Loop through labels.
-                    for (int labelCounterCurr = 1; labelCounterCurr <= labelCountCurr; labelCounterCurr++)
-                        
-                    {
-                        
-                        // Calculate y-coordinate for current label.
-                        // Position = Bottom of first label - ((counter - 1) * (label height + distance between)).
-                        labelPosY = bottomY_Labels - (labelHeightAdj * (labelCounterCurr - 1));
-                        
-                        // Add current label to scene graph.
-                        mainStage.addActor(buttonLabelCurr.get(labelCounterCurr - 1).displayLabel(labelPosX, 
-                          labelPosY));
-                        
-                        // Add current label to array list.
-                        buttonLabels.add(buttonLabelCurr.get(labelCounterCurr - 1));
-                        
-                    } // End ... Loop through labels.
-                    
-                } // End ... If more than one label.
-                
-                // Increment button counter.
-                buttonCounter++;
-                
-            } // End ... If a buy or exit button...
-            
-        } // End ... Loop through options to get to buttons.
-            
+            }; // End ... InputListener.
         
+        // Add event to button.
+        button.addListener(buttonEvent);
         
     }
     
@@ -393,12 +275,324 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // The function renders the player gold-related label.
         
-        CustomLabel goldLabel; // Label displaying player gold.
-        
         // Render the player gold-related label.
         goldLabel = new CustomLabel(game.skin, gameHD.avatar.getGold() + " Gold", "uiLabelStyle", 1.0f, 
           gameHD.config.getTextLineHeight(), CustomLabel.AlignEnum.ALIGN_RIGHT, 
-          CustomLabel.PosRelativeEnum.REL_POS_LOWER_RIGHT, mainStage, -12f, 12f);
+          CustomLabel.PosRelativeEnum.REL_POS_LOWER_RIGHT, mainStage, -12f, 12f, 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key());
+        
+    }
+    
+    public void renderButtons()
+    {
+        
+        // The function renders the buttons, selector, and associated labels.
+        
+        // Declare object variables.
+        BaseActor button; // Base actor for a button.
+        ArrayList<CustomLabel> buttonLabelCurr; // Label(s) for button message(s) for current option in loop.
+        
+        // Declare regular variables.
+        boolean drawButton; // Whether to draw current button.
+        float bottomY; // Y-coordinate of bottom of first button shown vertically.
+        float bottomY_Labels; // Y-coordinate of bottom of first label shown vertically.
+        int buttonCount; // Number of buttons of type buy or exit.
+        int buttonCounter; // Used to increment through buttons while adding them.
+        float buttonHeight; // Button height.
+        float buttonPosY; // Y-coordinate of bottom of current button.
+        float buttonPosY_Middle; // Y-coordinate of middle of current button.
+        float buttonWidth; // Button width.
+        int labelCountCurr; // Number of labels for current option.
+        float labelHeight; // Height (total) of label(s) for current option.
+        float labelHeightAdj; // Height of a single label added to space between.
+        float labelHeightSingle; // Height of a single label.
+        float labelPosX; // X-coordinate of left edge of labels.
+        float labelPosY; // Y-coordinate of bottom of current label.
+        
+        // Declare constants.
+        final float buttonPosX = 12.0f; // X-coordinate of buttons.
+        final float buttonDistanceVert = 18.0f; // Distance between buttons, vertically.
+        final float buttonLabelDistanceHorz = 24.0f; // Distance between buttons and labels, horizontally.
+        final float buttonSelectorHeight = 12.0f; // Height of one border of selector.
+        final float labelDistanceVert = 11.0f; // Distance between labels, vertically.
+        
+        // Set defaults.
+        buttonCounter = 0;
+        
+        // Initialize array lists.
+        labelCountList = new ArrayList<>();
+        
+        // First, clear any existing buttons and labels, and the selector and remove them from the stage.
+        
+        // If one or more buttons exist, then...
+        if (buttons.size() > 0)
+        {
+            
+            // One or more buttons exist.
+            // Clear existing buttons.
+            buttons.forEach((currButton) -> {
+                // Remove button from stage.
+                currButton.remove();
+            });
+
+            // Reinitialize button list.
+            buttons = new ArrayList<>();
+            
+        }
+            
+        // If one or more button labels exist, then...
+        if (buttonLabels.size() > 0)
+        {
+            
+            // One or more button labels exist.
+            // Clear existing labels.
+            buttonLabels.forEach((currLabel) -> {
+                // Remove button label from stage.
+                currLabel.removeActor();
+            });
+
+            // Reinitialize button label list.
+            buttonLabels = new ArrayList<>();
+            
+        }
+        
+        // If selector exists, then...
+        if (selector != null)
+        {
+            
+            // Selector exists.
+            
+            // Remove selector from stage.
+            selector.remove();
+
+            // Clear selector from memory.
+            selector = null;
+            
+        }
+        
+        // Count buttons.
+        buttonCount = gameHD.dialog.options.length;
+        
+        // Store button height and width.
+        buttonHeight = gameHD.assetMgr.getTextureRegionRect(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key()).height;
+        buttonWidth = gameHD.assetMgr.getTextureRegionRect(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key()).width;
+        
+        // Store x-coordinate of left edge of labels.
+        labelPosX = buttonWidth + buttonPosX + buttonLabelDistanceHorz;
+        
+        // Calculate y-coordinate of bottom edge of buttons.
+        // Bottom edge = ((Button height x (count - 1) + (distance between x (count - 1))) + button selector edge height.
+        // aka Buttom edge = ((Button height x distance between) x (count - 1)) + button selector edge height.
+        // LibGDX = Bottom edge.
+        bottomY = (buttonHeight + buttonDistanceVert) * (buttonCount - 1) + buttonSelectorHeight;
+        
+        // Loop through options to get to buttons and text.
+        for (Dialog.Option option : gameHD.dialog.options)
+            
+        {
+                
+            // If buy or exit button then, then draw -- set to true.
+            // Otherwise, do not draw button -- set to false.
+            drawButton = option.button == HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY || 
+              option.button == HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_EXIT;
+
+            // Calculate bottom and middle y-coordinates of current button.
+            buttonPosY = bottomY - (buttonCounter * (buttonHeight + buttonDistanceVert));
+            buttonPosY_Middle = buttonPosY + (buttonHeight / 2);
+            
+            // If drawing button, then...
+            if (drawButton)    
+            {
+                
+                // Drawing button -- Buy or exit.
+                    
+                // Create new BaseActor for the button.
+                button = new BaseActor();
+
+                // Name actor associated with button.
+                button.setActorName("button" + option.buttonNbr);
+
+                // Assign the Texture to the background Actor.
+                button.setTextureRegion(gameHD.assetMgr.getTextureRegion(option.button.getValue_Key()));
+                
+                // Position the background with its lower left corner at the corresponding location in the screen.
+                button.setPosition( buttonPosX, buttonPosY);
+
+                // Add events to current button.
+                addEvent( button, option.buttonNbr );
+
+                // Add the background Actor to the scene graph.
+                mainStage.addActor( button );
+
+                // Add button to array list.
+                buttons.add(button);
+                
+                // If current button selected, then...
+                if (option.buttonNbr == gameHD.dialog.select_pos)
+                {
+
+                    // Current button selected.
+
+                    // Create new BaseActor for the selector.
+                    selector = new BaseActor();
+
+                    // Name actor associated with the selector.
+                    selector.setActorName("selector");
+
+                    // Assign the Texture to the selector Actor.
+                    selector.setTexture(gameHD.assetMgr.getImage_xRef(HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_SELECT.getValue_Key()));
+
+                    // Position the background with its lower left corner at the corresponding location in the screen.
+                    selector.setPosition( 0, buttonPosY - buttonSelectorHeight );
+
+                    // Add events to selector.
+                    addEvent( button, -1 );
+
+                    // Add the background Actor to the scene graph.
+                    mainStage.addActor( selector );
+
+                }
+            
+            } // End ... If drawing button.
+
+            // Reset label count and height.
+            labelCountCurr = 0;
+            labelHeight = 0;
+
+            // Initialize array list for button label(s) for current option.
+            buttonLabelCurr = new ArrayList<>();
+
+            // If first of two possible messages exists for button, then...
+            if (option.msg1.length() > 0)
+
+            {
+
+                // First of two possible messages exists for button.
+
+                // Create button label.
+                buttonLabelCurr.add(new CustomLabel(game.skin, option.msg1.toUpperCase(), "uiLabelStyle", 
+                  1.0f, gameHD.config.getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key()));
+
+                // Add height of current label.
+                labelHeight += buttonLabelCurr.get(0).getLabelHeight();
+
+                // Increment label count -- for current option / button.
+                labelCountCurr++;
+
+            }
+            
+            // If second of two possible messages exists for button, then...
+            if (option.msg2.length() > 0)
+
+            {
+
+                // Second of two possible messages exists for button.
+
+                // Create button label.
+                buttonLabelCurr.add(new CustomLabel(game.skin, option.msg2.toUpperCase(), "uiLabelStyle", 
+                  1.0f, gameHD.config.getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key()));
+
+                // Add height of current label.
+                labelHeight += buttonLabelCurr.get(labelCountCurr).getLabelHeight();
+
+                // Increment label count -- for current option / button.
+                labelCountCurr++;
+
+            }
+
+            // Store label count for current option / button.
+            labelCountList.add(labelCountCurr);
+
+            // If one label exists for current option / button, then...
+            if (labelCountCurr == 1)
+            {
+                // One label exists for current option / button.
+
+                // Calculate y-coordinate of bottom of message (label) for current option / button.
+                bottomY_Labels = buttonPosY_Middle - labelHeight / 2;
+
+                // Add current label to scene graph.
+                mainStage.addActor(buttonLabelCurr.get(0).displayLabel(labelPosX, bottomY_Labels));
+
+                // Add current label to array list.
+                buttonLabels.add(buttonLabelCurr.get(0));
+
+            }
+
+            // If more than one message exists for current option / button, then...
+            else if (labelCountCurr > 1)
+
+            {
+
+                // More than one message exists for current option / button.
+
+                // Calculate y-coordinate of bottom of first message (label) for current option / button.
+
+                // Store height of a single label.
+                labelHeightSingle = buttonLabelCurr.get(0).getLabelHeight();
+
+                // Calculate height of a single label added to space in between.
+                labelHeightAdj = labelHeightSingle + labelDistanceVert;
+
+                // Bottom edge = Middle of button + ((0.5 * (label count - 1)) * distance between) + (label height * (0.5 * (label count - 1)))
+                bottomY_Labels = buttonPosY_Middle + ((0.5f * (labelCountCurr - 1f)) * labelDistanceVert) + 
+                  (labelHeightSingle * (0.5f * (labelCountCurr - 2f)));
+
+                // Loop through labels.
+                for (int labelCounterCurr = 1; labelCounterCurr <= labelCountCurr; labelCounterCurr++)
+
+                {
+
+                    // Calculate y-coordinate for current label.
+                    // Position = Bottom of first label - ((counter - 1) * (label height + distance between)).
+                    labelPosY = bottomY_Labels - (labelHeightAdj * (labelCounterCurr - 1));
+
+                    // Add current label to scene graph.
+                    mainStage.addActor(buttonLabelCurr.get(labelCounterCurr - 1).displayLabel(labelPosX, 
+                      labelPosY));
+
+                    // Add current label to array list.
+                    buttonLabels.add(buttonLabelCurr.get(labelCounterCurr - 1));
+
+                } // End ... Loop through labels.
+
+            } // End ... If more than one label.
+
+            // Increment button counter.
+            buttonCounter++;
+            
+        } // End ... Loop through options to get to buttons.
+        
+    }
+    
+    public void render()
+    {
+        
+        // The function updates the screen based on the most recent information / status.
+        
+        // Update the player gold-related label.
+        goldLabel.setLabelText(gameHD.avatar.getGold() + " GOLD");
+        
+        // Render the buttons, selector, and associated labels.
+        renderButtons();
+        
+        // Update the dialog message label.
+        dialogMsgLabel.setLabelText_Center(gameHD.dialog.message.toUpperCase(), mainStage.getWidth());
+        
+        // If fade effect desired, then...
+        if (gameHD.dialog.fadeMessage)
+            
+        {
+            
+            // Fade effect desired.
+            
+            // Add fact action to label.
+            dialogMsgLabel.addAction_Fade();
+            
+            // Change flag to indicate application of fade effect.
+            gameHD.dialog.fadeMessage = false;
+            
+        }
         
     }
     
