@@ -14,23 +14,94 @@ public class HeroineEnum
     
     Enumerations include:
     
-    1.  ArmorEnum:  Enumerations related to armors.
-    2.  DialogButtonEnum:  Enumerations related to dialog buttons.
-    3.  FacingEnum:  Enumerations related to direction player is facing.
-    4.  FontEnum:  Enumerations related to fonts.
-    5.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
-    6.  ImgBackgroundEnum:  Enumerations related to background images.
-    7.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
-    8.  ListEnum:  Enumerations related to list types.
-    9.  ShopEnum:  Enumerations related to shops / locations.
-    10.  ShopTypeEnum:  Enumerations related to shop / location types.
-    11.  SoundsEnum:  Enumerations related to sounds.
-    12.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    13:  WeaponEnum:  Enumerations related to weapons.
+    1.  ActionButtonEnum:  Enumerations related to action buttons.
+    2.  ArmorEnum:  Enumerations related to armors.
+    3.  DialogButtonEnum:  Enumerations related to dialog buttons.
+    4.  EnemyCategoryEnum:  Enumerations related to enemy categories.
+    5.  EnemyEnum:  Enumerations related to enemies.
+    6.  FacingEnum:  Enumerations related to direction player is facing.
+    7.  FontEnum:  Enumerations related to fonts.
+    8.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
+    9.  ImgBackgroundEnum:  Enumerations related to background images.
+    10.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
+    11.  ListEnum:  Enumerations related to list types.
+    12.  MusicEnum:  Enumerations related to music.
+    13.  ShopEnum:  Enumerations related to shops / locations.
+    14.  ShopTypeEnum:  Enumerations related to shop / location types.
+    15.  SoundsEnum:  Enumerations related to sounds.
+    16.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    17:  WeaponEnum:  Enumerations related to weapons.
     */
     
+    // Enumerations related to action buttons.
+    public enum ActionButtonEnum 
+    {
+        
+        ACTION_BUTTON_ATTACK (0, "action_buttons0"), // Attack button.
+        ACTION_BUTTON_RUN (1, "action_buttons1"), // Run button.
+        ACTION_BUTTON_HEAL (2, "action_buttons2"), // Heal button.
+        ACTION_BUTTON_BURN (3, "action_buttons3"), // Burn button.
+        ACTION_BUTTON_UNLOCK (4, "action_buttons4"), // Unlock button.
+        ACTION_BUTTON_LIGHT (5, "action_buttons5"), // Light button.
+        ACTION_BUTTON_FREEZE (6, "action_buttons6"), // Freeze button.
+        ACTION_BUTTON_REFLECT (7, "action_buttons7") // Reflect button.
+        ; // semicolon needed when fields / methods follow
+
+        private final int actionButtonEnum; // Enumerations related to action buttons.
+        private final String actionButtonKey; // Key associated with texture -- used with asset manager and textureRegions hash map.
+        private static final Map actionButtonMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // actionButtonEnum = Value to associate.
+        // actionButtonKey = Key associated with texture -- used with asset manager and textureRegions hash map.
+        private ActionButtonEnum(int actionButtonEnum, String actionButtonKey) 
+        {
+            // The constructor sets the numeric values for each enumeration.
+            this.actionButtonEnum = actionButtonEnum;
+            this.actionButtonKey = actionButtonKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ActionButtonEnum actionButtonEnum : ActionButtonEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                actionButtonMap.put(actionButtonEnum.actionButtonEnum, actionButtonEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return actionButtonEnum;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the key associated with the texture.
+            // Example for use:  String x = HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT.getValue_Key();
+            
+            // Return the key associated with the texture.
+            return actionButtonKey;
+        }
+        
+        // actionButton = Numeric value to convert to text.
+        public static ActionButtonEnum valueOf(int actionButton) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ActionButtonEnum) actionButtonMap.get(actionButton);
+        }
+        
+    }
+    
     // Enumerations related to armors.
-    public enum ArmorEnum 
+    public enum ArmorEnum
     {
         
         NO_ARMOR (0, "No Armor", 0, 0), // No armor.
@@ -105,7 +176,7 @@ public class HeroineEnum
         public String getValue_CleanText() 
         {
             // The function returns the clean text value for the enumeration.
-            // Example for use:  int x = HeroineEnum.ArmorEnum.TRAVEL_CLOAK.getValue_CleanText();
+            // Example for use:  String x = HeroineEnum.ArmorEnum.TRAVEL_CLOAK.getValue_CleanText();
             
             // Return the clean text value for the enumeration.
             return armorText;
@@ -167,7 +238,7 @@ public class HeroineEnum
         public String getValue_Key() 
         {
             // The function returns the key associated with the texture.
-            // Example for use:  int x = HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key();
+            // Example for use:  String x = HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key();
             
             // Return the key associated with the texture.
             return dialogButtonKey;
@@ -178,6 +249,277 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (DialogButtonEnum) dialogButtonMap.get(dialogButton);
+        }
+        
+    }
+    
+    // Enumerations related to enemy categories.
+    public enum EnemyCategoryEnum 
+    {
+        
+        ENEMY_CATEGORY_SHADOW (0), // Shadow enemy types.
+        ENEMY_CATEGORY_DEMON (1), // Demon enemy types.
+        ENEMY_CATEGORY_UNDEAD (2), // Undead enemy types.
+        ENEMY_CATEGORY_AUTOMATON (3) // Automaton enemy types.
+        ; // semicolon needed when fields / methods follow
+
+        private final int enemyCategoryEnum; // Enumerations related to enemy categories.
+        private static final Map enemyCategoryMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // enemyCategoryEnum = Value to associate.
+        private EnemyCategoryEnum(int enemyCategoryEnum) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.enemyCategoryEnum = enemyCategoryEnum;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (EnemyCategoryEnum enemyCategoryEnum : EnemyCategoryEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                enemyCategoryMap.put(enemyCategoryEnum.enemyCategoryEnum, enemyCategoryEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = AtlasEnum.EnemyCategoryEnum.ENEMY_CATEGORY_DEMON.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return enemyCategoryEnum;
+        }
+        
+        // enemyCategory = Numeric value to convert to text.
+        public static EnemyCategoryEnum valueOf(int enemyCategory) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (EnemyCategoryEnum) enemyCategoryMap.get(enemyCategory);
+        }
+        
+    }
+    
+    // Enumerations related to music.
+    public enum EnemyEnum
+    {
+        ENEMY_SHADOW_TENDRILS (0, 2, 5, EnemyCategoryEnum.ENEMY_CATEGORY_SHADOW, 6, "Shadow Tendrils", 1, 
+          2, "shadow_tendrils.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK}), // Shadow tendrils.
+        ENEMY_IMP (1, 2, 6, EnemyCategoryEnum.ENEMY_CATEGORY_DEMON, 7, "Imp", 1, 3, "imp.png",
+          new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, EnemyPowerEnum.ENEMY_POWER_ATTACK, 
+              EnemyPowerEnum.ENEMY_POWER_SCORCH}), // Imp.
+        ENEMY_SHADOW_SOUL (2, 3, 8, EnemyCategoryEnum.ENEMY_CATEGORY_SHADOW, 8, "Shadow Soul", 
+          2, 4, "shadow_soul.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, 
+              EnemyPowerEnum.ENEMY_POWER_ATTACK, EnemyPowerEnum.ENEMY_POWER_MPDRAIN}), // Shadow soul
+        ENEMY_ZOMBIE (3, 4, 10, EnemyCategoryEnum.ENEMY_CATEGORY_UNDEAD, 12, "Zombie", 
+          3, 6, "zombie.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, 
+              EnemyPowerEnum.ENEMY_POWER_ATTACK, EnemyPowerEnum.ENEMY_POWER_HPDRAIN}), // Zombie.
+        ENEMY_SKELETON (4, 6, 12, EnemyCategoryEnum.ENEMY_CATEGORY_UNDEAD, 18, "Skeleton", 
+          5, 8, "skeleton.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK}), // Skeleton.
+        ENEMY_DRUID (5, 7, 14, EnemyCategoryEnum.ENEMY_CATEGORY_DEMON, 16, "Druid", 
+          7, 12, "druid.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, 
+              EnemyPowerEnum.ENEMY_POWER_SCORCH, EnemyPowerEnum.ENEMY_POWER_HPDRAIN, 
+              EnemyPowerEnum.ENEMY_POWER_MPDRAIN}), // Druid.
+        ENEMY_MIMIC (6, 10, 16, EnemyCategoryEnum.ENEMY_CATEGORY_AUTOMATON, 30, "Mimic", 
+          16, 25, "mimic.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK}), // Mimic.
+        ENEMY_DEATH_SPEAKER (7, 8, 15, EnemyCategoryEnum.ENEMY_CATEGORY_DEMON, 84, "Death Speaker", 
+          225, 275, "death_speaker.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, 
+              EnemyPowerEnum.ENEMY_POWER_SCORCH}) // Death speaker.
+        ; // semicolon needed when fields / methods follow
+        
+        private final int enemyAtkMax; // Enemy maximum attack value.
+        private final int enemyAtkMin; // Enemy minimum attack value.
+        private final EnemyCategoryEnum enemyCategory; // Enemy category.
+        private final int enemyEnum; // Enumerations related to enemies.
+        private final int enemyHP; // Enemy hit points.
+        private static final Map enemyMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        private final String enemyName; // Enemy name.
+        private final int enemyGoldMax; // Enemy maximum gold value.
+        private final int enemyGoldMin; // Enemy minimum gold value.
+        private final String imageFile; // Image filename (just name and extension, no path).
+        private final EnemyPowerEnum[] powers; // Enemy powers.
+        
+        // enemyEnum = Enumerations related to enemies.
+        // enemyAtkMin = Enemy minimum attack value.
+        // enemyAtkMax = Enemy maximum attack value.
+        // enemyCategory = Enemy category.
+        // enemyHP = Enemy hit points.
+        // enemyName = Enemy name.
+        // enemyGoldMin = Enemy minimum gold value.
+        // enemyGoldMax = Enemy maximum gold value.
+        // imageFile = Image filename (just name and extension, no path).
+        // powers = List of enemy powers.
+        private EnemyEnum(int enemyEnum, int enemyAtkMin, int enemyAtkMax, EnemyCategoryEnum enemyCategory, 
+          int enemyHP, String enemyName, int enemyGoldMin, int enemyGoldMax, String imageFile, 
+          EnemyPowerEnum[] powers) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.enemyEnum = enemyEnum;
+            this.enemyAtkMin = enemyAtkMin;
+            this.enemyAtkMax = enemyAtkMax;
+            this.enemyCategory = enemyCategory;
+            this.enemyHP = enemyHP;
+            this.enemyName = enemyName;
+            this.enemyGoldMin = enemyGoldMin;
+            this.enemyGoldMax = enemyGoldMax;
+            this.imageFile = imageFile;
+            this.powers = powers;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (EnemyEnum enemyEnum : EnemyEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                enemyMap.put(enemyEnum.enemyEnum, enemyEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return enemyEnum;
+        }
+        
+        public int getValue_AtkMax() 
+        {
+            // The function returns the maximum attack value for the enemy.
+            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_AtkMax();
+            
+            // Return the maximum attack value for the enemy.
+            return enemyAtkMax;
+        }
+        
+        public int getValue_AtkMin() 
+        {
+            // The function returns the minimum attack value for the enemy.
+            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_AtkMin();
+            
+            // Return the minimum attack value for the enemy.
+            return enemyAtkMin;
+        }
+        
+        public EnemyCategoryEnum getValue_Category() 
+        {
+            // The function returns the category for the enemy.
+            // Example for use:  MusicEnum x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Category();
+            
+            // Return the category for the enemy.
+            return enemyCategory;
+        }
+        
+        public int getValue_GoldMax() 
+        {
+            // The function returns the maximum gold value for the enemy.
+            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_GoldMax();
+            
+            // Return the maximum gold value for the enemy.
+            return enemyGoldMax;
+        }
+        
+        public int getValue_GoldMin() 
+        {
+            // The function returns the minimum gold value for the enemy.
+            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_GoldMin();
+            
+            // Return the minimum gold value for the enemy.
+            return enemyGoldMin;
+        }
+        
+        public int getValue_HP() 
+        {
+            // The function returns the hit points for the enemy.
+            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_HP();
+            
+            // Return the hit points for the enemy.
+            return enemyHP;
+        }
+        
+        public String getValue_Name() 
+        {
+            // The function returns the enemy name.
+            // Example for use:  String x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Name();
+            
+            // Return the enemy name.
+            return enemyName;
+        }
+        
+        public String getValue_ImageFile() 
+        {
+            // The function returns the image filename (just name and extension, no path).
+            // Example for use:  String x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_ImageFile();
+            
+            // Return the image filename.
+            return imageFile;
+        }
+        
+        // enemy = Numeric value to convert to text.
+        public static EnemyEnum valueOf(int enemy) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (EnemyEnum) enemyMap.get(enemy);
+        }
+        
+    }
+    
+    // Enumerations related to enemy powers.
+    public enum EnemyPowerEnum 
+    {
+        
+        ENEMY_POWER_ATTACK (0), // Power -- attack.
+        ENEMY_POWER_SCORCH (1), // Power -- scorch.
+        ENEMY_POWER_HPDRAIN (2), // Power -- hit point drain.
+        ENEMY_POWER_MPDRAIN (3) // Power - magic point drain.
+        ; // semicolon needed when fields / methods follow
+
+        private final int enemyPowerEnum; // Enumerations related to enemy powers.
+        private static final Map enemyPowerMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // enemyPowerEnum = Value to associate.
+        private EnemyPowerEnum(int enemyPowerEnum) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.enemyPowerEnum = enemyPowerEnum;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (EnemyPowerEnum enemyPowerEnum : EnemyPowerEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                enemyPowerMap.put(enemyPowerEnum.enemyPowerEnum, enemyPowerEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = AtlasEnum.EnemyPowerEnum.ENEMY_POWER_SCORCH.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return enemyPowerEnum;
+        }
+        
+        // enemyPower = Numeric value to convert to text.
+        public static EnemyPowerEnum valueOf(int enemyPower) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (EnemyPowerEnum) enemyPowerMap.get(enemyPower);
         }
         
     }
@@ -279,7 +621,7 @@ public class HeroineEnum
         public String getValue_Key() 
         {
             // The function returns the key associated with the font.
-            // Example for use:  int x = HeroineEnum.FontEnum.FONT_UI.getValue_Key();
+            // Example for use:  String x = HeroineEnum.FontEnum.FONT_UI.getValue_Key();
             
             // Return the key associated with the font.
             return fontSkinKey;
@@ -350,13 +692,14 @@ public class HeroineEnum
     public enum ImgBackgroundEnum 
     {
         
-        IMG_BACK_BLACK (0, "black.png", "black"), // Black background.
-        IMG_BACK_NIGHTSKY (1, "nightsky.png", "nightsky"), // Night sky background.
-        IMG_BACK_TEMPEST (2, "tempest.png", "tempest"), // Tempest background.
-        IMG_BACK_INTERIOR (3, "interior.png", "interior"), // Interior background.
-        IMG_BACK_TITLE (4, "title.png", "title") // Title (menu) background.
+        IMG_BACK_BLACK (0, "black.png", "black", false), // Black background.
+        IMG_BACK_NIGHTSKY (1, "nightsky.png", "nightsky", true), // Night sky background.
+        IMG_BACK_TEMPEST (2, "tempest.png", "tempest", false), // Tempest background.
+        IMG_BACK_INTERIOR (3, "interior.png", "interior", false), // Interior background.
+        IMG_BACK_TITLE (4, "title.png", "title", false) // Title (menu) background.
         ; // semicolon needed when fields / methods follow
 
+        private final boolean loadFirst; // Whether to load before other objects.  Used with title screen.
         private final int imgBackgroundEnum; // Enumerations related to background images.
         private final String imgFile; // Filename (just name and extension, no path).
         private final String imgKey; // Key associated with image -- used with asset manager hash map.
@@ -365,12 +708,14 @@ public class HeroineEnum
         // imgBackgroundEnum = Value to associate.
         // imgFile = Filename (just name and extension, no path).
         // imgKey = Key associated with image -- used with asset manager hash map.
-        private ImgBackgroundEnum(int imgBackgroundEnum, String imgFile, String imgKey) 
+        // loadFirst = Whether to load before other objects.  Used with title screen.
+        private ImgBackgroundEnum(int imgBackgroundEnum, String imgFile, String imgKey, boolean loadFirst) 
         {
             // The constructor sets the values for each enumeration.
             this.imgBackgroundEnum = imgBackgroundEnum;
             this.imgFile = imgFile;
             this.imgKey = imgKey;
+            this.loadFirst = loadFirst;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -398,7 +743,7 @@ public class HeroineEnum
         public String getValue_File() 
         {
             // The function returns the filename (just name and extension, no path).
-            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_BACK_TEMPEST.getValue_File();
+            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_BACK_TEMPEST.getValue_File();
             
             // Return the filename (just name and extension, no path).
             return imgFile;
@@ -407,10 +752,19 @@ public class HeroineEnum
         public String getValue_Key() 
         {
             // The function returns the image key -- used with the asset manager hash map.
-            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_BACK_TEMPEST.getValue_Key();
+            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_BACK_TEMPEST.getValue_Key();
             
             // Return the key.
             return imgKey;
+        }
+        
+        public boolean getValue_LoadFirst() 
+        {
+            // The function returns whether to load before other assets -- used with introduction screen.
+            // Example for use:  boolean x = HeroineEnum.ImgBackgroundEnum.IMG_BACK_TEMPEST.getValue_LoadFirst();
+            
+            // Return the flag.
+            return loadFirst;
         }
         
         // imgBackground = Numeric value to convert to text.
@@ -426,7 +780,7 @@ public class HeroineEnum
     public enum ImgInterfaceEnum 
     {
         
-        IMG_INTERFACE_ACTION_BTN (0, "action_buttons.png", "", "action_btn", ""), // Action buttons.
+        IMG_INTERFACE_ACTION_BTN (0, "action_buttons.png", "action_buttons.pack", "action_btn", "action_btn_atlas"), // Action buttons.
         IMG_INTERFACE_DIALOG_BTN (1, "dialog_buttons.png", "dialog_buttons.atlas", "dialog_btn", "dialog_btn_atlas"), // Dialog buttons.
         IMG_INTERFACE_HEROINE (2, "heroine.png", "", "heroine", ""), // Heroine -- character pictures.
         IMG_INTERFACE_INFO_BTN (3, "info_button.png", "", "info_btn", ""), // Information button.
@@ -483,7 +837,7 @@ public class HeroineEnum
         public String getValue_AtlasFile() 
         {
             // The function returns the filename (just name and extension, no path).
-            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasFile();
+            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasFile();
             
             // Return the filename (just name and extension, no path).
             return imgAtlasFile;
@@ -492,7 +846,7 @@ public class HeroineEnum
         public String getValue_AtlasKey() 
         {
             // The function returns the atlas key -- used with the asset manager hash map.
-            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasKey();
+            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasKey();
             
             // Return the atlas key.
             return imgAtlasKey;
@@ -501,7 +855,7 @@ public class HeroineEnum
         public String getValue_File() 
         {
             // The function returns the filename (just name and extension, no path).
-            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_File();
+            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_File();
             
             // Return the filename (just name and extension, no path).
             return imgFile;
@@ -510,7 +864,7 @@ public class HeroineEnum
         public String getValue_Key() 
         {
             // The function returns the image key -- used with the asset manager hash map.
-            // Example for use:  int x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_Key();
+            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_Key();
             
             // Return the image key.
             return imgKey;
@@ -571,6 +925,81 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (ListEnum) listMap.get(listType);
+        }
+        
+    }
+    
+    // Enumerations related to music.
+    public enum MusicEnum 
+    {
+        
+        MUSIC_ELEGY_DM (0, "elegy_dm.mp3", "elegy_dm.ogg"), // Elegy DM music.
+        MUSIC_HAPLY (1, "haply.mp3", "haply.ogg"), // Haply music.
+        MUSIC_KAWARAYU (2, "kawarayu.mp3", "kawarayu.ogg"), // Kawarayu music.
+        M31 (3, "m31.mp3", "m31.ogg") // M31 music.
+        ; // semicolon needed when fields / methods follow
+
+        private final int musicEnum; // Enumerations related to music.
+        private final String mp3File; // Filename (just name and extension, no path) in mp3 format.
+        private final String oggFile; // Filename (just name and extension, no path) in ogg format.
+        private static final Map musicMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // musicEnum = Value to associate.
+        // mp3File = Filename (just name and extension, no path) in mp3 format.
+        // oggFile = Filename (just name and extension, no path) in ogg format.
+        private MusicEnum(int musicEnum, String mp3File, String oggFile) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.musicEnum = musicEnum;
+            this.mp3File = mp3File;
+            this.oggFile = oggFile;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (MusicEnum musicEnum : MusicEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                musicMap.put(musicEnum.musicEnum, musicEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = AtlasEnum.MusicEnum.MUSIC_HAPLY.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return musicEnum;
+        }
+        
+        public String getValue_File_mp3() 
+        {
+            // The function returns the mp3 filename (just name and extension, no path).
+            // Example for use:  String x = AtlasEnum.MusicEnum.MUSIC_HAPLY.getValue_File_mp3();
+            
+            // Return the mp3 filename (just name and extension, no path).
+            return mp3File;
+        }
+        
+        public String getValue_File_ogg() 
+        {
+            // The function returns the ogg filename (just name and extension, no path).
+            // Example for use:  String x = AtlasEnum.MusicEnum.MUSIC_HAPLY.getValue_File_ogg();
+            
+            // Return the ogg filename (just name and extension, no path).
+            return oggFile;
+        }
+        
+        // music = Numeric value to convert to text.
+        public static MusicEnum valueOf(int music) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (MusicEnum) musicMap.get(music);
         }
         
     }
@@ -741,7 +1170,7 @@ public class HeroineEnum
         public String getValue_FilePath() 
         {
             // The function returns the relative file path value for the enumeration.
-            // Example for use:  int x = HeroineEnum.ArmorEnum.SOUND_RUN.getValue_FilePath();
+            // Example for use:  String x = HeroineEnum.ArmorEnum.SOUND_RUN.getValue_FilePath();
             
             // Return the relative file path value for the enumeration.
             return soundFilePath;
@@ -819,7 +1248,7 @@ public class HeroineEnum
         public String getValue_CleanText() 
         {
             // The function returns the clean text value for the enumeration.
-            // Example for use:  int x = HeroineEnum.SpellEnum.SPELL_LIGHT.getValue_CleanText();
+            // Example for use:  String x = HeroineEnum.SpellEnum.SPELL_LIGHT.getValue_CleanText();
             
             // Return the clean text value for the enumeration.
             return spellText;
@@ -922,7 +1351,7 @@ public class HeroineEnum
         public String getValue_CleanText() 
         {
             // The function returns the clean text value for the enumeration.
-            // Example for use:  int x = HeroineEnum.WeaponEnum.IRON_KNIFE.getValue_CleanText();
+            // Example for use:  String x = HeroineEnum.WeaponEnum.IRON_KNIFE.getValue_CleanText();
             
             // Return the clean text value for the enumeration.
             return weaponText;

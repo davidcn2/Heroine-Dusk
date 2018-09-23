@@ -11,6 +11,21 @@ public class Shops
     Methods include:
 
     populateShops:  Populates the shop class.
+    shop_act:  Performs an action based on the slot (button) clicked.
+    shop_buy_armor:  Handles logic related to purchasing an armor.
+    shop_buy_room:  Handles logic related to staying in a room / inn for a night.
+    shop_buy_spell:  Handles logic related to purchasing a spell.
+    shop_buy_weapon:  Handles logic related to purchasing a weapon.
+    shop_clear_slot:  Clears the specified slot in the shop / room / location / message, ...
+    shop_exit:  Handles logic for exiting the shop / location.
+    shop_reset:  Rebuilds the dialog using the active shop identifier.
+    shop_set:  Builds the dialog -- title and buttons and associated text.
+    shop_set_armor:  Handles adding an armor to a shop / location.
+    shop_set_buy:  Stores dialog information for the current shop item.
+    shop_set_message:  Handles adding messages to the dialog.
+    shop_set_room:  Handles adding dialog related to buying a room at an inn.
+    shop_set_spell:  Handles adding a spell to a shop / location.
+    shop_set_weapon:  Handles adding a weapon to a shop / location.
     */
     
     // Declare object variables.

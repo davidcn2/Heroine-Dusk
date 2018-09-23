@@ -1,0 +1,541 @@
+{
+  "mapCount" : 11,
+  "mapIdentifiers" : {
+    "Canal Boneyard" : 7,
+    "Cedar Village" : 5,
+    "Dead Walkways" : 9,
+    "Gar'ashi Monastery" : 1,
+    "Mausoleum" : 8,
+    "Meditation Point" : 3,
+    "Monastery Trail" : 4,
+    "Monk Quarters" : 2,
+    "Serf Quarters" : 0,
+    "Trade Tunnel" : 10,
+    "Zuruth Plains" : 6
+  },
+  "maps" : {
+    "MAP_00" : {
+      "enemyCount" : 0,
+      "exitCount" : 1,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 1,
+          "DEST_X" : 6,
+          "DEST_Y" : 6,
+          "EXIT_X" : 0,
+          "EXIT_Y" : 2
+        }
+      },
+      "regionBackground" : "IMG_BACK_TEMPEST",
+      "regionHeight" : 4,
+      "regionMusic" : "M31",
+      "regionName" : "Serf Quarters",
+      "regionNbr" : 0,
+      "regionWidth" : 3,
+      "shopCount" : 0,
+      "tiles" : {
+        "ROW_01" : [ 2, 2, 2 ],
+        "ROW_02" : [ 2, 17, 2 ],
+        "ROW_03" : [ 3, 5, 2 ],
+        "ROW_04" : [ 2, 2, 2 ]
+      }
+    },
+    "MAP_01" : {
+      "enemies" : {
+        "ENEMY_01" : "ENEMY_SHADOW_TENDRILS",
+        "ENEMY_02" : "ENEMY_IMP"
+      },
+      "enemyCount" : 2,
+      "exitCount" : 4,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 4,
+          "DEST_X" : 6,
+          "DEST_Y" : 2,
+          "EXIT_X" : 4,
+          "EXIT_Y" : 10
+        },
+        "EXIT_02" : {
+          "DEST_MAP" : 4,
+          "DEST_X" : 6,
+          "DEST_Y" : 2,
+          "EXIT_X" : 4,
+          "EXIT_Y" : 10
+        },
+        "EXIT_03" : {
+          "DEST_MAP" : 4,
+          "DEST_X" : 6,
+          "DEST_Y" : 2,
+          "EXIT_X" : 4,
+          "EXIT_Y" : 10
+        },
+        "EXIT_04" : {
+          "DEST_MAP" : 4,
+          "DEST_X" : 6,
+          "DEST_Y" : 2,
+          "EXIT_X" : 4,
+          "EXIT_Y" : 10
+        }
+      },
+      "regionBackground" : "IMG_BACK_NIGHTSKY",
+      "regionHeight" : 11,
+      "regionMusic" : "M31",
+      "regionName" : "Gar'ashi Monastery",
+      "regionNbr" : 1,
+      "regionWidth" : 9,
+      "shopCount" : 0,
+      "tiles" : {
+        "ROW_01" : [ 0, 0, 2, 2, 3, 2, 2, 0, 0 ],
+        "ROW_02" : [ 0, 0, 2, 4, 1, 4, 2, 0, 0 ],
+        "ROW_03" : [ 2, 2, 2, 1, 1, 1, 2, 2, 2 ],
+        "ROW_04" : [ 2, 6, 6, 4, 1, 4, 6, 6, 2 ],
+        "ROW_05" : [ 2, 6, 6, 1, 1, 1, 6, 6, 2 ],
+        "ROW_06" : [ 2, 2, 6, 4, 1, 4, 6, 2, 2 ],
+        "ROW_07" : [ 2, 3, 1, 1, 1, 1, 1, 3, 2 ],
+        "ROW_08" : [ 2, 2, 6, 4, 1, 4, 6, 2, 2 ],
+        "ROW_09" : [ 2, 6, 6, 1, 1, 1, 6, 6, 2 ],
+        "ROW_10" : [ 2, 6, 6, 4, 1, 4, 6, 6, 2 ],
+        "ROW_11" : [ 2, 2, 2, 2, 3, 2, 2, 2, 2 ]
+      }
+    },
+    "MAP_02" : {
+      "enemyCount" : 0,
+      "exitCount" : 1,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 1,
+          "DEST_X" : 2,
+          "DEST_Y" : 6,
+          "EXIT_X" : 2,
+          "EXIT_Y" : 2
+        }
+      },
+      "regionBackground" : "IMG_BACK_BLACK",
+      "regionHeight" : 4,
+      "regionMusic" : "M31",
+      "regionName" : "Monk Quarters",
+      "regionNbr" : 2,
+      "regionWidth" : 3,
+      "shopCount" : 0,
+      "tiles" : {
+        "ROW_01" : [ 2, 2, 2 ],
+        "ROW_02" : [ 2, 8, 2 ],
+        "ROW_03" : [ 2, 5, 3 ],
+        "ROW_04" : [ 2, 2, 2 ]
+      }
+    },
+    "MAP_03" : {
+      "enemyCount" : 0,
+      "exitCount" : 1,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 1,
+          "DEST_X" : 4,
+          "DEST_Y" : 1,
+          "EXIT_X" : 2,
+          "EXIT_Y" : 5
+        }
+      },
+      "regionBackground" : "IMG_BACK_TEMPEST",
+      "regionHeight" : 6,
+      "regionMusic" : "M31",
+      "regionName" : "Meditation Point",
+      "regionNbr" : 3,
+      "regionWidth" : 5,
+      "shopCount" : 0,
+      "tiles" : {
+        "ROW_01" : [ 0, 0, 0, 0, 0 ],
+        "ROW_02" : [ 0, 0, 9, 0, 0 ],
+        "ROW_03" : [ 0, 7, 5, 7, 0 ],
+        "ROW_04" : [ 0, 5, 5, 5, 0 ],
+        "ROW_05" : [ 0, 7, 5, 7, 0 ],
+        "ROW_06" : [ 2, 2, 3, 2, 2 ]
+      }
+    },
+    "MAP_04" : {
+      "enemies" : {
+        "ENEMY_01" : "ENEMY_SHADOW_TENDRILS",
+        "ENEMY_02" : "ENEMY_IMP",
+        "ENEMY_03" : "ENEMY_SHADOW_SOUL"
+      },
+      "enemyCount" : 3,
+      "exitCount" : 2,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 5,
+          "DEST_X" : 3,
+          "DEST_Y" : 1,
+          "EXIT_X" : 10,
+          "EXIT_Y" : 15
+        },
+        "EXIT_02" : {
+          "DEST_MAP" : 5,
+          "DEST_X" : 3,
+          "DEST_Y" : 1,
+          "EXIT_X" : 10,
+          "EXIT_Y" : 15
+        }
+      },
+      "regionBackground" : "IMG_BACK_NIGHTSKY",
+      "regionHeight" : 16,
+      "regionMusic" : "M31",
+      "regionName" : "Monastery Trail",
+      "regionNbr" : 4,
+      "regionWidth" : 14,
+      "shopCount" : 1,
+      "shops" : {
+        "SHOP_01" : {
+          "DEST_X" : 5,
+          "DEST_Y" : 12,
+          "EXIT_X" : 5,
+          "EXIT_Y" : 13,
+          "SHOP_ID" : "SHOP_WOODSMAN"
+        }
+      },
+      "tiles" : {
+        "ROW_01" : [ 0, 12, 12, 2, 0, 0, 0, 0, 0, 2, 12, 0, 0, 0 ],
+        "ROW_02" : [ 12, 12, 12, 2, 2, 2, 3, 2, 2, 2, 12, 0, 0, 0 ],
+        "ROW_03" : [ 12, 12, 9, 6, 12, 6, 1, 6, 6, 12, 12, 12, 0, 0 ],
+        "ROW_04" : [ 12, 12, 12, 6, 6, 6, 1, 12, 6, 6, 12, 12, 0, 0 ],
+        "ROW_05" : [ 0, 12, 12, 12, 12, 6, 1, 6, 6, 12, 12, 12, 0, 0 ],
+        "ROW_06" : [ 0, 0, 12, 12, 12, 12, 6, 6, 12, 12, 12, 12, 0, 0 ],
+        "ROW_07" : [ 0, 0, 0, 12, 12, 6, 6, 6, 6, 12, 12, 12, 12, 0 ],
+        "ROW_08" : [ 0, 0, 12, 12, 12, 6, 6, 12, 6, 6, 6, 12, 12, 0 ],
+        "ROW_09" : [ 0, 12, 12, 12, 6, 6, 12, 12, 12, 6, 12, 12, 12, 0 ],
+        "ROW_10" : [ 0, 12, 12, 6, 6, 6, 12, 12, 6, 6, 6, 12, 12, 0 ],
+        "ROW_11" : [ 0, 12, 12, 12, 6, 6, 6, 6, 6, 6, 12, 12, 12, 0 ],
+        "ROW_12" : [ 0, 0, 12, 12, 6, 6, 6, 12, 6, 6, 6, 12, 12, 12 ],
+        "ROW_13" : [ 0, 0, 12, 12, 12, 6, 12, 12, 12, 6, 1, 6, 12, 12 ],
+        "ROW_14" : [ 0, 0, 0, 12, 10, 11, 12, 12, 12, 12, 1, 6, 12, 12 ],
+        "ROW_15" : [ 0, 0, 0, 0, 12, 12, 12, 12, 12, 6, 1, 6, 12, 12 ],
+        "ROW_16" : [ 0, 0, 0, 0, 0, 0, 0, 12, 12, 2, 3, 2, 12, 12 ]
+      }
+    },
+    "MAP_05" : {
+      "enemyCount" : 0,
+      "exitCount" : 2,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 6,
+          "DEST_X" : 4,
+          "DEST_Y" : 3,
+          "EXIT_X" : 9,
+          "EXIT_Y" : 11
+        },
+        "EXIT_02" : {
+          "DEST_MAP" : 6,
+          "DEST_X" : 4,
+          "DEST_Y" : 3,
+          "EXIT_X" : 9,
+          "EXIT_Y" : 11
+        }
+      },
+      "regionBackground" : "IMG_BACK_NIGHTSKY",
+      "regionHeight" : 12,
+      "regionMusic" : "MUSIC_HAPLY",
+      "regionName" : "Cedar Village",
+      "regionNbr" : 5,
+      "regionWidth" : 12,
+      "shopCount" : 4,
+      "shops" : {
+        "SHOP_01" : {
+          "DEST_X" : 2,
+          "DEST_Y" : 8,
+          "EXIT_X" : 1,
+          "EXIT_Y" : 8,
+          "SHOP_ID" : "SHOP_SAGE_THEREL"
+        },
+        "SHOP_02" : {
+          "DEST_X" : 2,
+          "DEST_Y" : 8,
+          "EXIT_X" : 1,
+          "EXIT_Y" : 8,
+          "SHOP_ID" : "SHOP_SAGE_THEREL"
+        },
+        "SHOP_03" : {
+          "DEST_X" : 2,
+          "DEST_Y" : 8,
+          "EXIT_X" : 1,
+          "EXIT_Y" : 8,
+          "SHOP_ID" : "SHOP_SAGE_THEREL"
+        },
+        "SHOP_04" : {
+          "DEST_X" : 2,
+          "DEST_Y" : 8,
+          "EXIT_X" : 1,
+          "EXIT_Y" : 8,
+          "SHOP_ID" : "SHOP_SAGE_THEREL"
+        }
+      },
+      "tiles" : {
+        "ROW_01" : [ 2, 2, 2, 3, 2, 2, 2, 2, 0, 0, 0, 0 ],
+        "ROW_02" : [ 2, 6, 12, 1, 12, 6, 6, 2, 0, 0, 0, 0 ],
+        "ROW_03" : [ 2, 6, 6, 1, 6, 6, 12, 2, 0, 0, 0, 0 ],
+        "ROW_04" : [ 2, 12, 6, 1, 6, 10, 10, 2, 2, 2, 2, 2 ],
+        "ROW_05" : [ 2, 10, 10, 1, 10, 10, 11, 10, 10, 1, 10, 2 ],
+        "ROW_06" : [ 2, 10, 10, 1, 10, 1, 1, 1, 10, 1, 10, 2 ],
+        "ROW_07" : [ 2, 1, 1, 1, 1, 1, 12, 1, 1, 1, 1, 2 ],
+        "ROW_08" : [ 2, 10, 6, 10, 10, 1, 1, 1, 10, 1, 10, 2 ],
+        "ROW_09" : [ 2, 11, 6, 10, 10, 10, 11, 10, 11, 1, 10, 2 ],
+        "ROW_10" : [ 2, 10, 6, 10, 10, 10, 10, 10, 10, 1, 6, 2 ],
+        "ROW_11" : [ 2, 12, 6, 6, 6, 6, 6, 9, 12, 1, 12, 2 ],
+        "ROW_12" : [ 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2 ]
+      }
+    },
+    "MAP_06" : {
+      "enemies" : {
+        "ENEMY_01" : "ENEMY_IMP",
+        "ENEMY_02" : "ENEMY_SHADOW_SOUL",
+        "ENEMY_03" : "ENEMY_ZOMBIE"
+      },
+      "enemyCount" : 3,
+      "exitCount" : 3,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 10,
+          "DEST_X" : 2,
+          "DEST_Y" : 1,
+          "EXIT_X" : 8,
+          "EXIT_Y" : 15
+        },
+        "EXIT_02" : {
+          "DEST_MAP" : 10,
+          "DEST_X" : 2,
+          "DEST_Y" : 1,
+          "EXIT_X" : 8,
+          "EXIT_Y" : 15
+        },
+        "EXIT_03" : {
+          "DEST_MAP" : 10,
+          "DEST_X" : 2,
+          "DEST_Y" : 1,
+          "EXIT_X" : 8,
+          "EXIT_Y" : 15
+        }
+      },
+      "regionBackground" : "IMG_BACK_TEMPEST",
+      "regionHeight" : 16,
+      "regionMusic" : "M31",
+      "regionName" : "Zuruth Plains",
+      "regionNbr" : 6,
+      "regionWidth" : 16,
+      "shopCount" : 0,
+      "tiles" : {
+        "ROW_01" : [ 0, 0, 0, 0, 0, 0, 2, 12, 12, 12, 12, 12, 12, 15, 15, 15 ],
+        "ROW_02" : [ 0, 0, 0, 0, 0, 0, 2, 12, 12, 12, 12, 12, 12, 15, 15, 15 ],
+        "ROW_03" : [ 2, 2, 2, 2, 3, 2, 2, 6, 6, 6, 6, 6, 6, 15, 15, 15 ],
+        "ROW_04" : [ 12, 12, 12, 6, 1, 6, 6, 6, 7, 5, 7, 6, 6, 15, 15, 15 ],
+        "ROW_05" : [ 12, 12, 6, 6, 1, 6, 12, 6, 5, 8, 5, 6, 6, 15, 15, 15 ],
+        "ROW_06" : [ 12, 12, 6, 12, 1, 6, 6, 6, 7, 5, 7, 6, 6, 15, 15, 15 ],
+        "ROW_07" : [ 12, 12, 6, 6, 1, 6, 6, 6, 6, 6, 6, 6, 4, 15, 15, 15 ],
+        "ROW_08" : [ 12, 12, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+        "ROW_09" : [ 12, 12, 12, 6, 6, 6, 6, 6, 1, 6, 6, 6, 4, 15, 15, 15 ],
+        "ROW_10" : [ 12, 12, 6, 6, 6, 6, 12, 6, 1, 6, 12, 6, 6, 15, 15, 15 ],
+        "ROW_11" : [ 12, 12, 6, 6, 6, 12, 6, 6, 1, 6, 6, 6, 6, 15, 15, 15 ],
+        "ROW_12" : [ 12, 12, 12, 6, 6, 6, 6, 12, 1, 6, 6, 6, 12, 15, 15, 15 ],
+        "ROW_13" : [ 12, 12, 6, 6, 6, 6, 6, 6, 1, 6, 6, 6, 6, 15, 15, 15 ],
+        "ROW_14" : [ 12, 7, 5, 7, 5, 7, 5, 7, 5, 7, 5, 7, 6, 4, 15, 4 ],
+        "ROW_15" : [ 12, 2, 5, 5, 5, 2, 5, 5, 5, 5, 5, 2, 6, 15, 9, 15 ],
+        "ROW_16" : [ 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2 ]
+      }
+    },
+    "MAP_07" : {
+      "enemies" : {
+        "ENEMY_01" : "ENEMY_SHADOW_SOUL",
+        "ENEMY_02" : "ENEMY_ZOMBIE",
+        "ENEMY_03" : "ENEMY_SKELETON"
+      },
+      "enemyCount" : 3,
+      "exitCount" : 2,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 8,
+          "DEST_X" : 1,
+          "DEST_Y" : 7,
+          "EXIT_X" : 10,
+          "EXIT_Y" : 5
+        },
+        "EXIT_02" : {
+          "DEST_MAP" : 8,
+          "DEST_X" : 1,
+          "DEST_Y" : 7,
+          "EXIT_X" : 10,
+          "EXIT_Y" : 5
+        }
+      },
+      "regionBackground" : "IMG_BACK_TEMPEST",
+      "regionHeight" : 11,
+      "regionMusic" : "M31",
+      "regionName" : "Canal Boneyard",
+      "regionNbr" : 7,
+      "regionWidth" : 15,
+      "shopCount" : 0,
+      "tiles" : {
+        "ROW_01" : [ 0, 15, 15, 15, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ],
+        "ROW_02" : [ 0, 15, 15, 15, 12, 6, 6, 6, 6, 6, 14, 14, 13, 14, 2 ],
+        "ROW_03" : [ 0, 15, 15, 15, 13, 6, 14, 1, 14, 6, 13, 13, 14, 13, 2 ],
+        "ROW_04" : [ 6, 15, 15, 15, 6, 6, 14, 1, 13, 6, 6, 6, 6, 6, 2 ],
+        "ROW_05" : [ 4, 15, 15, 15, 4, 6, 13, 1, 14, 6, 2, 2, 2, 5, 2 ],
+        "ROW_06" : [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 2, 2, 8, 2 ],
+        "ROW_07" : [ 4, 15, 15, 15, 4, 6, 14, 1, 13, 6, 2, 2, 2, 5, 2 ],
+        "ROW_08" : [ 6, 15, 15, 15, 6, 6, 13, 1, 14, 6, 6, 6, 6, 6, 2 ],
+        "ROW_09" : [ 0, 15, 15, 15, 13, 6, 14, 1, 13, 6, 14, 13, 13, 14, 2 ],
+        "ROW_10" : [ 0, 15, 15, 15, 12, 6, 6, 6, 6, 6, 14, 13, 14, 13, 2 ],
+        "ROW_11" : [ 0, 15, 15, 15, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ]
+      }
+    },
+    "MAP_08" : {
+      "enemies" : {
+        "ENEMY_01" : "ENEMY_ZOMBIE",
+        "ENEMY_02" : "ENEMY_SKELETON",
+        "ENEMY_03" : "ENEMY_DRUID"
+      },
+      "enemyCount" : 3,
+      "exitCount" : 2,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 9,
+          "DEST_X" : 1,
+          "DEST_Y" : 5,
+          "EXIT_X" : 15,
+          "EXIT_Y" : 7
+        },
+        "EXIT_02" : {
+          "DEST_MAP" : 9,
+          "DEST_X" : 1,
+          "DEST_Y" : 5,
+          "EXIT_X" : 15,
+          "EXIT_Y" : 7
+        }
+      },
+      "regionBackground" : "IMG_BACK_TEMPEST",
+      "regionHeight" : 15,
+      "regionMusic" : "MUSIC_ELEGY_DM",
+      "regionName" : "Mausoleum",
+      "regionNbr" : 8,
+      "regionWidth" : 16,
+      "shopCount" : 0,
+      "tiles" : {
+        "ROW_01" : [ 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ],
+        "ROW_02" : [ 0, 0, 2, 2, 2, 7, 5, 5, 5, 5, 5, 5, 7, 15, 15, 2 ],
+        "ROW_03" : [ 0, 0, 2, 8, 16, 5, 5, 5, 15, 15, 5, 5, 5, 5, 15, 2 ],
+        "ROW_04" : [ 0, 0, 2, 2, 2, 2, 2, 5, 2, 2, 5, 2, 2, 5, 2, 2 ],
+        "ROW_05" : [ 0, 0, 0, 0, 0, 2, 2, 5, 2, 2, 5, 2, 7, 5, 2, 0 ],
+        "ROW_06" : [ 2, 2, 2, 2, 2, 2, 5, 5, 5, 5, 5, 16, 2, 5, 2, 0 ],
+        "ROW_07" : [ 2, 5, 7, 5, 2, 2, 5, 6, 6, 6, 6, 5, 2, 5, 7, 2 ],
+        "ROW_08" : [ 3, 5, 5, 5, 16, 5, 5, 6, 6, 6, 6, 5, 5, 16, 5, 3 ],
+        "ROW_09" : [ 2, 5, 7, 5, 2, 2, 5, 6, 6, 6, 6, 5, 2, 5, 7, 2 ],
+        "ROW_10" : [ 2, 2, 2, 2, 2, 2, 8, 5, 5, 5, 5, 17, 2, 5, 2, 0 ],
+        "ROW_11" : [ 0, 0, 0, 0, 0, 2, 2, 5, 2, 2, 5, 2, 7, 5, 2, 0 ],
+        "ROW_12" : [ 0, 0, 2, 2, 2, 2, 2, 5, 2, 2, 5, 2, 2, 5, 2, 2 ],
+        "ROW_13" : [ 0, 0, 2, 8, 18, 5, 5, 5, 15, 15, 5, 5, 5, 5, 15, 2 ],
+        "ROW_14" : [ 0, 0, 2, 2, 2, 7, 5, 5, 5, 5, 5, 5, 7, 15, 15, 2 ],
+        "ROW_15" : [ 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ]
+      }
+    },
+    "MAP_09" : {
+      "enemies" : {
+        "ENEMY_01" : "ENEMY_ZOMBIE",
+        "ENEMY_02" : "ENEMY_SKELETON",
+        "ENEMY_03" : "ENEMY_DRUID",
+        "ENEMY_04" : "ENEMY_DRUID"
+      },
+      "enemyCount" : 4,
+      "exitCount" : 1,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 8,
+          "DEST_X" : 14,
+          "DEST_Y" : 7,
+          "EXIT_X" : 0,
+          "EXIT_Y" : 5
+        }
+      },
+      "regionBackground" : "IMG_BACK_TEMPEST",
+      "regionHeight" : 10,
+      "regionMusic" : "MUSIC_ELEGY_DM",
+      "regionName" : "Dead Walkways",
+      "regionNbr" : 9,
+      "regionWidth" : 13,
+      "shopCount" : 0,
+      "tiles" : {
+        "ROW_01" : [ 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0 ],
+        "ROW_02" : [ 0, 0, 0, 0, 0, 0, 1, 2, 2, 1, 0, 0, 0 ],
+        "ROW_03" : [ 0, 4, 0, 0, 4, 0, 1, 5, 16, 1, 0, 4, 0 ],
+        "ROW_04" : [ 0, 0, 0, 1, 0, 0, 1, 2, 2, 1, 0, 0, 0 ],
+        "ROW_05" : [ 2, 0, 0, 1, 2, 2, 1, 0, 0, 1, 13, 14, 13 ],
+        "ROW_06" : [ 3, 1, 1, 1, 5, 16, 1, 0, 0, 1, 6, 19, 14 ],
+        "ROW_07" : [ 2, 0, 0, 1, 2, 2, 1, 0, 0, 1, 14, 13, 14 ],
+        "ROW_08" : [ 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0 ],
+        "ROW_09" : [ 0, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 4, 0 ],
+        "ROW_10" : [ 0, 0, 0, 0, 9, 1, 1, 1, 1, 0, 0, 0, 0 ]
+      }
+    },
+    "MAP_10" : {
+      "enemies" : {
+        "ENEMY_01" : "ENEMY_ZOMBIE",
+        "ENEMY_02" : "ENEMY_SKELETON",
+        "ENEMY_03" : "ENEMY_DRUID"
+      },
+      "enemyCount" : 3,
+      "exitCount" : 1,
+      "exits" : {
+        "EXIT_01" : {
+          "DEST_MAP" : 6,
+          "DEST_X" : 8,
+          "DEST_Y" : 14,
+          "EXIT_X" : 2,
+          "EXIT_Y" : 0
+        }
+      },
+      "regionBackground" : "IMG_BACK_TEMPEST",
+      "regionHeight" : 16,
+      "regionMusic" : "MUSIC_KAWARAYU",
+      "regionName" : "Trade Tunnel",
+      "regionNbr" : 10,
+      "regionWidth" : 16,
+      "shopCount" : 3,
+      "shops" : {
+        "SHOP_01" : {
+          "DEST_X" : 13,
+          "DEST_Y" : 8,
+          "EXIT_X" : 13,
+          "EXIT_Y" : 7,
+          "SHOP_ID" : "SHOP_THIEVES_GUILD"
+        },
+        "SHOP_02" : {
+          "DEST_X" : 13,
+          "DEST_Y" : 8,
+          "EXIT_X" : 13,
+          "EXIT_Y" : 7,
+          "SHOP_ID" : "SHOP_THIEVES_GUILD"
+        },
+        "SHOP_03" : {
+          "DEST_X" : 13,
+          "DEST_Y" : 8,
+          "EXIT_X" : 13,
+          "EXIT_Y" : 7,
+          "SHOP_ID" : "SHOP_THIEVES_GUILD"
+        }
+      },
+      "tiles" : {
+        "ROW_01" : [ 2, 2, 3, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0 ],
+        "ROW_02" : [ 2, 5, 5, 5, 2, 5, 5, 5, 2, 0, 2, 2, 2, 2, 2, 0 ],
+        "ROW_03" : [ 2, 5, 5, 5, 16, 5, 15, 5, 2, 0, 2, 8, 2, 8, 2, 0 ],
+        "ROW_04" : [ 2, 5, 5, 5, 2, 5, 15, 5, 2, 2, 2, 18, 2, 18, 2, 0 ],
+        "ROW_05" : [ 2, 2, 16, 2, 2, 5, 9, 5, 5, 5, 5, 5, 5, 5, 2, 0 ],
+        "ROW_06" : [ 2, 5, 5, 5, 2, 5, 15, 5, 2, 2, 2, 2, 2, 2, 2, 0 ],
+        "ROW_07" : [ 2, 5, 5, 5, 2, 5, 15, 5, 2, 0, 0, 0, 0, 0, 0, 0 ],
+        "ROW_08" : [ 2, 5, 5, 5, 2, 5, 1, 5, 2, 0, 0, 2, 2, 3, 2, 2 ],
+        "ROW_09" : [ 2, 7, 5, 5, 2, 5, 15, 5, 2, 0, 0, 2, 5, 5, 5, 2 ],
+        "ROW_10" : [ 2, 5, 5, 5, 2, 5, 15, 5, 2, 0, 0, 3, 5, 5, 8, 2 ],
+        "ROW_11" : [ 2, 5, 5, 5, 5, 5, 1, 5, 2, 0, 0, 2, 5, 5, 5, 2 ],
+        "ROW_12" : [ 2, 5, 5, 5, 2, 5, 15, 5, 2, 2, 2, 2, 2, 5, 2, 2 ],
+        "ROW_13" : [ 2, 2, 5, 2, 2, 5, 15, 5, 5, 5, 5, 5, 5, 5, 5, 2 ],
+        "ROW_14" : [ 2, 7, 5, 7, 2, 5, 15, 15, 1, 15, 15, 1, 15, 15, 5, 2 ],
+        "ROW_15" : [ 2, 2, 5, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 2 ],
+        "ROW_16" : [ 2, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ]
+      }
+    }
+  }
+}

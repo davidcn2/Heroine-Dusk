@@ -37,11 +37,12 @@ public class CustomProgressBar
     
     addAction_Fade:  Sets up a fade to nothing effect to use later with the progress bar.
     displayBar:  Displays the progress bar at the passed coordinates.  Used when first displaying the bar.
+    displayBarCenter:  Displays the progress bar in the center of the application window.
+    displayBarCenterHorz:  Displays the progress bar in the center of the application window.
     hideBar:  Uses a fading action to hide the progress bar.
     setBarHeight:  Sets the height of the progress bar.
     setBarWidth:  Sets the width of the progress bar.
     setValue:  Sets the value of the progress bar.
-    setVertical:  Sets the orientation of the progress bar (horizontal vs vertical).
     */
     
     // Declare object variables.
@@ -137,6 +138,26 @@ public class CustomProgressBar
         // Store location of progress bar -- using the center of the application window.
         barX = windowWidth / 2 - barWidth / 2;
         barY = windowHeight / 2 - barHeight / 2;
+        
+        // Set the location and dimensions of the progress bar.
+        progressBar.setBounds(barX, barY, barWidth, barHeight);
+        
+        // Return the progress bar.
+        return progressBar;
+        
+    }
+    
+    // windowWidth = Width of the application window.
+    // barY = Y-coordinate for placement of the bar.
+    public ProgressBar displayBarCenterHorz(int windowWidth, int barY)
+    {
+        
+        // The function displays the progress bar in the center of the application window.
+        // Example for use (1):  mainStage.addActor(progressBar.displayBarCenter(800, 600));
+        // Example for use (2):  mainStage.addActor(progressBar.displayBarCenter(config.getViewWidth(), config.getViewHeight()));
+        
+        // Store x-coordinate of progress bar -- using the center of the application window.
+        barX = windowWidth / 2 - barWidth / 2;
         
         // Set the location and dimensions of the progress bar.
         progressBar.setBounds(barX, barY, barWidth, barHeight);

@@ -215,7 +215,7 @@ public class AssetMgr
         for (String atlasKey : atlasKeyList)
         {
             
-            System.out.println("Loading texture regions for: " + atlasKey);
+            // System.out.println("Loading texture regions for: " + atlasKey);
         
             // Loop through texture regions in atlas.
             for (AtlasRegion region : getAtlas_xRef(atlasKey).getRegions())  

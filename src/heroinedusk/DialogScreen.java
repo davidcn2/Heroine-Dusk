@@ -1,9 +1,5 @@
 package heroinedusk;
 
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -42,8 +38,12 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
 
     Methods include:
 
+    addEvent:  Adds events to the passed button (BaseActor).
     create:  Calls constructor for BaseScreen and configures and adds objects in the dialog screen.
     dispose:  Called when removing the screen and allows for clearing of related resources from memory.
+    info_render_gold:  Renders the player gold-related label.
+    render:  Updates the screen based on the most recent information / status.
+    renderButtons:  Renders the buttons, selector, and associated labels.
     update:  Occurs during the update phase (render method) and contains code related to game logic.
     wakeScreen:  Called when redisplaying the already initialized screen.
     */
@@ -312,7 +312,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         // Declare constants.
         final float buttonPosX = 12.0f; // X-coordinate of buttons.
         final float buttonDistanceVert = 18.0f; // Distance between buttons, vertically.
-        final float buttonLabelDistanceHorz = 24.0f; // Distance between buttons and labels, horizontally.
+        final float buttonLabelDistanceHorz = 18.0f; // Distance between buttons and labels, horizontally.
         final float buttonSelectorHeight = 12.0f; // Height of one border of selector.
         final float labelDistanceVert = 11.0f; // Distance between labels, vertically.
         
@@ -412,7 +412,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Name actor associated with button.
                 button.setActorName("button" + option.buttonNbr);
 
-                // Assign the Texture to the background Actor.
+                // Assign the Texture to the button Actor.
                 button.setTextureRegion(gameHD.assetMgr.getTextureRegion(option.button.getValue_Key()));
                 
                 // Position the background with its lower left corner at the corresponding location in the screen.

@@ -25,26 +25,32 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     
     Methods include:
     
-    create:  sets up the skin and initializes and displays the title screen.
+    create:  Sets up the skin and initializes and displays the title screen.
     createSkin:  Sets up the skin.
     disposeScreens:  Disposes of LibGDX objects in screens.
+    renderDialogScreen:  Renders the dialog screen, incorporating any necessary updates.
+    setDialogScreen:  Switches to (displays) the dialog screen and hides the current.
     setGameScreen:  Switches to (displays) the main game screen and hides the current.
+    setIntroScreen:  Switches to (displays) the introduction screen and hides the current.
     setTitleScreen:  Switches to (displays) the title screen and hides the current.
     */
     
     // Declare object variables.
     protected AssetMgr assetMgr; // Enhanced asset manager.
+    protected Atlas atlas; // Atlas containing all map / region information.
     protected Avatar avatar; // Player information.
     protected final Config config; // Configuration information, including options.
     protected Dialog dialog; // Contains information related to current dialog window.
     private static DialogScreen dsMain; // Reference to dialog screen.
     private static GameScreen gsMain; // Reference to main game screen.
+    private static IntroScreen isMain; // Reference to introduction screen.
     protected Shops shopInfo; // Contains message-related information, mostly used for shops.
     protected Sounds sounds; // Contains logic related to playing sounds and music.
     private static TitleScreen tsMain; // Reference to title screen.
     
     // Declare regular variables.
     protected HeroineEnum.GameState gameState; // Game state.  See enumerated values in HeroineEnum for more details.
+    private String jsonDir; // Directory containing JSON files.
     private int windowWidth; // Width to use for stages.
     private int windowHeight; // Height to use for stages.
     
@@ -81,6 +87,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     {
         
         // The function sets up the skin and initializes and displays the title screen.
+        // The function is automatically called by the superclass.
         
         // Set defaults.
         gameState = HeroineEnum.GameState.STATE_TITLE;
@@ -88,8 +95,9 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // Set up the skin.
         createSkin();
         
-        // Initialize and display the title screen.
-        setTitleScreen();
+        // Initialize and display the introduction screen.
+        //setTitleScreen();
+        setIntroScreen();
         
     }
     
@@ -218,6 +226,9 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // The function disposes of LibGDX objects in screens.
         // The function also disposes of additional LibGDX, such as those related to sounds and music.
         
+        // Dispose of LibGDX objects related to introduction screen.
+        isMain.dispose();
+        
         // If main game screen initialized, then...
         if (gsMain != null)
             
@@ -241,6 +252,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // Renders the dialog screen, incorporating any necessary updates.
         
+        // Render the dialog screen.
         dsMain.render();
         
     }
@@ -255,6 +267,19 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // Launch dialog screen.
         setScreen(dsMain);
+        
+    }
+    
+    protected void setIntroScreen()
+    {
+        
+        // The function switches to (displays) the introduction screen and hides the current.
+        
+        // Initialize introduction screen object.
+        isMain = new IntroScreen(this, windowWidth, windowHeight);
+        
+        // Launch introduction screen.
+        setScreen(isMain);
         
     }
     
@@ -305,6 +330,16 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // Launch title screen.
         setScreen(tsMain);        
         
+    }
+    
+    // Getters and setters below...
+    
+    public String getJsonDir() {
+        return jsonDir;
+    }
+
+    public void setJsonDir(String jsonDir) {
+        this.jsonDir = jsonDir;
     }
     
 }

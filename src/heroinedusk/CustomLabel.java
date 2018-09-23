@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import routines.UtilityRoutines;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,18 +42,32 @@ public class CustomLabel
     Example of steps to add to stage:
     
     CustomLabel mainMenu; // LibGDX Label object that will display main menu text.
-    mainMenu = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2);
+    mainMenu = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f, "Key");
     mainMenu.addAction_FadePartial();
     mainStage.addActor(mainMenu.displayLabel(200, 200));
     
     Enumerations include:
     
     AlignEnum:  Enumerations related to text alignment.
+    PosRelativeEnum:  Enumerations related to relative positioning.
     
     Methods include:
     
+    addAction_Fade:  Sets up a fade effect for the label, fading out over the course of 1.0 seconds after 2.0 elapse.
     addAction_FadePartial:  Sets up a color fade effect for the label.
+    addEvent:  Adds the passed event logic to the label.
+    applyAction_Visible:  Depending on the passed parameter, either instantly displays or hides the label.
+    centerLabel:  Centers a label -- useful when text changes.
+    colorLabelDark:  Applies a dark shade to the label.
+    colorLabelMedium:  Applies a medium shade to the label.
+    colorLabelNormal:  Removes shading from the label.
     displayLabel:  Displays the label at the passed coordinates.
+    displayLabelAlignRight:  Positions the label with its right edge at passed X and top at specified Y coordinate.
+    displayLabelCenterX:  Centers the label at the passed Y coordinate.
+    removeActions:  Removes all actions from the label.
+    removeActor:  Removes the actor associated with the label.
+    setLabelText:  Updates the text of the label, using the existing bitmap font.
+    setLabelTextCenter:  Updates the text of the label and centers the revised object across the screen.
     */
     
     // Declare object variables.
@@ -82,7 +97,7 @@ public class CustomLabel
     {
         
         // The constructor creates a label.
-        // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
+        // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f, "Key");
         
         // Initialize the hash map for actions.
         actionMapping = new HashMap<>();
@@ -600,9 +615,42 @@ public class CustomLabel
         actionMapping.putIfAbsent("FadePartial", 
           Actions.forever(
             Actions.sequence(
-              Actions.color( new Color(1, 1, 0, 1), 0.5f ),
+              Actions.color( new Color(1f, 1f, 0f, 1f), 0.5f ),
               Actions.delay( 0.5f ),
-              Actions.color( new Color(0.5f, 0.5f, 0, 1), 0.5f )
+              Actions.color( new Color(0.5f, 0.5f, 0f, 1f), 0.5f )
+            )));
+        
+        // Set up color pause effect for the label.
+        customLabel.addAction(actionMapping.get("FadePartial"));
+        
+    }
+    
+    // redFrom = Red portion of starting color value, in RGB format.
+    // greenFrom = Green portion of starting color value, in RGB format.
+    // blueFrom = Blue portion of starting color value, in RGB format.
+    // redTo = Red portion of ending color value, in RGB format.
+    // greenTo = Green portion of ending color value, in RGB format.
+    // blueTo = Blue portion of ending color value, in RGB format.
+    public void addAction_FadePartial(float redFrom, float greenFrom, float blueFrom, float redTo, float greenTo,
+      float blueTo)
+    {
+        
+        // The function sets up a color fade effect for the label using the passed color values.
+        
+        Color colorFrom; // Starting color value, in LibGDX format.
+        Color colorTo; // Ending color value, in LibGDX format.
+        
+        // Convert colors from RGB to LibGDX format.
+        colorFrom = UtilityRoutines.toRGB(redFrom, greenFrom, blueFrom);
+        colorTo = UtilityRoutines.toRGB(redTo, greenTo, blueTo);
+        
+        // Add action to hash map.
+        actionMapping.putIfAbsent("FadePartial", 
+          Actions.forever(
+            Actions.sequence(
+              Actions.color( colorFrom, 0.5f ),
+              Actions.delay( 0.5f ),
+              Actions.color( colorTo, 0.5f )
             )));
         
         // Set up color pause effect for the label.
@@ -660,7 +708,7 @@ public class CustomLabel
         // Example for use:  labelTitle.centerLabel(viewWidthMain);
         
         // Store location of label.
-        this.posX = stageWidth / 2 - customLabel.getWidth() / 2;
+        this.posX = stageWidth / 2 - (customLabel.getWidth() * this.labelScale) / 2;
         
         // Set the location of the label.
         customLabel.setPosition(this.posX, this.posY);
@@ -671,6 +719,12 @@ public class CustomLabel
     {
         // The function applies a dark shade to the label.
         customLabel.setColor(Color.DARK_GRAY);
+    }
+    
+    public void colorLabelMedium()
+    {
+        // The function applies a medium shade to the label.
+        customLabel.setColor(Color.LIGHT_GRAY);
     }
     
     public void colorLabelNormal()
@@ -704,7 +758,7 @@ public class CustomLabel
     public final Label displayLabelAlignRight(float posX, float posY)
     {
         
-        // The function positions the label with its right edge at the passed X and top at the passed 
+        // The function positions the label with its right edge at the passed X and top at the specified 
         // Y coordinate.
         // Example for use:  mainStage.addActor(labelTitle.displayLabelAlignRight(384f, 300f));
         
@@ -729,40 +783,15 @@ public class CustomLabel
         // The function centers the label at the passed Y coordinate.
         // Example for use:  mainStage.addActor(labelTitle.displayLabelCenterX(384f, viewWidthMain));
         
-        // Store location of label.
-        this.posX = stageWidth / 2 - Math.round(customLabel.getWidth()) / 2;
+        // Store y-coordinate of label.
         this.posY = posY;
         
-        // Set the location of the label.
-        customLabel.setPosition(this.posX, this.posY);
+        // Center label across stage.
+        setLabelText_Center(this.labelText, stageWidth);
         
         // Return the label.
         return customLabel;
         
-    }
-    
-    // Getters and setters below...
-    
-    public Label getLabel()
-    {
-        // The function returns a reference to the label object.
-        return customLabel;
-    }
-    
-    public float getLabelHeight()
-    {
-        // The function returns the label height.
-        
-        // Return the height of the label.
-        return customLabel.getHeight();
-    }
-    
-    public String getLabelText()
-    {
-        // The function returns the label text.
-        
-        // Return the text of the label.
-        return labelText;
     }
     
     public void removeActions()
@@ -858,6 +887,30 @@ public class CustomLabel
         // Update and recenter label text.
         setLabelText_Center(labelText, bitmapFont, stageWidth);
         
+    }
+    
+    // Getters and setters below...
+    
+    public Label getLabel()
+    {
+        // The function returns a reference to the label object.
+        return customLabel;
+    }
+    
+    public float getLabelHeight()
+    {
+        // The function returns the label height.
+        
+        // Return the height of the label.
+        return customLabel.getHeight();
+    }
+    
+    public String getLabelText()
+    {
+        // The function returns the label text.
+        
+        // Return the text of the label.
+        return labelText;
     }
     
 }

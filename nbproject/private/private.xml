@@ -2,13 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="HeroineDusk">
-            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/heroinedusk/DialogScreen.java</file>
-            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/heroinedusk/TitleScreen.java</file>
-            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/heroinedusk/Dialog.java</file>
-            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/heroinedusk/Shops.java</file>
-            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/heroinedusk/CustomLabel.java</file>
-            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/heroinedusk/HeroineDuskGame.java</file>
-        </group>
+        <group name="HeroineDusk"/>
     </open-files>
 </project-private>

@@ -8,11 +8,13 @@ public class Dialog
     
     Inner classes include:
     
-    Option:  Store option related information (button and two messages).
+    Option:  Stores option related information (button and two messages).
     
     Methods include:
 
     addOption:  Adds an option to the dialog.
+    countButtons:  Stores and returns a count of the number of buttons.
+    resetDialog:  Resets most aspects of the dialog.
     */
     
     // Declare regular variables.
