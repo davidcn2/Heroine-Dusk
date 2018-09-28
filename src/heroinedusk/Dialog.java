@@ -19,16 +19,16 @@ public class Dialog
     
     // Declare regular variables.
     protected int buttonCount; // Number of buttons of type Buy and Exit.
-    protected boolean fadeMessage; // Whether to fade next display of message.
-    protected boolean items_for_sale; // Whether dialog related to items being offered for sale.
-    protected String message; // Dialog message.
-    protected int select_pos; // Selected button -- base 0.  Examples:  0, 1, 2.
+    private boolean fadeMessage; // Whether to fade next display of message.
+    private boolean items_for_sale; // Whether dialog related to items being offered for sale.
+    private String message; // Dialog message.
+    private int select_pos; // Selected button -- base 0.  Examples:  0, 1, 2.
     protected Shop shop; // Reference to current shop.
-    protected HeroineEnum.ShopEnum shop_id; // Identifier of current shop / location.  
+    private HeroineEnum.ShopEnum shop_id; // Identifier of current shop / location.  
       // Only meaningful when in a shop / location.  Matches to a ShopEnum value.
-    protected String title; // Name of current shop / location.
+    private String title; // Name of current shop / location.
     private int optionCount; // Number of options.
-    protected Option[] options; // Dialog button information.
+    private Option[] options; // Dialog button information.
     
     public Dialog()
     {
@@ -53,10 +53,10 @@ public class Dialog
         // The inner class stores dialog button information.
         
         // Declare regular variables.
-        protected HeroineEnum.DialogButtonEnum button; // Identifier of button to display.
-        protected int buttonNbr; // Button number, base 0.
-        protected String msg1; // First line of text to display near button.
-        protected String msg2; // Second line of text to display near button.
+        public HeroineEnum.DialogButtonEnum button; // Identifier of button to display.
+        public int buttonNbr; // Button number, base 0.
+        public String msg1; // First line of text to display near button.
+        public String msg2; // Second line of text to display near button.
 
         // button = Identifier of button to display.
         // buttonNbr = Button number, base 0.
@@ -162,6 +162,60 @@ public class Dialog
         // Most shops should use the exit button as the third option.
         options[2] = new Option(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_EXIT, 2, "Exit", "");
         
+    }
+    
+    // Getters and setters below...
+    
+    public boolean isFadeMessage() {
+        return fadeMessage;
+    }
+    
+    public void setFadeMessage(boolean fadeMessage) {
+        this.fadeMessage = fadeMessage;
+    }
+    
+    public boolean isItems_for_sale() {
+        return items_for_sale;
+    }
+    
+    public void setItems_for_sale(boolean items_for_sale) {
+        this.items_for_sale = items_for_sale;
+    }
+    
+    public String getMessage() {
+        return message;
+    }
+    
+    public void setMessage(String message) {
+        this.message = message;
+    }
+    
+    public Option[] getOptions() {
+        return options;
+    }
+    
+    public int getSelect_pos() {
+        return select_pos;
+    }
+    
+    public void setSelect_pos(int select_pos) {
+        this.select_pos = select_pos;
+    }
+    
+    public HeroineEnum.ShopEnum getShop_id() {
+        return shop_id;
+    }
+    
+    public void setShop_id(HeroineEnum.ShopEnum shop_id) {
+        this.shop_id = shop_id;
+    }
+    
+    public String getTitle() {
+        return title;
+    }
+    
+    public void setTitle(String title) {
+        this.title = title;
     }
     
 }

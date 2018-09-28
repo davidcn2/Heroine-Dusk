@@ -1,5 +1,6 @@
 package heroinedusk;
 
+// LibGDX imports.
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -12,9 +13,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import core.AssetMgr;
 
+// Local project imports.
+import core.AssetMgr;
 import core.BaseGame;
+import screens.DialogScreen;
+import screens.ExploreScreen;
+import screens.GameScreen;
+import screens.IntroScreen;
+import screens.TitleScreen;
 
 public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
 {
@@ -36,20 +43,22 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     */
     
     // Declare object variables.
-    protected AssetMgr assetMgr; // Enhanced asset manager.
-    protected Atlas atlas; // Atlas containing all map / region information.
-    protected Avatar avatar; // Player information.
-    protected final Config config; // Configuration information, including options.
-    protected Dialog dialog; // Contains information related to current dialog window.
+    private AssetMgr assetMgr; // Enhanced asset manager.
+    private Atlas atlas; // Atlas containing all map / region information.
+    private AtlasItems atlasItems; // Atlas item information.
+    private Avatar avatar; // Player information.
+    private final Config config; // Configuration information, including options.
+    private Dialog dialog; // Contains information related to current dialog window.
     private static DialogScreen dsMain; // Reference to dialog screen.
+    private static ExploreScreen esMain; // Reference to explore screen.
     private static GameScreen gsMain; // Reference to main game screen.
     private static IntroScreen isMain; // Reference to introduction screen.
-    protected Shops shopInfo; // Contains message-related information, mostly used for shops.
-    protected Sounds sounds; // Contains logic related to playing sounds and music.
+    private Shops shopInfo; // Contains message-related information, mostly used for shops.
+    private Sounds sounds; // Contains logic related to playing sounds and music.
     private static TitleScreen tsMain; // Reference to title screen.
     
     // Declare regular variables.
-    protected HeroineEnum.GameState gameState; // Game state.  See enumerated values in HeroineEnum for more details.
+    private HeroineEnum.GameState gameState; // Game state.  See enumerated values in HeroineEnum for more details.
     private String jsonDir; // Directory containing JSON files.
     private int windowWidth; // Width to use for stages.
     private int windowHeight; // Height to use for stages.
@@ -220,7 +229,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
     }
     
-    protected void disposeScreens()
+    public void disposeScreens()
     {
         
         // The function disposes of LibGDX objects in screens.
@@ -257,7 +266,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
     }
     
-    protected void setDialogScreen()
+    public void setDialogScreen()
     {
         
         // The function switches to (displays) the dialog screen and hides the current.
@@ -267,6 +276,30 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // Launch dialog screen.
         setScreen(dsMain);
+        
+    }
+    
+    public void setExploreScreen()
+    {
+        
+        // The function switches to (displays) the explore screen and hides the current.
+        
+        // If explore screen object initialized, then...
+        if (esMain == null)
+            {
+            // Explore screen object not initialized yet.
+            // Initialize explore screen object.
+            esMain = new ExploreScreen(this, windowWidth, windowHeight);
+            }
+        else
+            {
+            // Explore screen object initialized already.
+            // Update multiplexer and display.
+            esMain.wakeScreen();
+            }
+            
+        // Launch explore screen.
+        setScreen(esMain);   
         
     }
     
@@ -284,7 +317,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     }
     
     // resetGame = Whether to reset game.
-    protected void setGameScreen(boolean resetGame)
+    public void setGameScreen(boolean resetGame)
     {
         
         // The function switches to (displays) the main game screen and hides the current.
@@ -308,7 +341,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
     }
     
-    protected void setTitleScreen()
+    public void setTitleScreen()
     {
         
         // The function switches to (displays) the title screen and hides the current.
@@ -328,11 +361,51 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
             }
             
         // Launch title screen.
-        setScreen(tsMain);        
+        setScreen(tsMain);
         
     }
     
     // Getters and setters below...
+
+    public AssetMgr getAssetMgr() {
+        return assetMgr;
+    }
+
+    public Atlas getAtlas() {
+        return atlas;
+    }
+
+    public AtlasItems getAtlasItems() {
+        return atlasItems;
+    }
+    
+    public void setAtlas(Atlas atlas) {
+        this.atlas = atlas;
+    }
+    
+    public void setAtlasItems(AtlasItems atlasItems) {
+        this.atlasItems = atlasItems;
+    }
+    
+    public Avatar getAvatar() {
+        return avatar;
+    }
+
+    public Config getConfig() {
+        return config;
+    }
+
+    public Dialog getDialog() {
+        return dialog;
+    }
+
+    public HeroineEnum.GameState getGameState() {
+        return gameState;
+    }
+
+    public void setGameState(HeroineEnum.GameState gameState) {
+        this.gameState = gameState;
+    }
     
     public String getJsonDir() {
         return jsonDir;
@@ -342,4 +415,16 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         this.jsonDir = jsonDir;
     }
     
+    public Shops getShopInfo() {
+        return shopInfo;
+    }
+
+    public Sounds getSounds() {
+        return sounds;
+    }
+
+    public void setSounds(Sounds sounds) {
+        this.sounds = sounds;
+    }
+
 }

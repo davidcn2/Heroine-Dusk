@@ -1,5 +1,6 @@
 package core;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.Texture;
@@ -122,6 +123,75 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
     }
 
+    // actorName = Name of actor.
+    // filename = Full path to file containing image to load.
+    // x = X-coordinate at which to place lower left corner of the actor.
+    // y = Y-coordinate at which to place lower left corner of the actor.
+    public BaseActor(String actorName, String filename, float x, float y)
+    {
+        
+        // The constructor creates a base actor, loading the image from a file, based on the passed properties.
+        
+        // Call basic logic related to a new base actor.
+        this();
+        
+        // Name actor.
+        this.actorName = actorName;
+        
+        // Assign texture to actor.
+        setTexture( new Texture(Gdx.files.internal(filename)) );
+        
+        // Position the background with its lower left corner at the corresponding location in the screen.
+        setPosition( x, y );
+        
+    }
+    
+    // actorName = Name of actor.
+    // texture = Texture to assign to actor.
+    // x = X-coordinate at which to place lower left corner of the actor.
+    // y = Y-coordinate at which to place lower left corner of the actor.
+    public BaseActor(String actorName, Texture texture, float x, float y)
+    {
+        
+        // The constructor creates a base actor using a texture based on the passed properties.
+        
+        // Call basic logic related to a new base actor.
+        this();
+        
+        // Name actor.
+        this.actorName = actorName;
+        
+        // Assign texture to actor.
+        setTexture( texture );
+        
+        // Position the background with its lower left corner at the corresponding location in the screen.
+        setPosition( x, y );
+        
+    }
+    
+    // actorName = Name of actor.
+    // textureRegion = Texture region to assign to actor.
+    // x = X-coordinate at which to place lower left corner of the actor.
+    // y = Y-coordinate at which to place lower left corner of the actor.
+    public BaseActor(String actorName, TextureRegion textureRegion, float x, float y)
+    {
+        
+        // The constructor creates a base actor using a texture based on the passed properties.
+        
+        // Call basic logic related to a new base actor.
+        this();
+        
+        // Name actor.
+        this.actorName = actorName;
+        
+        // Assign texture region to actor.
+        setTextureRegion( textureRegion );
+        
+        // Position the background with its lower left corner at the corresponding location in the screen.
+        setPosition( x, y );
+        
+    }
+    
     private void setAdditionalDefaults()
     {
 
@@ -139,6 +209,18 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         parentList = pl;
     }
 
+    // x = X-coordinate at which to place lower left corner of the actor.
+    // y = Y-coordinate at which to place lower left corner of the actor.
+    @Override
+    public final void setPosition(float x, float y)
+    {
+        // The method sets the position of the lower left corner of the actor.
+        // The method exists to facilitate its use in the constructor.
+        
+        // Call method in superclass.
+        super.setPosition(x, y);
+    }
+    
     public void destroy()
     {
 
@@ -195,7 +277,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     }
 
     // t = Texture (stores a single image).
-    public void setTexture(Texture t)
+    public final void setTexture(Texture t)
     {
 
         // The function sets the properties of a texture.
@@ -216,7 +298,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     }
 
     // t = TextureRegion (stores a single image).
-    public void setTextureRegion(TextureRegion t)
+    public final void setTextureRegion(TextureRegion t)
     {
 
         // The function sets the properties of a texture.
@@ -480,7 +562,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         super.draw(batch, parentAlpha);
 
     }
-
+    
     // actorName = Name to give Actor.
     public void setActorName(String actorName)
     {

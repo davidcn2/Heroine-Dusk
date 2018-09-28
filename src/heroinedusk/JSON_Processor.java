@@ -38,11 +38,17 @@ public class JSON_Processor
     Methods include:
     
     loadAtlas:  Encapsulates the reading of the atlas JSON file from the specified location.
+    loadAtlasItems:  Encapsulates the reading of the atlas items JSON file from the specified location.
     readAtlas:  Encapsulates the reading of the atlas JSON file from the specified location, adding 
+      exception handling.
+    readAtlasItems:  Encapsulates the reading of the atlas items JSON file from the specified location, adding 
       exception handling.
     saveAtlas:  Encapsulates the saving of the atlas as a JSON file to the specified location, 
       adding exception handling.
+    saveAtlasItems:  Encapsulates the saving of the atlas items as a JSON file to the specified location, 
+      adding exception handling.
     writeAtlas:  Saves the atlas as a JSON file to the specified location.
+    writeAtlasItems:  Saves the atlas items as a JSON file to the specified location.
     */
     
     // atlas = Contains atlas information.
@@ -71,6 +77,33 @@ public class JSON_Processor
         
     }
     
+    // atlasItems = Contains atlas items information.
+    // filename = Filename to use when reading atlas, including full path.
+    // regionCount = Number of regions.
+    private void loadAtlasItems(AtlasItems atlasItems, String filename, int regionCount) throws IOException
+    {
+        
+        // The function encapsulates the reading of the atlas items JSON file from the specified location.
+        
+        byte[] jsonData; // Byte array containing JSON data from file.
+        Map<String, Object> mapJSON; // Hash map containing key / value pairs covering atlas items data -- 
+        // used with JSON.
+        ObjectMapper mapper; // ObjectMapper provides functionality for reading and writing the JSON.
+        
+        // Read json file data to byte array.
+        jsonData = Files.readAllBytes(Paths.get(filename));
+        
+        // Initialize Jackson's serialization mapper.
+        mapper = new ObjectMapper();
+        
+        // Convert JSON file data (loaded into byte array) to hash map.
+        mapJSON = mapper.readValue(jsonData, HashMap.class);
+        
+        // Load hash map using atlas items functionality.
+        atlasItems.readHashMap(mapJSON, regionCount);
+        
+    }
+    
     // filename = Filename to use when reading atlas, including full path.
     public final Atlas readAtlas(String filename)
     {
@@ -90,7 +123,7 @@ public class JSON_Processor
             
         }
         
-        // Catch any io exceptions occurring when trying ot write atlas to JSON file.
+        // Catch any io exceptions occurring when trying to read atlas from JSON file.
         catch (IOException ex) {
         
             // Display error message.
@@ -100,6 +133,39 @@ public class JSON_Processor
         
         // Return atlas.
         return atlas;
+        
+    }
+    
+    // filename = Filename to use when reading atlas items, including full path.
+    // regionCount = Number of regions.
+    public final AtlasItems readAtlasItems(String filename, int regionCount)
+    {
+        
+        // The function encapsulates the reading of the atlas items JSON file from the specified location, 
+        // adding exception handling.
+        
+        AtlasItems atlasItems; // Contains atlas items information.
+        
+        // Initialize atlas items class.
+        atlasItems = new AtlasItems();
+        
+        // Try reading the atlas item information to a byte array.
+        try {
+            
+            loadAtlasItems(atlasItems, filename, regionCount);
+            
+        }
+        
+        // Catch any io exceptions occurring when trying to read atlas items from JSON file.
+        catch (IOException ex) {
+        
+            // Display error message.
+            System.out.println("Warning:  Error reading atlas items from JSON file.\nMessage: " + ex.getMessage());
+        
+        }
+        
+        // Return atlas items.
+        return atlasItems;
         
     }
     
@@ -119,11 +185,37 @@ public class JSON_Processor
         
         } 
         
-        // Catch any io exceptions occurring when trying ot write atlas to JSON file.
+        // Catch any io exceptions occurring when trying to write atlas to JSON file.
         catch (IOException ex) {
         
             // Display error message.
             System.out.println("Warning:  Error writing atlas to JSON file.\nMessage: " + ex.getMessage());
+        
+        }
+        
+    }
+    
+    // atlasItems = Contains atlas item information.
+    // filename = Filename to use when saving atlas items, including full path.
+    public final void saveAtlasItems(AtlasItems atlasItems, String filename)
+    {
+        
+        // The function encapsulates the saving of the atlas item data as a JSON file to the specified 
+        // location, adding exception handling.
+        
+        // Try writing the atlas item information to a JSON file.
+        try {
+        
+            // Save atlas item data to JSON file.
+            writeAtlasItems(atlasItems, filename);
+        
+        } 
+        
+        // Catch any io exceptions occurring when trying to write atlas item data to JSON file.
+        catch (IOException ex) {
+        
+            // Display error message.
+            System.out.println("Warning:  Error writing atlas items to JSON file.\nMessage: " + ex.getMessage());
         
         }
         
@@ -154,6 +246,40 @@ public class JSON_Processor
         
         // Add other atlas details.
         map.put("maps", atlas.mapJSON);
+        
+        // Initialize Jackson's serialization mapper.
+        mapper = new ObjectMapper();
+        
+        // Order by keys.
+        mapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+        
+        // Convert from hash map to JSON text.
+        mapJSON = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);
+        
+        // Write the JSON text to the file.
+        FileRoutines.writeUsingBufferedWriter(mapJSON, filename);
+        
+    }
+    
+    // atlasItems = Contains atlas item information.
+    // filename = Filename to use when saving atlas items, including full path.
+    private void writeAtlasItems(AtlasItems atlasItems, String filename) throws IOException
+    {
+        
+        // The function saves the atlas item information as a JSON file to the specified location.
+        
+        ObjectMapper mapper; // ObjectMapper provides functionality for reading and writing the JSON.
+        Map<String, Object> map; // Hash map containing all data to write to file.
+        String mapJSON; // JSON text containing all information from hash map.
+        
+        // Initialize hash map.
+        map = new HashMap<>();
+        
+        // Populate atlas items hash map.
+        atlasItems.populateHashMap();
+        
+        // Add atlas item details.
+        map.put("items", atlasItems.getMapJSON());
         
         // Initialize Jackson's serialization mapper.
         mapper = new ObjectMapper();

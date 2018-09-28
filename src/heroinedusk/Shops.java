@@ -30,7 +30,7 @@ public class Shops
     
     // Declare object variables.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
-    protected ArrayList<Shop> shopList; // Contains message-related information, mostly used for shops.
+    private ArrayList<Shop> shopList; // Contains message-related information, mostly used for shops.
     
     // Declare constants.
     private final int TYPE_VALUE_ROOM_COST = 10; // Cost associated with room / inn.
@@ -172,7 +172,7 @@ public class Shops
     }
     
     // slot = Slot / item number in shop.  Base 0.
-    protected void shop_act(int slot)
+    public void shop_act(int slot)
     {
         
         // The function performs an action based on the slot (button) clicked.
@@ -180,7 +180,7 @@ public class Shops
         Shop currShop; // Reference to current shop.
         
         // If exit button clicked, then...
-        if (gameHD.dialog.options[slot].button == HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_EXIT)
+        if (gameHD.getDialog().getOptions()[slot].button == HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_EXIT)
             
             {
             // Exit button clicked.
@@ -195,7 +195,7 @@ public class Shops
             // Something other than the exit button clicked.
                 
             // Get reference to current shop.
-            currShop = shopList.get(gameHD.dialog.shop_id.getValue());
+            currShop = shopList.get(gameHD.getDialog().getShop_id().getValue());
             
             // Depending on shop / location type...
             switch (currShop.getShopType()) 
@@ -267,23 +267,23 @@ public class Shops
         cost = armor_id.getValue_Gold();
         
         // If player owns sufficient gold, then...
-        if (gameHD.avatar.getGold() >= cost)
+        if (gameHD.getAvatar().getGold() >= cost)
             
             {
             // Player owns sufficient gold.
                 
             // Subtract cost from player gold.
-            gameHD.avatar.adjGold(-cost);
+            gameHD.getAvatar().adjGold(-cost);
             
             // Play purchase sound.
-            gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
+            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
             
             // Adjust player armor.
-            gameHD.avatar.setArmor(armor_id);
+            gameHD.getAvatar().setArmor(armor_id);
             
             // Adjust dialog message.
-            gameHD.dialog.message = "Bought " + armor_id.getValue_CleanText();
-            gameHD.dialog.fadeMessage = true;
+            gameHD.getDialog().setMessage("Bought " + armor_id.getValue_CleanText());
+            gameHD.getDialog().setFadeMessage(true);
             
             // Rebuild dialog.
             shop_reset();
@@ -298,23 +298,23 @@ public class Shops
         // The function handles logic related to staying in a room / inn for a night.
         
         // If player owns sufficient gold, then...
-        if (gameHD.avatar.getGold() >= cost)
+        if (gameHD.getAvatar().getGold() >= cost)
             
             {
             // Player owns sufficient gold.
                 
             // Subtract cost from player gold.
-            gameHD.avatar.adjGold(-cost);
+            gameHD.getAvatar().adjGold(-cost);
             
             // Play purchase sound.
-            gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
+            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
             
             // Adjust player spellbook.
-            gameHD.avatar.avatar_sleep();
+            gameHD.getAvatar().avatar_sleep();
             
             // Adjust dialog message.
-            gameHD.dialog.message = "You have rested";
-            gameHD.dialog.fadeMessage = true;
+            gameHD.getDialog().setMessage("You have rested");
+            gameHD.getDialog().setFadeMessage(true);
             
             // Rebuild dialog.
             shop_reset();
@@ -334,23 +334,23 @@ public class Shops
         cost = spell_id.getValue_Gold();
         
         // If player owns sufficient gold, then...
-        if (gameHD.avatar.getGold() >= cost)
+        if (gameHD.getAvatar().getGold() >= cost)
             
             {
             // Player owns sufficient gold.
                 
             // Subtract cost from player gold.
-            gameHD.avatar.adjGold(-cost);
+            gameHD.getAvatar().adjGold(-cost);
             
             // Play purchase sound.
-            gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
+            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
             
             // Adjust player spellbook.
-            gameHD.avatar.setSpellbook(spell_id);
+            gameHD.getAvatar().setSpellbook(spell_id);
             
             // Adjust dialog message.
-            gameHD.dialog.message = "Learned " + spell_id.getValue_CleanText();
-            gameHD.dialog.fadeMessage = true;
+            gameHD.getDialog().setMessage("Learned " + spell_id.getValue_CleanText());
+            gameHD.getDialog().setFadeMessage(true);
             
             // Rebuild dialog.
             shop_reset();
@@ -370,23 +370,23 @@ public class Shops
         cost = weapon_id.getValue_Gold();
         
         // If player owns sufficient gold, then...
-        if (gameHD.avatar.getGold() >= cost)
+        if (gameHD.getAvatar().getGold() >= cost)
             
             {
             // Player owns sufficient gold.
                 
             // Subtract cost from player gold.
-            gameHD.avatar.adjGold(-cost);
+            gameHD.getAvatar().adjGold(-cost);
             
             // Play purchase sound.
-            gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_COIN);
+            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
             
             // Adjust player weapon.
-            gameHD.avatar.setWeapon(weapon_id);
+            gameHD.getAvatar().setWeapon(weapon_id);
             
             // Adjust dialog message.
-            gameHD.dialog.message = "Bought " + weapon_id.getValue_CleanText();
-            gameHD.dialog.fadeMessage = true;
+            gameHD.getDialog().setMessage("Bought " + weapon_id.getValue_CleanText());
+            gameHD.getDialog().setFadeMessage(true);
             
             // Rebuild dialog.
             shop_reset();
@@ -401,7 +401,7 @@ public class Shops
         // The function clears the specified slot in the shop / room / location / message, ...
         
         // Clear slot.
-        gameHD.dialog.addOption(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_NONE, "", "");
+        gameHD.getDialog().addOption(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_NONE, "", "");
         
     }
     
@@ -411,12 +411,13 @@ public class Shops
         // The function handles logic for exiting the shop / location.
         
         // Play a click sound.
-        gameHD.sounds.playSound(HeroineEnum.SoundEnum.SOUND_CLICK);
+        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_CLICK);
         
         // Switch to explore mode.
-        gameHD.gameState = HeroineEnum.GameState.STATE_EXPLORE;
+        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
         
-        // To Do:  Switch to ? screen, ...
+        // Switch to explore screen.
+        gameHD.setExploreScreen();
         
     }
     
@@ -425,10 +426,10 @@ public class Shops
         // The function rebuilds the dialog using the active shop identifier.
         
         // Reset dialog.
-        gameHD.dialog.resetDialog();
+        gameHD.getDialog().resetDialog();
         
         // Rebuild dialog.
-        shop_set(gameHD.dialog.shop_id);
+        shop_set(gameHD.getDialog().getShop_id());
         
         // Render dialog screen.
         gameHD.renderDialogScreen();
@@ -448,13 +449,13 @@ public class Shops
         counter = 0;
         
         // Update shop / location.
-        gameHD.dialog.shop_id = shop_id;
+        gameHD.getDialog().setShop_id(shop_id);
         
         // Pass reference to current shop to dialog.
-        gameHD.dialog.shop = shopList.get(shop_id.getValue());
+        gameHD.getDialog().shop = shopList.get(shop_id.getValue());
         
         // Update shop name.
-        gameHD.dialog.title = shopList.get(shop_id.getValue()).getMsgGroupName();
+        gameHD.getDialog().setTitle(shopList.get(shop_id.getValue()).getMsgGroupName());
         
         // System.out.println("Shop " + shop_id + ": " + gameHD.dialog.title);
         
@@ -568,7 +569,7 @@ public class Shops
         disable_reason = "";
         
         // If player already owns armor, then...
-        if (armor_id == gameHD.avatar.getArmor())
+        if (armor_id == gameHD.getAvatar().getArmor())
         
             {
             // Player already owns armor.
@@ -578,7 +579,7 @@ public class Shops
             }
         
         // Otherwise, if player armor better, then...
-        else if (armor_id.getValue() < gameHD.avatar.getArmor().getValue())
+        else if (armor_id.getValue() < gameHD.getAvatar().getArmor().getValue())
             {
             // Player armor better.
             
@@ -642,7 +643,7 @@ public class Shops
         // Display the dialog button if the item can be purchased.
         
         // If player owns sufficient gold to buy the item and no disable reason exists, then...
-        if (gameHD.avatar.getGold() >= cost && !disable)
+        if (gameHD.getAvatar().getGold() >= cost && !disable)
             
             {
             // Flag item as buyable.
@@ -669,10 +670,10 @@ public class Shops
             }
         
         // Add option to dialog.
-        gameHD.dialog.addOption(button, msg1, msg2);
+        gameHD.getDialog().addOption(button, msg1, msg2);
         
         // Flag items for item.
-        gameHD.dialog.items_for_sale = true;
+        gameHD.getDialog().setItems_for_sale(true);
         
     }
     
@@ -684,7 +685,7 @@ public class Shops
         // The function handles adding messages to the dialog.
         
         // Add messages to dialog.
-        gameHD.dialog.addOption(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_NONE, msg[0], msg[1]);
+        gameHD.getDialog().addOption(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_NONE, msg[0], msg[1]);
         
     }
     
@@ -701,7 +702,7 @@ public class Shops
         disable_reason = "";
         
         // If player already at maximum hit and magic points, then...
-        if (gameHD.avatar.get_HpMp_AtMax())
+        if (gameHD.getAvatar().get_HpMp_AtMax())
             
             {
             // Player already at maximum hit and magic points.
@@ -728,7 +729,7 @@ public class Shops
         disable_reason = "";
         
         // If player already knows spell, then...
-        if (spell_id.getValue() <= gameHD.avatar.getSpellbook().getValue())
+        if (spell_id.getValue() <= gameHD.getAvatar().getSpellbook().getValue())
         
             {
             // Player already knows spell.
@@ -738,7 +739,7 @@ public class Shops
             }
         
         // Otherwise, if player lacks prior spell, then...
-        else if (spell_id.getValue() > gameHD.avatar.getSpellbook().getValue() + 1)
+        else if (spell_id.getValue() > gameHD.getAvatar().getSpellbook().getValue() + 1)
             {
             // Player lacks prior spell.
             
@@ -764,7 +765,7 @@ public class Shops
         disable_reason = "";
         
         // If player already owns weapon, then...
-        if (weapon_id == gameHD.avatar.getWeapon())
+        if (weapon_id == gameHD.getAvatar().getWeapon())
         
             {
             // Player already owns weapon.
@@ -774,7 +775,7 @@ public class Shops
             }
         
         // Otherwise, if player weapon better, then...
-        else if (weapon_id.getValue() < gameHD.avatar.getWeapon().getValue())
+        else if (weapon_id.getValue() < gameHD.getAvatar().getWeapon().getValue())
             {
             // Player weapon better.
             
@@ -785,6 +786,12 @@ public class Shops
         // Add item to dialog for shop.
         shop_set_buy(slot, weapon_id.getValue_CleanText(), weapon_id.getValue_Gold(), disable_reason);
         
+    }
+
+    // Getters and setters below...
+    
+    public ArrayList<Shop> getShopList() {
+        return shopList;
     }
     
 }

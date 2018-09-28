@@ -48,7 +48,7 @@ public class Sounds
             filePath = soundEnum.getValue_FilePath();
             
             // Get the sound.
-            sound = hdg.assetMgr.manager.get(filePath);
+            sound = hdg.getAssetMgr().manager.get(filePath);
             
             // Get enumerated value for the sound, as a String.
             soundKey = soundEnum.toString();

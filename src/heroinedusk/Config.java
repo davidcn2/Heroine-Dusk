@@ -19,7 +19,7 @@ public class Config
     */
     
     // Declare object variables.
-    protected Options options; // Information from options screen, including flags for animation, music, and 
+    private Options options; // Information from options screen, including flags for animation, music, and 
       // sound effects.
     
     // Declare regular variables.
@@ -87,6 +87,10 @@ public class Config
         return menuTopCurr;
     }
     
+    public Options getOptions() {
+        return options;
+    }
+    
     public String getPrescaleFolder_Backgrounds() {
         return prescaleFolder_Backgrounds;
     }
@@ -101,6 +105,10 @@ public class Config
 
     public String getPrescaleFolder_Tiles() {
         return prescaleFolder_Tiles;
+    }
+    
+    public int getScale() {
+        return scale;
     }
     
     public boolean getStretchToScreen() {

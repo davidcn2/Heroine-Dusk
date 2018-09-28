@@ -46,10 +46,11 @@ public class Atlas
     
     // Declare object variables.
     private RegionMap currRegion; // Reference to current region.  Simplifies addition of tiles, shops, exits, ...
-    protected HashMap<String, Integer> mapIdentifiers; // Region name and identifier cross reference.
+    protected HashMap<String, Integer> mapIdentifiers; // Region name and identifier (number) cross reference.
+    protected HashMap<Integer, String> mapIdentifiersRev; // Identifier (number) and region name cross reference.
     protected Map<String, Object> mapJSON; // Hash map containing key / value pairs covering all atlas data -- 
-      // used with JSON.
-    protected HashMap<String, RegionMap> maps; // Information about each region.
+      // used with JSON.  Key = region name.
+    protected HashMap<String, RegionMap> maps; // Information about each region.  Key = region name.
     
     // Declare regular variables.
     protected int mapCount; // Number of maps / regions.  Base 1.
@@ -70,6 +71,7 @@ public class Atlas
         
         // Initialize the hash maps.
         mapIdentifiers = new HashMap<>();
+        mapIdentifiersRev = new HashMap<>();
         mapJSON = new HashMap<>();
         maps = new HashMap<>();
         
@@ -93,6 +95,7 @@ public class Atlas
         
         // Add cross reference entry.
         mapIdentifiers.put(regionName, mapCount);
+        mapIdentifiersRev.put(mapCount, regionName);
         
         // Increment map count.
         mapCount++;
@@ -255,16 +258,6 @@ public class Atlas
         // The function builds the entire atlas using the passed hash map.
         
         // Declare object variables.
-        int enemyCount; // Number of enemies in current region.
-        int enemyCounter; // Used to increment through enemies.
-        int exitCount; // Number of exits in current region.
-        int mapCountFile; // Map count read from file.
-        int regionHeight; // Region height, in tiles.  Same as tile row count.
-        String regionName; // Name of current region in loop.
-        int shopCount; // Number of shops in current region.
-        String tileRowKey; // Key in hash map for current tile row in loop.
-        
-        // Declare regular variables.
         HeroineEnum.EnemyEnum[] enemyEnums; // Array containing enemies for current region in loop.
         Set<Map.Entry<String, Object>> entrySet; // Set view of all of the mappings in the hash map for all regions.
         Set<Map.Entry<String, String>> entrySetEnemies; // Set view of the enemy mappings in the hash map for current region in loop.
@@ -277,11 +270,22 @@ public class Atlas
         HashMap<String, Object> temp; // Hash map containing information for current region in loop.
         ArrayList tileRow; // Array list containing information for all tiles in current row and region in loops.
         
+        // Declare regular variables.
+        int enemyCount; // Number of enemies in current region.
+        int enemyCounter; // Used to increment through enemies.
+        int exitCount; // Number of exits in current region.
+        int mapCountFile; // Map count read from file.
+        int regionHeight; // Region height, in tiles.  Same as tile row count.
+        String regionName; // Name of current region in loop.
+        int shopCount; // Number of shops in current region.
+        String tileRowKey; // Key in hash map for current tile row in loop.
+        
         // Reset defaults.
         mapCount = 0;
         
         // Reinitialize atlas.
         mapIdentifiers = new HashMap<>();
+        mapIdentifiersRev = new HashMap<>();
         mapJSON = new HashMap<>();
         maps = new HashMap<>();
         
@@ -462,6 +466,10 @@ public class Atlas
     }
     
     // Getters and setters below...
+    
+    public int getMapCount() {
+        return mapCount;
+    }
     
     public Map<String, Object> getMapJSON() {
         return mapJSON;

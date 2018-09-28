@@ -1,5 +1,6 @@
 package heroinedusk;
 
+import core.TextureRect;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,18 +20,25 @@ public class HeroineEnum
     3.  DialogButtonEnum:  Enumerations related to dialog buttons.
     4.  EnemyCategoryEnum:  Enumerations related to enemy categories.
     5.  EnemyEnum:  Enumerations related to enemies.
-    6.  FacingEnum:  Enumerations related to direction player is facing.
-    7.  FontEnum:  Enumerations related to fonts.
-    8.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
-    9.  ImgBackgroundEnum:  Enumerations related to background images.
-    10.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
-    11.  ListEnum:  Enumerations related to list types.
-    12.  MusicEnum:  Enumerations related to music.
-    13.  ShopEnum:  Enumerations related to shops / locations.
-    14.  ShopTypeEnum:  Enumerations related to shop / location types.
-    15.  SoundsEnum:  Enumerations related to sounds.
-    16.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    17:  WeaponEnum:  Enumerations related to weapons.
+    6.  EnemyPowerEnum:  Enumerations realted to enemy powers.
+    7.  FacingEnum:  Enumerations related to direction player is facing.
+    8.  FontEnum:  Enumerations related to fonts.
+    9.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
+    10.  ImgBackgroundEnum:  Enumerations related to background images.
+    11.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
+    12.  ImgTileEnum:  Enumerations related to tile images.
+    13.  ItemCategoryEnum:  Enumerations related to item categories.
+    14.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
+    15.  ItemTypeEnum:  Enumerations related to item types.
+    16.  ListEnum:  Enumerations related to list types.
+    17.  MagicItemEnum:  Enumerations related to magic items.
+    18.  MusicEnum:  Enumerations related to music.
+    19.  ShopEnum:  Enumerations related to shops / locations.
+    20.  ShopTypeEnum:  Enumerations related to shop / location types.
+    21.  SoundsEnum:  Enumerations related to sounds.
+    22.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    23.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
+    24:  WeaponEnum:  Enumerations related to weapons.
     */
     
     // Enumerations related to action buttons.
@@ -289,7 +297,7 @@ public class HeroineEnum
         public int getValue() 
         {
             // The function returns the numeric value for the enumeration.
-            // Example for use:  int x = AtlasEnum.EnemyCategoryEnum.ENEMY_CATEGORY_DEMON.getValue();
+            // Example for use:  int x = HeroineEnum.EnemyCategoryEnum.ENEMY_CATEGORY_DEMON.getValue();
             
             // Return the numeric value for the enumeration.
             return enemyCategoryEnum;
@@ -386,7 +394,7 @@ public class HeroineEnum
         public int getValue() 
         {
             // The function returns the numeric value for the enumeration.
-            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue();
+            // Example for use:  int x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue();
             
             // Return the numeric value for the enumeration.
             return enemyEnum;
@@ -395,7 +403,7 @@ public class HeroineEnum
         public int getValue_AtkMax() 
         {
             // The function returns the maximum attack value for the enemy.
-            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_AtkMax();
+            // Example for use:  int x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_AtkMax();
             
             // Return the maximum attack value for the enemy.
             return enemyAtkMax;
@@ -404,7 +412,7 @@ public class HeroineEnum
         public int getValue_AtkMin() 
         {
             // The function returns the minimum attack value for the enemy.
-            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_AtkMin();
+            // Example for use:  int x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_AtkMin();
             
             // Return the minimum attack value for the enemy.
             return enemyAtkMin;
@@ -413,7 +421,7 @@ public class HeroineEnum
         public EnemyCategoryEnum getValue_Category() 
         {
             // The function returns the category for the enemy.
-            // Example for use:  MusicEnum x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Category();
+            // Example for use:  MusicEnum x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Category();
             
             // Return the category for the enemy.
             return enemyCategory;
@@ -422,7 +430,7 @@ public class HeroineEnum
         public int getValue_GoldMax() 
         {
             // The function returns the maximum gold value for the enemy.
-            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_GoldMax();
+            // Example for use:  int x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_GoldMax();
             
             // Return the maximum gold value for the enemy.
             return enemyGoldMax;
@@ -431,7 +439,7 @@ public class HeroineEnum
         public int getValue_GoldMin() 
         {
             // The function returns the minimum gold value for the enemy.
-            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_GoldMin();
+            // Example for use:  int x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_GoldMin();
             
             // Return the minimum gold value for the enemy.
             return enemyGoldMin;
@@ -440,7 +448,7 @@ public class HeroineEnum
         public int getValue_HP() 
         {
             // The function returns the hit points for the enemy.
-            // Example for use:  int x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_HP();
+            // Example for use:  int x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_HP();
             
             // Return the hit points for the enemy.
             return enemyHP;
@@ -449,7 +457,7 @@ public class HeroineEnum
         public String getValue_Name() 
         {
             // The function returns the enemy name.
-            // Example for use:  String x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Name();
+            // Example for use:  String x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Name();
             
             // Return the enemy name.
             return enemyName;
@@ -458,7 +466,7 @@ public class HeroineEnum
         public String getValue_ImageFile() 
         {
             // The function returns the image filename (just name and extension, no path).
-            // Example for use:  String x = AtlasEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_ImageFile();
+            // Example for use:  String x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_ImageFile();
             
             // Return the image filename.
             return imageFile;
@@ -509,7 +517,7 @@ public class HeroineEnum
         public int getValue() 
         {
             // The function returns the numeric value for the enumeration.
-            // Example for use:  int x = AtlasEnum.EnemyPowerEnum.ENEMY_POWER_SCORCH.getValue();
+            // Example for use:  int x = HeroineEnum.EnemyPowerEnum.ENEMY_POWER_SCORCH.getValue();
             
             // Return the numeric value for the enumeration.
             return enemyPowerEnum;
@@ -879,6 +887,321 @@ public class HeroineEnum
         
     }
     
+    // Enumerations related to tile images.
+    public enum ImgTileEnum 
+    {
+        
+        IMG_TILE_DUNGEON_FLOOR (1, "dungeon_floor.png", "tile-dungeon floor", true), // Dungeon floor tiles.
+        IMG_TILE_DUNGEON_WALL (2, "dungeon_wall.png", "tile-dungeon wall", false), // Dungeon wall tiles.
+        IMG_TILE_DUNGEON_DOOR (3, "dungeon_door.png", "tile-dungeon door", true), // Dungeon door tiles.
+        IMG_TILE_PILLAR_EXTERIOR (4, "pillar_exterior.png", "tile-exterior pillar", false), // Exterior pillar tiles.
+        IMG_TILE_DUNGEON_CEILING (5, "dungeon_ceiling.png", "tile-dungeon ceiling", true), // Dungeon ceiling tiles.
+        IMG_TILE_GRASS (6, "grass.png", "tile-grass", true), // Grass tiles.
+        IMG_TILE_PILLAR_INTERIOR (7, "pillar_interior.png", "tile-interior pillar", false), // Interior pillar tiles.
+        IMG_TILE_CHEST_INTERIOR (8, "chest_interior.png", "tile-chest interior", true), // Interior chest tiles.
+        IMG_TILE_CHEST_EXTERIOR (9, "chest_exterior.png", "tile-chest exterior", true), // Exterior chest tiles.
+        IMG_TILE_MEDIEVAL_HOUSE (10, "medieval_house.png", "tile-medieval house", false), // Medieval house tiles.
+        IMG_TILE_MEDIEVAL_DOOR (11, "medieval_door.png", "tile-medieval door", true), // Medieval door tiles.
+        IMG_TILE_TREE_EVERGREEN (12, "tree_evergreen.png", "tile-evergreen", false), // Evergreen tree tiles.
+        IMG_TILE_GRAVE_CROSS (13, "grave_cross.png", "tile-grave cross", false), // Grave cross tiles.
+        IMG_TILE_GRAVE_STONE (14, "grave_stone.png", "tile-grave stone", false), // Grave stone tiles.
+        IMG_TILE_WATER (15, "water.png", "tile-water", false), // Water tiles.
+        IMG_TILE_SKULL_PILE (16, "skull_pile.png", "tile-skull pile", false), // Skull pile tiles.
+        IMG_TILE_HAY_PILE (17, "hay_pile.png", "tile-hay pile", true), // Hay pile tiles.
+        IMG_TILE_LOCKED_DOOR (18, "locked_door.png", "tile-locked door", false), // Locked door tiles.
+        IMG_TILE_DEATH_SPEAKER (19, "death_speaker.png", "tile-death speaker", true) // Death speaker tiles.
+        ; // semicolon needed when fields / methods follow
+        
+        private final int imgTileEnum; // Enumerations related to tile images.
+        private final String imgFile; // Filename (just name and extension, no path).
+        private final String imgKey; // Key associated with image -- used with asset manager hash map.
+        private static final Map imgTileMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        private final boolean walkable; // Whether tile walkable.
+        
+        // imgTileEnum = Value to associate.
+        // imgFile = Filename (just name and extension, no path).
+        // imgKey = Key associated with image -- used with asset manager hash map.
+        // walkable = Whether tile walkable.
+        private ImgTileEnum(int imgTileEnum, String imgFile, String imgKey, boolean walkable) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.imgTileEnum = imgTileEnum;
+            this.imgFile = imgFile;
+            this.imgKey = imgKey;
+            this.walkable = walkable;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ImgTileEnum imgTileEnum : ImgTileEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                imgTileMap.put(imgTileEnum.imgTileEnum, imgTileEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ImgTileEnum.IMG_TILE_MEDIEVAL_DOOR.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return imgTileEnum;
+        }
+        
+        public String getValue_File() 
+        {
+            // The function returns the filename (just name and extension, no path).
+            // Example for use:  String x = HeroineEnum.ImgTileEnum.IMG_TILE_MEDIEVAL_DOOR.getValue_File();
+            
+            // Return the filename (just name and extension, no path).
+            return imgFile;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the image key -- used with the asset manager hash map.
+            // Example for use:  String x = HeroineEnum.ImgTileEnum.IMG_TILE_MEDIEVAL_DOOR.getValue_Key();
+            
+            // Return the key.
+            return imgKey;
+        }
+        
+        public boolean getValue_Walkable() 
+        {
+            // The function returns whether a walkable tile.
+            // Example for use:  boolean x = HeroineEnum.ImgTileEnum.IMG_TILE_MEDIEVAL_DOOR.getValue_Walkable();
+            
+            // Return the flag.
+            return walkable;
+        }
+        
+        // imgTile = Numeric value to convert to text.
+        public static ImgTileEnum valueOf(int imgTile) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ImgTileEnum) imgTileMap.get(imgTile);
+        }
+        
+    }
+    
+    // Enumerations related to item categories.
+    public enum ItemCategoryEnum 
+    {
+        
+        ITEM_CTGY_ALTER_MAP (0), // Map alteration event.
+        ITEM_CTGY_BONE_PILE (1), // Bone pile.
+        ITEM_CTGY_CHEST (2), // Chest.
+        ITEM_CTGY_HAY_BALE (3), // Hay bale.
+        ITEM_CTGY_LOCKED_DOOR (4), // Locked door.
+        ITEM_CTGY_SPECIFIC_ENEMY (5) // Enemy at specific location.
+        ; // semicolon needed when fields / methods follow
+
+        private final int itemCategoryEnum; // Enumerations related to item categories.
+        private static final Map itemCategoryMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // itemCategoryEnum = Value to associate.
+        private ItemCategoryEnum(int itemCategoryEnum) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.itemCategoryEnum = itemCategoryEnum;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ItemCategoryEnum itemCategoryEnum : ItemCategoryEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                itemCategoryMap.put(itemCategoryEnum.itemCategoryEnum, itemCategoryEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ItemCategoryEnum.ITEM_CTGY_CHEST.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return itemCategoryEnum;
+        }
+        
+        // itemCategory = Numeric value to convert to text.
+        public static ItemCategoryEnum valueOf(int itemCategory) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ItemCategoryEnum) itemCategoryMap.get(itemCategory);
+        }
+        
+    }
+    
+    // Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
+    public enum ItemEnum 
+    {
+        
+        ITEM_GOLD (0, "GOLD", ItemTypeEnum.ITEM_TYPE_GOLD, null), // Gold.
+        ITEM_ARMOR_SERF_RAGS (1, ArmorEnum.ARMOR_SERF_RAGS.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Serf rags.
+        ITEM_ARMOR_TRAVEL_CLOAK (2, ArmorEnum.ARMOR_TRAVEL_CLOAK.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Travel cloak.
+        ITEM_ARMOR_HIDE_CUIRASS (3, ArmorEnum.ARMOR_HIDE_CUIRASS.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Hide cuirass.
+        ITEM_ARMOR_RIVET_LEATHER (4, ArmorEnum.ARMOR_RIVET_LEATHER.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Rivet leather.
+        ITEM_ARMOR_CHAIN_MAILLE (5, ArmorEnum.ARMOR_CHAIN_MAILLE.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Chain maille.
+        ITEM_ARMOR_PLATE_ARMOR (6, ArmorEnum.ARMOR_PLATE_ARMOR.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Wyvern scale.
+        ITEM_ARMOR_WYVERN_SCALE (7, ArmorEnum.ARMOR_WYVERN_SCALE.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Wyvern scale.
+        ITEM_MAGIC_SAPPHIRE (8, MagicItemEnum.MAGIC_ITEM_SAPPHIRE.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 12), // Magic sapphire.
+        ITEM_MAGIC_EMERALD (9, MagicItemEnum.MAGIC_ITEM_EMERALD.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 13), // Magic emerald.
+        ITEM_MAGIC_RUBY (10, MagicItemEnum.MAGIC_ITEM_RUBY.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 14), // Magic ruby.
+        ITEM_MAGIC_DIAMOND (11, MagicItemEnum.MAGIC_ITEM_DIAMOND.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 15), // Magic diamond.
+        ITEM_SPELL_HEAL (12, SpellEnum.SPELL_HEAL.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, 11), // Heal spell.
+        ITEM_SPELL_BURN (13, SpellEnum.SPELL_BURN.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Burn spell.
+        ITEM_SPELL_UNLOCK (14, SpellEnum.SPELL_UNLOCK.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Unlock spell.
+        ITEM_SPELL_LIGHT (15, SpellEnum.SPELL_LIGHT.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Light spell.
+        ITEM_SPELL_FREEZE (16, SpellEnum.SPELL_FREEZE.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Freeze spell.
+        ITEM_SPELL_REFLECT (17, SpellEnum.SPELL_REFLECT.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Reflect spell.
+        ITEM_WEAPON_WOOD_STICK (18, WeaponEnum.WEAPON_WOOD_STICK.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, 10), // Wood stick.
+        ITEM_WEAPON_IRON_KNIFE (19, WeaponEnum.WEAPON_IRON_KNIFE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // Iron knife.
+        ITEM_WEAPON_BRONZE_MACE (20, WeaponEnum.WEAPON_BRONZE_MACE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // Bronze mace.
+        ITEM_WEAPON_STEEL_SWORD (21, WeaponEnum.WEAPON_STEEL_SWORD.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // Steel sword.
+        ITEM_WEAPON_WAR_HAMMER (22, WeaponEnum.WEAPON_WAR_HAMMER.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // War hammer.
+        ITEM_WEAPON_BATTLE_AXE (23, WeaponEnum.WEAPON_BATTLE_AXE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // Battle axe.
+        ITEM_WEAPON_GREAT_SWORD (24, WeaponEnum.WEAPON_GREAT_SWORD.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null) // Great sword.
+        ; // semicolon needed when fields / methods follow
+        
+        private final int itemEnum; // Enumerations related to items.
+        private final String itemName; // Item name -- equivalent to enumerated value.  Examples:  ARMOR_TRAVEL_CLOAK, ARMOR_HIDE_CUIRASS, ...
+        private final ItemTypeEnum itemType; // Item type -- gold, armor, magic, spell, or weapon.  Examples:  ITEM_TYPE_GOLD, ITEM_TYPE_WEAPON, ITEM_TYPE_ARMOR, ITEM_TYPE_SPELL, ITEM_TYPE_MAGIC.
+        private static final Map itemMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        private final Integer treasure_id; // Treasure identifier.
+        
+        // itemEnum = Value to associate.
+        // itemName = Item name -- equivalent to enumerated value.  Examples:  ARMOR_TRAVEL_CLOAK, ARMOR_HIDE_CUIRASS, ...
+        // itemType = Item type -- gold, weapon, armor, spell, or magic.  Examples:  ITEM_TYPE_GOLD, ITEM_TYPE_WEAPON, ITEM_TYPE_ARMOR, ITEM_TYPE_SPELL, ITEM_TYPE_MAGIC.
+        // treasure_id = Treasure identifier.
+        private ItemEnum(int itemEnum, String itemName, ItemTypeEnum itemType, Integer treasure_id)
+        {
+            // The constructor sets the values for each enumeration.
+            this.itemEnum = itemEnum;
+            this.itemName = itemName;
+            this.itemType = itemType;
+            this.treasure_id = treasure_id;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ItemEnum itemEnum : ItemEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                itemMap.put(itemEnum.itemEnum, itemEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ItemEnum.ITEM_WEAPON_IRON_KNIFE.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return itemEnum;
+        }
+        
+        public String getValue_ItemName() 
+        {
+            // The function returns the item name -- equivalent to enumerated value.
+            // Example for use:  String x = HeroineEnum.ItemEnum.ITEM_WEAPON_IRON_KNIFE.getValue_ItemName();
+            
+            // Return the item name.
+            return itemName;
+        }
+        
+        public ItemTypeEnum getValue_ItemType() 
+        {
+            // The function returns the item type -- gold, weapon, armor, spell, or magic.
+            // Example for use:  ItemTypeEnum x = HeroineEnum.ItemEnum.ITEM_WEAPON_IRON_KNIFE.getValue_ItemType();
+            
+            // Return the item type.
+            return itemType;
+        }
+        
+        public Integer getValue_TreasureID() 
+        {
+            // The function returns the treasure identifier of the item.
+            // Example for use:  int x = HeroineEnum.ItemEnum.ITEM_MAGIC_RUBY.getValue_TreasureID();
+            
+            // Return the treasure identifier of the item.
+            return treasure_id;
+        }
+        
+        // item = Numeric value to convert to text.
+        public static ItemEnum valueOf(int item) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ItemEnum) itemMap.get(item);
+        }
+        
+    }
+    
+    // Enumerations related to item types.
+    public enum ItemTypeEnum 
+    {
+        
+        ITEM_TYPE_GOLD (0), // Gold.
+        ITEM_TYPE_WEAPON (1), // Weapon.
+        ITEM_TYPE_ARMOR (2), // Armor.
+        ITEM_TYPE_SPELL (3), // Spell.
+        ITEM_TYPE_MAGIC (4) // Magic item.
+        ; // semicolon needed when fields / methods follow
+
+        private final int itemTypeEnum; // Enumerations related to item types.
+        private static final Map itemTypeMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // itemTypeEnum = Value to associate.
+        private ItemTypeEnum(int itemTypeEnum) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.itemTypeEnum = itemTypeEnum;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ItemTypeEnum itemTypeEnum : ItemTypeEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                itemTypeMap.put(itemTypeEnum.itemTypeEnum, itemTypeEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ItemTypeEnum.ITEM_TYPE_WEAPON.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return itemTypeEnum;
+        }
+        
+        // itemType = Numeric value to convert to text.
+        public static ItemTypeEnum valueOf(int itemType) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ItemTypeEnum) itemTypeMap.get(itemType);
+        }
+        
+    }
+    
     // Enumerations related to list types.
     public enum ListEnum 
     {
@@ -929,6 +1252,142 @@ public class HeroineEnum
         
     }
     
+    // Enumerations related to magic items.
+    public enum MagicItemEnum
+    {
+        
+        MAGIC_ITEM_SAPPHIRE (0, 0, 0, 0, 0, 2, 2, "Magic Sapphire (MP Up)"), // Magic sapphire (MP+).
+        MAGIC_ITEM_EMERALD (1, 0, 0, 5, 5, 0, 0, "Magic Emerald (HP Up)"), // Magic emerald (HP+).
+        MAGIC_ITEM_RUBY (2, 1, 0, 0, 0, 0, 0, "Magic Ruby (Atk Up)"), // Magic ruby (attack+).
+        MAGIC_ITEM_DIAMOND (3, 0, 1, 0, 0, 0, 0, "Magic Diamond (Def Up)") // Magic diamond (defense+).
+        ; // semicolon needed when fields / methods follow
+        
+        private final int attrAdj_BonusAtk; // Amount by which to adjust player attack bonus.
+        private final int attrAdj_BonusDef; // Amount by which to adjust player defense bonus.
+        private final int attrAdj_HP; // Amount by which to adjust player hit points.
+        private final int attrAdj_MaxHP; // Amount by which to adjust maximum player hit points.
+        private final int attrAdj_MaxMP; // Amount by which to adjust maximum magic points for player.
+        private final int attrAdj_MP; // Amount by which to adjust player magic points.
+        private final int magicItemEnum; // Enumerations related to magic items.
+        private final String magicItemText; // Clean text for the magic item (name).
+        private static final Map magicItemMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // magicItemEnum = Value to associate.
+        // attrAdj_BonusAtk = Amount by which to adjust player attack bonus.
+        // attrAdj_BonusDef = Amount by which to adjust player defense bonus.
+        // attrAdj_HP = Amount by which to adjust player hit points.
+        // attrAdj_MaxHP = Amount by which to adjust maximum player hit points.
+        // attrAdj_MP = Amount by which to adjust player magic points.
+        // attrAdj_MaxMP = Amount by which to adjust maximum magic points for player.
+        // magicItemText = Clean text for the magic item (name).
+        private MagicItemEnum(int magicItemEnum, int attrAdj_BonusAtk, int attrAdj_BonusDef, 
+          int attrAdj_HP, int attrAdj_MaxHP, int attrAdj_MP, int attrAdj_MaxMP, String magicItemText) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.magicItemEnum = magicItemEnum;
+            this.attrAdj_BonusAtk = attrAdj_BonusAtk;
+            this.attrAdj_BonusDef = attrAdj_BonusDef;
+            this.attrAdj_HP = attrAdj_HP;
+            this.attrAdj_MaxHP = attrAdj_MaxHP;
+            this.attrAdj_MP = attrAdj_MP;
+            this.attrAdj_MaxMP = attrAdj_MaxMP;
+            this.magicItemText = magicItemText;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (MagicItemEnum magicItemEnum : MagicItemEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                magicItemMap.put(magicItemEnum.magicItemEnum, magicItemEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.MagicItemEnum.MAGIC_ITEM_SAPPHIRE.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return magicItemEnum;
+        }
+        
+        public int getValue_AttrAdj_BonusAtk() 
+        {
+            // The function returns the player bonus attack adjustment related to the magic item.
+            // Example for use:  int x = HeroineEnum.MagicItemEnum.MAGIC_ITEM_SAPPHIRE.getValue_AttrAdj_BonusAtk();
+            
+            // Return the player bonus attack adjustment.
+            return attrAdj_BonusAtk;
+        }
+        
+        public int getValue_AttrAdj_BonusDef() 
+        {
+            // The function returns the player bonus defense adjustment related to the magic item.
+            // Example for use:  int x = HeroineEnum.MagicItemEnum.MAGIC_ITEM_SAPPHIRE.getValue_AttrAdj_BonusDef();
+            
+            // Return the player bonus defense adjustment.
+            return attrAdj_BonusDef;
+        }
+        
+        public int getValue_AttrAdj_HP() 
+        {
+            // The function returns the player hit point adjustment related to the magic item.
+            // Example for use:  int x = HeroineEnum.MagicItemEnum.MAGIC_ITEM_SAPPHIRE.getValue_AttrAdj_HP();
+            
+            // Return the player hit point adjustment.
+            return attrAdj_HP;
+        }
+        
+        public int getValue_AttrAdj_MaxHP() 
+        {
+            // The function returns the player maximum hit point adjustment related to the magic item.
+            // Example for use:  int x = HeroineEnum.MagicItemEnum.MAGIC_ITEM_SAPPHIRE.getValue_AttrAdj_MaxHP();
+            
+            // Return the player maximum hit point adjustment.
+            return attrAdj_MaxHP;
+        }
+        
+        public int getValue_AttrAdj_MP() 
+        {
+            // The function returns the player magic point adjustment related to the item.
+            // Example for use:  int x = HeroineEnum.MagicItemEnum.MAGIC_ITEM_SAPPHIRE.getValue_AttrAdj_MP();
+            
+            // Return the player magic point adjustment.
+            return attrAdj_MP;
+        }
+        
+        public int getValue_AttrAdj_MaxMP() 
+        {
+            // The function returns the player maximum magic point adjustment related to the item.
+            // Example for use:  int x = HeroineEnum.MagicItemEnum.MAGIC_ITEM_SAPPHIRE.getValue_AttrAdj_MaxMP();
+            
+            // Return the player maximum magic point adjustment.
+            return attrAdj_MaxMP;
+        }
+        
+        public String getValue_CleanText() 
+        {
+            // The function returns the clean text value for the enumeration.
+            // Example for use:  String x = HeroineEnum.MagicItemEnum.MAGIC_ITEM_SAPPHIRE.getValue_CleanText();
+            
+            // Return the clean text value for the enumeration.
+            return magicItemText;
+        }
+        
+        // magicItem = Numeric value to convert to text.
+        public static MagicItemEnum valueOf(int magicItem) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (MagicItemEnum) magicItemMap.get(magicItem);
+        }
+        
+    }
+    
     // Enumerations related to music.
     public enum MusicEnum 
     {
@@ -971,7 +1430,7 @@ public class HeroineEnum
         public int getValue() 
         {
             // The function returns the numeric value for the enumeration.
-            // Example for use:  int x = AtlasEnum.MusicEnum.MUSIC_HAPLY.getValue();
+            // Example for use:  int x = HeroineEnum.MusicEnum.MUSIC_HAPLY.getValue();
             
             // Return the numeric value for the enumeration.
             return musicEnum;
@@ -980,7 +1439,7 @@ public class HeroineEnum
         public String getValue_File_mp3() 
         {
             // The function returns the mp3 filename (just name and extension, no path).
-            // Example for use:  String x = AtlasEnum.MusicEnum.MUSIC_HAPLY.getValue_File_mp3();
+            // Example for use:  String x = HeroineEnum.MusicEnum.MUSIC_HAPLY.getValue_File_mp3();
             
             // Return the mp3 filename (just name and extension, no path).
             return mp3File;
@@ -989,7 +1448,7 @@ public class HeroineEnum
         public String getValue_File_ogg() 
         {
             // The function returns the ogg filename (just name and extension, no path).
-            // Example for use:  String x = AtlasEnum.MusicEnum.MUSIC_HAPLY.getValue_File_ogg();
+            // Example for use:  String x = HeroineEnum.MusicEnum.MUSIC_HAPLY.getValue_File_ogg();
             
             // Return the ogg filename (just name and extension, no path).
             return oggFile;
@@ -1189,29 +1648,32 @@ public class HeroineEnum
     public enum SpellEnum 
     {
         
-        NO_SPELL (0, "No Spell", 0), // No spell.
-        SPELL_HEAL (1, "Heal", 0), // Heal spell.
-        SPELL_BURN (2, "Burn", 100), // Burn spell.
-        SPELL_UNLOCK (3, "Unlock", 500), // Unlock spell.
-        SPELL_LIGHT (4, "Light", 2500), // Light spell.
-        SPELL_FREEZE (5, "Freeze", 10000), // Freeze spell.
-        SPELL_REFLECT (6, "Reflect", 50000) // Reflect spell.
+        NO_SPELL (0, "No Spell", 0, ""), // No spell.
+        SPELL_HEAL (1, "Heal", 0, "Spellbook: Heal"), // Heal spell.
+        SPELL_BURN (2, "Burn", 100, "Spellbook: Burn"), // Burn spell.
+        SPELL_UNLOCK (3, "Unlock", 500, "Spellbook: Unlock"), // Unlock spell.
+        SPELL_LIGHT (4, "Light", 2500, "Spellbook: Light"), // Light spell.
+        SPELL_FREEZE (5, "Freeze", 10000, "Spellbook: Freeze"), // Freeze spell.
+        SPELL_REFLECT (6, "Reflect", 50000, "Spellbook: Reflect") // Reflect spell.
         ; // semicolon needed when fields / methods follow
 
         private final int gold; // Value of the weapon, in gold.
         private final int spellEnum; // Enumerations related to spells.
         private static final Map spellMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         private final String spellText; // Clean text for the spell.
+        private final String treasureDesc; // Treasure description for the spell.
         
         // spellEnum = Value to associate.
         // spellText = Clean text to associate.
         // gold = Weapon value, in gold, to associate.
-        private SpellEnum(int spellEnum, String spellText, int gold) 
+        // treasureDesc = Treasure description for the spell.
+        private SpellEnum(int spellEnum, String spellText, int gold, String treasureDesc) 
         {
             // The constructor sets the values for each enumeration.
             this.spellEnum = spellEnum;
             this.spellText = spellText;
             this.gold = gold;
+            this.treasureDesc = treasureDesc;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -1254,11 +1716,130 @@ public class HeroineEnum
             return spellText;
         }
         
+        public String getValue_TreasureDesc() 
+        {
+            // The function returns the treasure description value for the enumeration.
+            // Example for use:  String x = HeroineEnum.SpellEnum.SPELL_LIGHT.getValue_TreasureDesc();
+            
+            // Return the treasure description value for the enumeration.
+            return treasureDesc;
+        }
+        
         // spell = Numeric value to convert to text.
         public static SpellEnum valueOf(int spell) 
         {
             // The function converts the passed numeric value to its corresponding text.
             return (SpellEnum) spellMap.get(spell);
+        }
+        
+    }
+    
+    // Enumerations related to regions within unscaled tiles.
+    public enum TileRegionEnum
+    {
+        
+        TILE_REGION_000 (  0,   0,   0,  80, 120,  0, 0 ), // Tile region 000.
+        TILE_REGION_001 (  1,  80,   0,  80, 120, 80, 0 ), // Tile region 001.
+        TILE_REGION_002 (  2, 160,   0,  80, 120,  0, 0 ), // Tile region 002.
+        TILE_REGION_003 (  3, 240,   0,  80, 120, 80, 0 ), // Tile region 003.
+        TILE_REGION_004 (  4, 320,   0, 160, 120,  0, 0 ), // Tile region 004.
+        TILE_REGION_005 (  5, 480,   0,  80, 120,  0, 0 ), // Tile region 005.
+        TILE_REGION_006 (  6, 560,   0,  80, 120, 80, 0 ), // Tile region 006.
+        TILE_REGION_007 (  7,   0, 120,  80, 120,  0, 0 ), // Tile region 007.
+        TILE_REGION_008 (  8,  80, 120,  80, 120, 80, 0 ), // Tile region 008.
+        TILE_REGION_009 (  9, 160, 120, 160, 120,  0, 0 ), // Tile region 009.
+        TILE_REGION_010 ( 10, 320, 120,  80, 120,  0, 0 ), // Tile region 010.
+        TILE_REGION_011 ( 11, 400, 120,  80, 120, 80, 0 ), // Tile region 011.
+        TILE_REGION_012 ( 12, 480, 120, 160, 120,  0, 0 )  // Tile region 012.
+        ; // semicolon needed when fields / methods follow
+
+        private final int dest_x; // X-coordinate (relative to the bottom left corner) to display texture
+          // region in stage.  Excludes render offset.
+        private final int dest_y; // Y-coordinate (relative to the bottom left corner) to display texture
+          // region in stage.  Excludes render offset.
+        private final TextureRect rect; // Tile region information -- source x and y, width, and height.
+        private final int tileRegionEnum; // Enumerations related to spells.
+        private static final Map tileRegionMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // tileRegionEnum = Value to associate.
+        // src_x = X-coordinate of the bottom left position of the image to extract.
+        // src_y = Y-coordinate of the bottom left position of the image to extract.
+        // width = Width of the region to extract.
+        // height = Height of the region to extract.
+        // dest_x = X-coordinate (relative to the bottom left corner) to display texture region in stage.
+        //   Excludes render offset.
+        // dest_y = Y-coordinate (relative to the bottom left corner) to display texture region in stage.
+        //   Excludes render offset.
+        private TileRegionEnum(int tileRegionEnum, int src_x, int src_y, int width, int height, int dest_x,
+          int dest_y)
+        {
+            // The constructor sets the values for each enumeration.
+            this.tileRegionEnum = tileRegionEnum;
+            this.rect = new TextureRect(src_x, src_y, width, height);
+            this.dest_x = dest_x;
+            this.dest_y = dest_y;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (TileRegionEnum tileRegionEnum : TileRegionEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                tileRegionMap.put(tileRegionEnum.tileRegionEnum, tileRegionEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.TileRegionEnum.TILE_REGION_000.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return tileRegionEnum;
+        }
+        
+        public int getValue_Dest_X() 
+        {
+            // The function returns the X-coordinate (relative to the bottom left corner) to display the 
+            // texture region in the stage for the enumeration.
+            // Excludes render offset.
+            // Example for use:  int x = HeroineEnum.TileRegionEnum.TILE_REGION_000.getValue_Dest_X();
+            
+            // Return the X-coordinate (relative to the bottom left corner) to display the texture region
+            // in the stage for the enumeration.
+            return dest_x;
+        }
+        
+        public int getValue_Dest_Y() 
+        {
+            // The function returns the Y-coordinate (relative to the bottom left corner) to display the 
+            // texture region in the stage for the enumeration.
+            // Excludes render offset.
+            // Example for use:  int x = HeroineEnum.TileRegionEnum.TILE_REGION_000.getValue_Dest_Y();
+            
+            // Return the Y-coordinate (relative to the bottom left corner) to display the texture region
+            // in the stage for the enumeration.
+            return dest_y;
+        }
+        
+        public TextureRect getValue_TextureRect() 
+        {
+            // The function returns the tile region information for the enumeration.
+            // Example for use:  Texture Rect x = HeroineEnum.TileRegionEnum.TILE_REGION_000.getValue_TextureRect();
+            
+            // Return the tile region information for the enumeration.
+            return rect;
+        }
+        
+        // tileRegion = Numeric value to convert to text.
+        public static TileRegionEnum valueOf(int tileRegion) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (TileRegionEnum) tileRegionMap.get(tileRegion);
         }
         
     }

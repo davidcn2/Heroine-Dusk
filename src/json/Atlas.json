@@ -49,25 +49,25 @@
       "exitCount" : 4,
       "exits" : {
         "EXIT_01" : {
-          "DEST_MAP" : 4,
-          "DEST_X" : 6,
+          "DEST_MAP" : 0,
+          "DEST_X" : 1,
           "DEST_Y" : 2,
-          "EXIT_X" : 4,
-          "EXIT_Y" : 10
+          "EXIT_X" : 7,
+          "EXIT_Y" : 6
         },
         "EXIT_02" : {
-          "DEST_MAP" : 4,
-          "DEST_X" : 6,
+          "DEST_MAP" : 2,
+          "DEST_X" : 1,
           "DEST_Y" : 2,
-          "EXIT_X" : 4,
-          "EXIT_Y" : 10
+          "EXIT_X" : 1,
+          "EXIT_Y" : 6
         },
         "EXIT_03" : {
-          "DEST_MAP" : 4,
-          "DEST_X" : 6,
-          "DEST_Y" : 2,
+          "DEST_MAP" : 3,
+          "DEST_X" : 2,
+          "DEST_Y" : 4,
           "EXIT_X" : 4,
-          "EXIT_Y" : 10
+          "EXIT_Y" : 0
         },
         "EXIT_04" : {
           "DEST_MAP" : 4,
@@ -162,11 +162,11 @@
       "exitCount" : 2,
       "exits" : {
         "EXIT_01" : {
-          "DEST_MAP" : 5,
-          "DEST_X" : 3,
-          "DEST_Y" : 1,
-          "EXIT_X" : 10,
-          "EXIT_Y" : 15
+          "DEST_MAP" : 1,
+          "DEST_X" : 4,
+          "DEST_Y" : 9,
+          "EXIT_X" : 6,
+          "EXIT_Y" : 1
         },
         "EXIT_02" : {
           "DEST_MAP" : 5,
@@ -216,11 +216,11 @@
       "exitCount" : 2,
       "exits" : {
         "EXIT_01" : {
-          "DEST_MAP" : 6,
-          "DEST_X" : 4,
-          "DEST_Y" : 3,
-          "EXIT_X" : 9,
-          "EXIT_Y" : 11
+          "DEST_MAP" : 4,
+          "DEST_X" : 10,
+          "DEST_Y" : 14,
+          "EXIT_X" : 3,
+          "EXIT_Y" : 0
         },
         "EXIT_02" : {
           "DEST_MAP" : 6,
@@ -239,25 +239,25 @@
       "shopCount" : 4,
       "shops" : {
         "SHOP_01" : {
-          "DEST_X" : 2,
-          "DEST_Y" : 8,
-          "EXIT_X" : 1,
-          "EXIT_Y" : 8,
-          "SHOP_ID" : "SHOP_SAGE_THEREL"
+          "DEST_X" : 6,
+          "DEST_Y" : 5,
+          "EXIT_X" : 6,
+          "EXIT_Y" : 4,
+          "SHOP_ID" : "SHOP_CEDAR_ARMS"
         },
         "SHOP_02" : {
-          "DEST_X" : 2,
-          "DEST_Y" : 8,
-          "EXIT_X" : 1,
+          "DEST_X" : 6,
+          "DEST_Y" : 7,
+          "EXIT_X" : 6,
           "EXIT_Y" : 8,
-          "SHOP_ID" : "SHOP_SAGE_THEREL"
+          "SHOP_ID" : "SHOP_SIMMONS_CLOTHIER"
         },
         "SHOP_03" : {
-          "DEST_X" : 2,
+          "DEST_X" : 9,
           "DEST_Y" : 8,
-          "EXIT_X" : 1,
+          "EXIT_X" : 8,
           "EXIT_Y" : 8,
-          "SHOP_ID" : "SHOP_SAGE_THEREL"
+          "SHOP_ID" : "SHOP_PILGRIM_INN"
         },
         "SHOP_04" : {
           "DEST_X" : 2,
@@ -292,18 +292,18 @@
       "exitCount" : 3,
       "exits" : {
         "EXIT_01" : {
-          "DEST_MAP" : 10,
-          "DEST_X" : 2,
-          "DEST_Y" : 1,
-          "EXIT_X" : 8,
-          "EXIT_Y" : 15
+          "DEST_MAP" : 5,
+          "DEST_X" : 9,
+          "DEST_Y" : 10,
+          "EXIT_X" : 4,
+          "EXIT_Y" : 2
         },
         "EXIT_02" : {
-          "DEST_MAP" : 10,
+          "DEST_MAP" : 7,
           "DEST_X" : 2,
-          "DEST_Y" : 1,
-          "EXIT_X" : 8,
-          "EXIT_Y" : 15
+          "DEST_Y" : 5,
+          "EXIT_X" : 14,
+          "EXIT_Y" : 7
         },
         "EXIT_03" : {
           "DEST_MAP" : 10,
@@ -349,10 +349,10 @@
       "exitCount" : 2,
       "exits" : {
         "EXIT_01" : {
-          "DEST_MAP" : 8,
-          "DEST_X" : 1,
+          "DEST_MAP" : 6,
+          "DEST_X" : 13,
           "DEST_Y" : 7,
-          "EXIT_X" : 10,
+          "EXIT_X" : 1,
           "EXIT_Y" : 5
         },
         "EXIT_02" : {
@@ -394,10 +394,10 @@
       "exitCount" : 2,
       "exits" : {
         "EXIT_01" : {
-          "DEST_MAP" : 9,
-          "DEST_X" : 1,
+          "DEST_MAP" : 7,
+          "DEST_X" : 9,
           "DEST_Y" : 5,
-          "EXIT_X" : 15,
+          "EXIT_X" : 0,
           "EXIT_Y" : 7
         },
         "EXIT_02" : {
@@ -497,18 +497,18 @@
       "shopCount" : 3,
       "shops" : {
         "SHOP_01" : {
-          "DEST_X" : 13,
-          "DEST_Y" : 8,
-          "EXIT_X" : 13,
-          "EXIT_Y" : 7,
-          "SHOP_ID" : "SHOP_THIEVES_GUILD"
+          "DEST_X" : 2,
+          "DEST_Y" : 14,
+          "EXIT_X" : 2,
+          "EXIT_Y" : 15,
+          "SHOP_ID" : "SHOP_STONEGATE_ENTRANCE"
         },
         "SHOP_02" : {
-          "DEST_X" : 13,
-          "DEST_Y" : 8,
-          "EXIT_X" : 13,
-          "EXIT_Y" : 7,
-          "SHOP_ID" : "SHOP_THIEVES_GUILD"
+          "DEST_X" : 12,
+          "DEST_Y" : 9,
+          "EXIT_X" : 11,
+          "EXIT_Y" : 9,
+          "SHOP_ID" : "SHOP_THOMAS_THE_FENCE"
         },
         "SHOP_03" : {
           "DEST_X" : 13,

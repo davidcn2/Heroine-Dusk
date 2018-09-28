@@ -30,7 +30,7 @@ public class RegionMap
 {
     
     /* 
-    The class stores map-related data.  One to many region maps exist in an atlas.
+    The class stores map-related data, except for items.  One to many region maps exist in an atlas.
     
     Inner classes include:
     
@@ -272,9 +272,7 @@ public class RegionMap
         // Initialize hash map.
         mapJSON = new HashMap<>();
         mapJSON_RegionEnemies = new HashMap<>();
-        mapJSON_RegionExit = new HashMap<>();
         mapJSON_RegionExits = new HashMap<>();
-        mapJSON_RegionShop = new HashMap<>();
         mapJSON_RegionShops = new HashMap<>();
         mapJSON_RegionTileRow = new HashMap<>();
         mapJSON_RegionTileRows = new HashMap<>();
@@ -312,6 +310,9 @@ public class RegionMap
             for (regionExit currRegionExit : regionExits)
             {
 
+                // Reinitialize hash map for current region exit.  Necessary or same data written for each entry.
+                mapJSON_RegionExit = new HashMap<>();
+                
                 // Add information to hash map containing data for a single region exit.
                 mapJSON_RegionExit.put("EXIT_X", currRegionExit.exit_x);
                 mapJSON_RegionExit.put("EXIT_Y", currRegionExit.exit_y);
@@ -342,6 +343,9 @@ public class RegionMap
             for (regionShop currRegionShop : regionShops)
             {
 
+                // Reinitialize hash map for current region shop.  Necessary or same data written for each entry.
+                mapJSON_RegionShop = new HashMap<>();
+                
                 // Add information to hash map containing data for a single region exit.
                 mapJSON_RegionShop.put("EXIT_X", currRegionShop.exit_x);
                 mapJSON_RegionShop.put("EXIT_Y", currRegionShop.exit_y);
