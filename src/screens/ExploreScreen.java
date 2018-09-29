@@ -1,10 +1,15 @@
 package screens;
 
+// Local project imports.
 import core.BaseActor;
 import core.BaseScreen;
+import gui.CustomLabel;
 import heroinedusk.HeroineDuskGame;
 import heroinedusk.HeroineEnum;
 import heroinedusk.MazeMap;
+
+// Java imports.
+import java.util.ArrayList;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -40,8 +45,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     
     // Declare object variables.
     private BaseActor background; // BaseActor object that will act as the background.
+    private CustomLabel facingLabel; // Label showing direction player is facing.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
+    private BaseActor infoButton; // BaseActor object that will act as the information button.
     private MazeMap mazemap; // Stores data for the current active region / map.
+    private ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
     
     // Declare regular variables.
     
@@ -82,10 +90,13 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 1.  Set defaults.
         
-        // 2.  Initialize the maze map.
-        mazemap = new MazeMap(gameHD.getAtlas(), gameHD.getAtlasItems());
+        // 2.  Initialize arrays and array lists.
+        tiles = new ArrayList<>();
         
-        // 3.  Configure and add the background Actor.
+        // 3.  Initialize the maze map.
+        mazemap = new MazeMap(gameHD);
+        
+        // 4.  Configure and add the background Actor.
         
         // Note:  The application uses a starting background of tempest, which the foreground objects completely hide.
         
@@ -104,9 +115,42 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the background Actor to the scene graph.
         mainStage.addActor( background );
         
-        // Render current map location / tiles.
-        mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), gameHD.getAvatar().getFacing(), 
-          mainStage);
+        // 5.  Render current map location / tiles.
+        
+        // Store array list with base actors for tiles to display.
+        tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
+          gameHD.getAvatar().getFacing());
+        
+        // Loop through base actors in array list.
+        tiles.forEach((actor) -> {
+            
+            // Add the tile Actor to the scene graph.
+            mainStage.addActor( actor );
+        
+        });
+        
+        // 6.  Configure and add the label with the direction the player is facing.
+        
+        // Initialize and add label with facing text.
+        facingLabel = new CustomLabel(game.skin, gameHD.getAvatar().getFacing().toString(), "uiLabelStyle", 1.0f, 
+          gameHD.getConfig().getTextLineHeight(), CustomLabel.AlignEnum.ALIGN_CENTER, 
+          CustomLabel.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, (float)(gameHD.getConfig().getScale() * -2), 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // 7.  Configure and add the information button Actor.
+        
+        // Create and configure new BaseActor for the information button.
+        
+        // To Do:  Switch to atlas to get non-selected button.
+        
+        // Pos X = (140 + 2) * scale factor.  2 = Offset.
+        // Pos Y = (0 + 2) * scale factor.  2 = Offset.
+        infoButton = new BaseActor( "info button", 
+          gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_INFO_BTN.getValue_Key()), 
+          (140 + 2) * gameHD.getConfig().getScale(), 2 * gameHD.getConfig().getScale() );
+        
+        // Add the information button Actor to the scene graph.
+        mainStage.addActor( infoButton );
         
     }
     

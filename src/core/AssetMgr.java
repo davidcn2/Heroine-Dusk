@@ -229,7 +229,7 @@ public class AssetMgr
             // System.out.println("Loading texture regions for: " + atlasKey);
         
             // Loop through texture regions in atlas.
-            for (AtlasRegion region : getAtlas_xRef(atlasKey).getRegions())  
+            for (AtlasRegion region : getAtlas_xRef(atlasKey).getRegions())
             {
                 
                 // Add current texture region to hash map.

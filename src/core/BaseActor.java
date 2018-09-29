@@ -176,7 +176,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     public BaseActor(String actorName, TextureRegion textureRegion, float x, float y)
     {
         
-        // The constructor creates a base actor using a texture based on the passed properties.
+        // The constructor creates a base actor using a texture region based on the passed properties.
         
         // Call basic logic related to a new base actor.
         this();
@@ -186,6 +186,30 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
         // Assign texture region to actor.
         setTextureRegion( textureRegion );
+        
+        // Position the background with its lower left corner at the corresponding location in the screen.
+        setPosition( x, y );
+        
+    }
+    
+    // actorName = Name of actor.
+    // regionKey = Key (as relates to hash map -- textureRegions -- in asset manager) for texture region to return.
+    // x = X-coordinate at which to place lower left corner of the actor.
+    // y = Y-coordinate at which to place lower left corner of the actor.
+    // assetMgr = Reference to the asset manager.
+    public BaseActor(String actorName, String regionKey, float x, float y, AssetMgr assetMgr)
+    {
+        
+        // The constructor creates a base actor using a texture region based on the passed properties.
+        
+        // Call basic logic related to a new base actor.
+        this();
+        
+        // Name actor.
+        this.actorName = actorName;
+        
+        // Assign texture region to actor.
+        setTextureRegion( assetMgr.getTextureRegion(regionKey) );
         
         // Position the background with its lower left corner at the corresponding location in the screen.
         setPosition( x, y );

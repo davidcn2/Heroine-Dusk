@@ -48,7 +48,7 @@ public class CustomLabel
     
     Enumerations include:
     
-    AlignEnum:  Enumerations related to text alignment.
+    AlignEnum:  Enumerations related to text alignment -- horizontal.
     PosRelativeEnum:  Enumerations related to relative positioning.
     
     Methods include:
@@ -96,7 +96,7 @@ public class CustomLabel
       float textLineHeight, String fontSkinKey)
     {
         
-        // The constructor creates a label.
+        // The constructor creates a label with basic settings -- essentially text, style, and scale.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f, "Key");
         
         // Initialize the hash map for actions.
@@ -110,7 +110,7 @@ public class CustomLabel
         // If key to font in skin passed (not null), then...
         if (fontSkinKey != null)
             bitmapFont = gameSkin.get(fontSkinKey, BitmapFont.class);
-            
+        
         // Set up Label object using passed properties.
         // Note:  Best practices include avoiding scaling -- use a high-resolution image, instead.
         customLabel = new Label( labelText, gameSkin, labelStyle ); // Add text and style to Label.
@@ -129,7 +129,7 @@ public class CustomLabel
       String fontSkinKey)
     {
         
-        // The constructor creates a label.
+        // The constructor creates a label with basic settings -- essentially text and style.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Call original constructor using a scale of 1.0f.
@@ -144,7 +144,7 @@ public class CustomLabel
     public CustomLabel(Skin gameSkin, String labelText, float textLineHeight, String fontSkinKey)
     {
         
-        // The constructor creates a label.
+        // The constructor creates a label with basic settings -- essentially text.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Call original constructor using a style of uiLabelStyle and scale of 1.0f.
@@ -157,7 +157,7 @@ public class CustomLabel
     // labelStyle = Name of the style to use.
     // labelScale = Scale to use when displaying label.
     // textLineHeight = Desired text line height.
-    // align = Text alignment desired.  Maps to one of the AlignEnum values.
+    // align = Text alignment desired (horizontal).  Maps to one of the AlignEnum values.
     // whichStage = Reference to stage to which to add label.
     // fontSkinKey = Key to font in skin.
     // elements = Provides values for posX, posY, and stageWidth, as needed, based on alignment.
@@ -168,7 +168,7 @@ public class CustomLabel
         
         /*
         The constructor simplifies the addition of a label to the stage.
-        Supports alignment of text.
+        Supports horizontal alignment of text.
         
         // Notes about elements...
         For left alignment, 0 = posX.

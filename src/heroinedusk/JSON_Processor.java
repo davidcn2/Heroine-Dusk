@@ -1,5 +1,9 @@
 package heroinedusk;
 
+// Local project imports.
+import routines.FileRoutines;
+
+// Java imports.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
@@ -7,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import routines.FileRoutines;
 
 /*
 Interface (implements) vs Sub-Class (extends)...

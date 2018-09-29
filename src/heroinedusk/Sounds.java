@@ -1,6 +1,9 @@
 package heroinedusk;
 
+// LibGDX imports.
 import com.badlogic.gdx.audio.Sound;
+
+// Java imports.
 import java.util.HashMap;
 
 public class Sounds 

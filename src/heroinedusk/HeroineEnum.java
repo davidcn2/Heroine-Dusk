@@ -1,6 +1,9 @@
 package heroinedusk;
 
+// Local project imports.
 import core.TextureRect;
+
+// Java imports.
 import java.util.HashMap;
 import java.util.Map;
 

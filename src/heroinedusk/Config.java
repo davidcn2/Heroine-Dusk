@@ -1,5 +1,6 @@
 package heroinedusk;
 
+// Java imports.
 import routines.ArrayRoutines;
 
 public class Config 

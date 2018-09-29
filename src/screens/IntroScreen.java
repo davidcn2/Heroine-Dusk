@@ -406,7 +406,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 1.  Allocate space in arrays.
         rects = new TextureRect[HeroineEnum.TileRegionEnum.values().length];
-        System.out.println("Space allocated: " + (HeroineEnum.TileRegionEnum.values().length - 1));
+        
         // 2.  Load texture regions related to atlases.
         gameHD.getAssetMgr().loadTextureRegions(atlasKeyList);
         
@@ -477,6 +477,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
             {
                 
                 // Load one piece of region information for the current tile - x, y, width, height.
+                // Apply scale factor to get proper region.
                 rects[counter] = new TextureRect(tileRegionEnum.getValue_TextureRect(), gameHD.getConfig().getScale());
                 
                 // Increment counter.
@@ -570,11 +571,6 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 {
                 // Specify image path.
                 imagePath = "assets/interface/" + imgEnum.getValue_File();
-
-                // Add to lists.
-                imageMapList.add(imagePath);
-                imageMapList.add(imgEnum.getValue_Key());
-                imagePathList.add(imagePath);
                 
                 // Specify atlas path.
                 atlasPath = "assets/interface/" + imgEnum.getValue_AtlasFile();
@@ -589,6 +585,16 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                     atlasMapList.add(atlasPath);
                     atlasMapList.add(imgEnum.getValue_AtlasKey());
                     atlasPathList.add(atlasPath);
+                    }
+                
+                else
+                    {
+                    // No atlas exists.
+                        
+                    // Add to standard texture lists.
+                    imageMapList.add(imagePath);
+                    imageMapList.add(imgEnum.getValue_Key());
+                    imagePathList.add(imagePath);
                     }
                     
                 }
@@ -632,11 +638,6 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 {
                 // Specify image path.
                 imagePath = gameHD.getConfig().getPrescaleFolder_Interface() + imgEnum.getValue_File();
-
-                // Add to lists.
-                imageMapList.add(imagePath);
-                imageMapList.add(imgEnum.getValue_Key());
-                imagePathList.add(imagePath);
                 
                 // Specify atlas path.
                 atlasPath = gameHD.getConfig().getPrescaleFolder_Interface() + imgEnum.getValue_AtlasFile();
@@ -652,6 +653,16 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                     atlasMapList.add(atlasPath);
                     atlasMapList.add(imgEnum.getValue_AtlasKey());
                     atlasPathList.add(atlasPath);
+                    }
+                
+                else
+                    {
+                    // No atlas exists.
+                    
+                    // Add to standard texture lists.
+                    imageMapList.add(imagePath);
+                    imageMapList.add(imgEnum.getValue_Key());
+                    imagePathList.add(imagePath);
                     }
                 
                 }

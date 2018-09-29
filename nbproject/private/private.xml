@@ -2,6 +2,14 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group name="HeroineDusk"/>
+        <group name="HeroineDusk">
+            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/core/BaseActor.java</file>
+            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/screens/ExploreScreen.java</file>
+            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/screens/TitleScreen.java</file>
+            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/heroinedusk/MazeMap.java</file>
+            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/core/AssetMgr.java</file>
+            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/heroinedusk/HeroineEnum.java</file>
+            <file>file://Mac/Home/Documents/NetBeansProjects/HeroineDusk/HeroineDusk/src/screens/IntroScreen.java</file>
+        </group>
     </open-files>
 </project-private>

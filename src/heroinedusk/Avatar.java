@@ -1,6 +1,5 @@
 package heroinedusk;
 
-
 public class Avatar 
 {
 
