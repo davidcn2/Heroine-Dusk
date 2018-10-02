@@ -153,11 +153,11 @@ public class RegionMap
         // The inner class stores information for a shop in the region.
         
         // Declare regular variables.
-        protected int exit_x; // X-coordinate of the exit (in the current region).
-        protected int exit_y; // Y-cooridnate of the exit (in the current region).
+        protected int exit_x; // X-coordinate of the shop (in the current region).
+        protected int exit_y; // Y-cooridnate of the shop (in the current region).
         protected HeroineEnum.ShopEnum shop_id; // Shop identifier.
-        protected int dest_x; // X-coordinate of the exit (in the destination region).
-        protected int dest_y; // Y-coordinate of the exit (in the destination region).
+        protected int dest_x; // X-coordinate of the shop exit (in the destination region).
+        protected int dest_y; // Y-coordinate of the shop exit (in the destination region).
         
         // exit_x = X-coordinate of the shop.
         // exit_y = Y-cooridnate of the shop.

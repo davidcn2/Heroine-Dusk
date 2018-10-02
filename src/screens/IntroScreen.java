@@ -354,7 +354,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         // Process exit event.
                         
-                        // Return label to normal color.
+                        // Return start button to normal color.
                         startButton.setColor(Color.WHITE);
                         
                 }
@@ -579,7 +579,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 if (atlasPath.length() > 0)
                     {
                     // Atlas exists.
-                        
+                    
                     // Add to atlas lists.
                     atlasKeyList.add(imgEnum.getValue_AtlasKey());
                     atlasMapList.add(atlasPath);

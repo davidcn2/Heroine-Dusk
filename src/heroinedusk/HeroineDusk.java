@@ -1,5 +1,6 @@
 package heroinedusk;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 
@@ -24,6 +25,7 @@ public class HeroineDusk {
 	config.height = windowHeight; // Set height of application window.
 	config.title = "Heroine Dusk!"; // Set title of application.
         config.forceExit = false; // Prevent default behavior of LWJGL 2 backend calling System.exit(-1).
+        config.resizable = false; // Prevent maximizing and resizing of screen.
         //config.samples = 4; // Adjust sampling rate to improve anti-aliasing.
         
         // Launch game using configuration settings.

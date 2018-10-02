@@ -1,5 +1,6 @@
 package gui;
 
+// LibGDX imports.
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -9,7 +10,12 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+
+// Local project imports.
+import core.CoreEnum;
 import routines.UtilityRoutines;
+
+// Java imports.
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +52,7 @@ public class CustomLabel
     mainMenu.addAction_FadePartial();
     mainStage.addActor(mainMenu.displayLabel(200, 200));
     
-    Enumerations include:
+    Enumerations referenced include:
     
     AlignEnum:  Enumerations related to text alignment -- horizontal.
     PosRelativeEnum:  Enumerations related to relative positioning.
@@ -56,7 +62,7 @@ public class CustomLabel
     addAction_Fade:  Sets up a fade effect for the label, fading out over the course of 1.0 seconds after 2.0 elapse.
     addAction_FadePartial:  Sets up a color fade effect for the label.
     addEvent:  Adds the passed event logic to the label.
-    applyAction_Visible:  Depending on the passed parameter, either instantly displays or hides the label.
+    applyVisible:  Depending on the passed parameter, either instantly displays or hides the label.
     centerLabel:  Centers a label -- useful when text changes.
     colorLabelDark:  Applies a dark shade to the label.
     colorLabelMedium:  Applies a medium shade to the label.
@@ -162,7 +168,7 @@ public class CustomLabel
     // fontSkinKey = Key to font in skin.
     // elements = Provides values for posX, posY, and stageWidth, as needed, based on alignment.
     public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
-      float textLineHeight, AlignEnum align, Stage whichStage, String fontSkinKey,
+      float textLineHeight, CoreEnum.AlignEnum align, Stage whichStage, String fontSkinKey,
       float ... elements)
     {
         
@@ -171,7 +177,7 @@ public class CustomLabel
         Supports horizontal alignment of text.
         
         // Notes about elements...
-        For left alignment, 0 = posX.
+        For left alignment, 0 = posX, 1 = posY.
         For center alignment, 0 = posY.
         For right alignment, 0 = posX (rightmost edge), 1 = posY.
         
@@ -243,30 +249,30 @@ public class CustomLabel
     // align = Text alignment desired.  Maps to one of the AlignEnum values.
     // posRelative = Relative positioning desired.  Maps to one of the PosRelativeEnum values.
     // whichStage = Reference to stage to which to add label.
-    // adjPosX = Adjustment of x-coordinate, relative to corner specified in alignRelative.
-    //   Null = No relative positioning for x-coordinate.
-    // adjPosY = Adjustment of y-coordinate, relative to corner specified in alignRelative.
-    //   Null = No relative positioning for y-coordinate.
+    // adjPosX = Adjustment of x-coordinate, relative to corner specified in alignRelative or posRelative.
+    //   Null = No horizontal / relative positioning for x-coordinate.
+    // adjPosY = Adjustment of y-coordinate, relative to corner specified in alignRelative or posRelative.
+    //   Null = No horizontal / relative positioning for y-coordinate.
     // fontSkinKey = Key to font in skin.
     // elements = Provides values for posX, posY, and stageWidth, as needed, based on enum values.
     public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
-      float textLineHeight, AlignEnum align, PosRelativeEnum posRelative, Stage whichStage, 
-      Float adjPosX, Float adjPosY, String fontSkinKey, float ... elements)
+      float textLineHeight, CoreEnum.AlignEnum align, CoreEnum.PosRelativeEnum posRelative, 
+      Stage whichStage, Float adjPosX, Float adjPosY, String fontSkinKey, float ... elements)
     {
         
         /*
         The constructor simplifies the addition of a label to the stage.
-        Support alignment of text and relative position of label.
+        Supports alignment and relative positioning of label.
         Centering overrides relative x positioning.
-        Note that the posY refers to the bottom y-coordinte of the label, NOT the top.
+        Note that the posY refers to the bottom y-coordinate of the label, NOT the top.
         
-        For lower left and right positioning...
+        For upper left and right positioning...
           Relative y-position incorporates the height of the label.
           As a result, the bottom of the label aligns with the position.
         
         Notes about elements...
         
-        For left alignment, 0 = posX.
+        For left alignment, 0 = posX, 1 = posY.
         For center alignment, 0 = posY.
         For right alignment, 0 = posX (rightmost edge), 1 = posY.
         
@@ -280,6 +286,7 @@ public class CustomLabel
         this(gameSkin, labelText.toUpperCase(), labelStyle, labelScale, textLineHeight, fontSkinKey);
         
         // Declare variables -- must happen after calling other constructor.
+        CoreEnum.AlignEnum alignHorz; // Horizontal alignment to use for label.
         float labelPosX; // X-coordinate to pass to function displaying label.
         float labelPosY; // Y-coordinate to pass to function displaying label.
         
@@ -291,146 +298,175 @@ public class CustomLabel
         this.stageWidth = whichStage.getWidth();
         this.stageHeight = whichStage.getHeight();
         
-        // Depending on alignment, ...
-        switch (align)
+        // If horizontal alignment passed, then...
+        if (align != null)
         {
-            case ALIGN_LEFT:
-                
-                // Aligning text to the left.
-                
-                // Set positions of x and y coordinates based on passed values.
-                // As necessary, replace with relative positions.
-                
-                // If elements passed, then...
-                if (elements.length == 2)
-                    {
-                    // Element passed.
-                    labelPosX = elements[0];
-                    labelPosY = elements[1];
-                    }
-                
-                // Exit selector.
-                break;
-                
-            case ALIGN_CENTER:
-                
-                // Aligning text to the center.
-                
-                // Set position of y coordinate based on passed value.
-                // As necessary, replace with relative positions.
-                
-                // If element passed, then...
-                if (elements.length == 1)
-                    labelPosY = elements[0];
-                
-                // Exit selector.
-                break;
-                
-            case ALIGN_RIGHT:
-                
-                // Aligning text to the right.
-                
-                // Set positions of x and y coordinates based on passed values.
-                // As necessary, replace with relative positions.
-                
-                // If elements passed, then...
-                if (elements.length == 2)
-                    {
-                    // Element passed.
-                    labelPosX = elements[0]; // Rightmost edge.
-                    labelPosY = elements[1];
-                    }
-                
-                // Exit selector.
-                break;
-                
-            default:
-                
-                // Unknown alignment type.
-                
-                // Exit selector.
-                break;
-                
-        } // Depending on text alignment...
+            
+            // Horizontal alignment passed.
         
-        // Depending on relative positioning, ...
-        switch (posRelative)
+            // Store passed horizontal alignment.
+            alignHorz = align;
+            
+            // Depending on alignment, ...
+            switch (align)
+            {
+                case ALIGN_LEFT:
+
+                    // Aligning text to the left.
+
+                    // Set positions of x and y coordinates based on passed values.
+                    // As necessary, replace with relative positions.
+
+                    // If elements passed, then...
+                    if (elements.length == 2)
+                        {
+                        // Elements passed.
+                        labelPosX = elements[0];
+                        labelPosY = elements[1];
+                        }
+
+                    // Exit selector.
+                    break;
+
+                case ALIGN_CENTER:
+
+                    // Aligning text to the center.
+
+                    // Set position of y coordinate based on passed value.
+                    // As necessary, replace with relative positions.
+
+                    // If element passed, then...
+                    if (elements.length == 1)
+                        labelPosY = elements[0];
+
+                    // Exit selector.
+                    break;
+
+                case ALIGN_RIGHT:
+
+                    // Aligning text to the right.
+
+                    // Set positions of x and y coordinates based on passed values.
+                    // As necessary, replace with relative positions.
+
+                    // If elements passed, then...
+                    if (elements.length == 2)
+                        {
+                        // Elements passed.
+                        labelPosX = elements[0]; // Rightmost edge.
+                        labelPosY = elements[1];
+                        }
+
+                    // Exit selector.
+                    break;
+
+                default:
+
+                    // Unknown alignment type.
+
+                    // Exit selector.
+                    break;
+
+            } // Depending on text alignment...
+            
+        } // End ... If horizontal alignment passed.
+        
+        else
         {
-            case REL_POS_LOWER_LEFT:
-                
-                // Position relative to lower left corner.
-                
-                // If necessary, replace x-coordinate with relative position.
-                if (adjPosX != null)
-                    labelPosX = adjPosX;
-                
-                // If necessary, replace y-coordinate with relative position.
-                if (adjPosY != null)
-                    labelPosY = adjPosY;
-                    
-                // Exit selector.
-                break;
-                
-            case REL_POS_LOWER_RIGHT:
-                
-                // Position relative to lower right corner.
-                
-                // If necessary, replace x-coordinate with relative position.
-                if (adjPosX != null)
-                    labelPosX = this.stageWidth + adjPosX;
-                
-                // If necessary, replace y-coordinate with relative position.
-                if (adjPosY != null)
-                    labelPosY = adjPosY;
-                
-                // Exit selector.
-                break;
-                
-            case REL_POS_UPPER_LEFT:
-                
-                // Position relative to upper left corner.
-                
-                // If necessary, replace x-coordinate with relative position.
-                if (adjPosX != null)
-                    labelPosX = adjPosX;
-                
-                // If necessary, replace y-coordinate with relative position.
-                if (adjPosY != null)
-                    labelPosY = this.stageHeight - customLabel.getHeight() + adjPosY;
-                
-                // Exit selector.
-                break;
-                
-            case REL_POS_UPPER_RIGHT:
-                
-                // Position relative to upper right corner.
-                
-                // If necessary, replace x-coordinate with relative position.
-                if (adjPosX != null)
-                    labelPosX = this.stageWidth + adjPosX;
-                
-                // If necessary, replace y-coordinate with relative position.
-                if (adjPosY != null)
-                    labelPosY = this.stageHeight - customLabel.getHeight() + adjPosY;
-                
-                // Exit selector.
-                break;
-                
-            default:
-                
-                // No relative positioning needed.
-                
-                // Exit selector.
-                break;
-                
-        } // Depending on relative positioning...
+        
+            // Horizontal alignment NOT passed.
+            
+            // Default to left alignment.
+            alignHorz = CoreEnum.AlignEnum.ALIGN_LEFT;
+            
+        }
+        
+        // If relative positioning passed, then...
+        if (posRelative != null)
+        {
+            
+            // Relative positioning passed.
+        
+            // Depending on relative positioning, ...
+            switch (posRelative)
+            {
+                case REL_POS_LOWER_LEFT:
+
+                    // Position relative to lower left corner.
+
+                    // If necessary, replace x-coordinate with relative position.
+                    if (adjPosX != null)
+                        labelPosX = adjPosX;
+
+                    // If necessary, replace y-coordinate with relative position.
+                    if (adjPosY != null)
+                        labelPosY = adjPosY;
+
+                    // Exit selector.
+                    break;
+
+                case REL_POS_LOWER_RIGHT:
+
+                    // Position relative to lower right corner.
+
+                    // If necessary, replace x-coordinate with relative position.
+                    if (adjPosX != null)
+                        labelPosX = this.stageWidth + adjPosX;
+
+                    // If necessary, replace y-coordinate with relative position.
+                    if (adjPosY != null)
+                        labelPosY = adjPosY;
+
+                    // Exit selector.
+                    break;
+
+                case REL_POS_UPPER_LEFT:
+
+                    // Position relative to upper left corner.
+
+                    // If necessary, replace x-coordinate with relative position.
+                    if (adjPosX != null)
+                        labelPosX = adjPosX;
+
+                    // If necessary, replace y-coordinate with relative position.
+                    if (adjPosY != null)
+                        labelPosY = this.stageHeight - customLabel.getHeight() + adjPosY;
+
+                    // Exit selector.
+                    break;
+
+                case REL_POS_UPPER_RIGHT:
+
+                    // Position relative to upper right corner.
+
+                    // If necessary, replace x-coordinate with relative position.
+                    if (adjPosX != null)
+                        labelPosX = this.stageWidth + adjPosX;
+
+                    // If necessary, replace y-coordinate with relative position.
+                    if (adjPosY != null)
+                        labelPosY = this.stageHeight - customLabel.getHeight() + adjPosY;
+
+                    // Exit selector.
+                    break;
+
+                default:
+
+                    // No relative positioning needed.
+
+                    // Exit selector.
+                    break;
+
+            } // Depending on relative positioning...
+            
+        } // End ... If relative positioning passed.
         
         //System.out.println("Label height: " + customLabel.getHeight());
         //System.out.println("Label pos x: " + labelPosX);
         //System.out.println("Label pos y: " + labelPosY);
         
         // Depending on alignment, ...
-        switch (align)
+        switch (alignHorz)
         {
             case ALIGN_LEFT:
                 
@@ -473,110 +509,6 @@ public class CustomLabel
                 break;
                 
         } // Depending on text alignment...
-        
-    }
-    
-    // Enumerations below...
-    
-    // Enumerations related to text alignment.
-    public enum AlignEnum 
-    {
-        
-        ALIGN_LEFT (0), // Align to the left.
-        ALIGN_CENTER (1), // Align to the center.
-        ALIGN_RIGHT (2) // Align to the right.
-        ; // semicolon needed when fields / methods follow
-
-        private final int alignEnum; // Enumerations related to text alignment.
-        private static final Map alignMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
-        
-        // alignEnum = Value to associate.
-        private AlignEnum(int alignEnum) 
-        {
-            // The constructor sets the numeric values for each enumeration.
-            this.alignEnum = alignEnum;
-        }
-        
-        // Populate the hash map containing the text and numbers.
-        static 
-        {
-            
-            // Loop through each of the enumerated values.
-            for (AlignEnum alignEnum : AlignEnum.values()) 
-            {
-                // Add the current enumeration to the hash map.
-                alignMap.put(alignEnum.alignEnum, alignEnum);
-            }
-            
-        }
-        
-        public int getValue() 
-        {
-            // The function returns the numeric value for the enumeration.
-            // Example for use:  int x = HeroineEnum.AlignEnum.ALIGN_RIGHT.getValue();
-            
-            // Return the numeric value for the enumeration.
-            return alignEnum;
-        }
-        
-        // align = Numeric value to convert to text.
-        public static AlignEnum valueOf(int align) 
-        {
-            // The function converts the passed numeric value to its corresponding text.
-            return (AlignEnum) alignMap.get(align);
-        }
-        
-    }
-    
-    // Enumerations related to relative position.
-    public enum PosRelativeEnum 
-    {
-        
-        REL_POS_GENERAL (0), // No adjustments, place simply as indicated.
-        REL_POS_UPPER_LEFT (1), // Align relative to the upper left corner.
-        REL_POS_UPPER_RIGHT (2), // Align relative to the upper right corner.
-        REL_POS_LOWER_LEFT (3), // Align relative to the lower left corner.
-        REL_POS_LOWER_RIGHT (4) // Align relative to the lower right corner.
-        ; // semicolon needed when fields / methods follow
-
-        private final int posRelativeEnum; // Enumerations related to relative label positioning.
-        private static final Map posRelativeMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
-        
-        // posRelativeEnum = Value to associate.
-        private PosRelativeEnum(int posRelativeEnum) 
-        {
-            // The constructor sets the numeric values for each enumeration.
-            this.posRelativeEnum = posRelativeEnum;
-        }
-        
-        // Populate the hash map containing the text and numbers.
-        static 
-        {
-            
-            // Loop through each of the enumerated values.
-            for (PosRelativeEnum posRelativeEnum : PosRelativeEnum.values()) 
-            {
-                // Add the current enumeration to the hash map.
-                posRelativeMap.put(posRelativeEnum.posRelativeEnum, posRelativeEnum);
-            }
-            
-        }
-        
-        public int getValue() 
-        {
-            // The function returns the numeric value for the enumeration.
-            // Example for use:  int x = HeroineEnum.PosRelativeEnum.ALIGN_UPPER_RIGHT.getValue();
-            
-            // Return the numeric value for the enumeration.
-            return posRelativeEnum;
-        }
-        
-        // posRelative = Numeric value to convert to text.
-        public static PosRelativeEnum valueOf(int posRelative) 
-        {
-            // The function converts the passed numeric value to its corresponding text.
-            return (PosRelativeEnum) posRelativeMap.get(posRelative);
-        }
         
     }
     
@@ -666,18 +598,10 @@ public class CustomLabel
     }
     
     // visible = Whether to display label.
-    public void applyAction_Visible(boolean visible)
+    public void applyVisible(boolean visible)
     {
         
         // Depending on the passed parameter, the function either instantly displays or hides the label.
-        
-        // Add display action to hash map.
-        actionMapping.putIfAbsent("Visible", 
-          Actions.sequence(Actions.fadeIn(0.0f), Actions.visible(true)));
-        
-        // Add display action to hash map.
-        actionMapping.putIfAbsent("Invisible", 
-          Actions.sequence(Actions.visible(false)));
         
         // If displaying label, then...
         if (visible)
@@ -686,7 +610,7 @@ public class CustomLabel
             // Displaying label.
             
             // Display label.
-            customLabel.addAction(actionMapping.get("Visible"));
+            customLabel.setVisible(true);
         }
         
         else
@@ -695,11 +619,11 @@ public class CustomLabel
             // Hiding label.
             
             // Display label.
-            customLabel.addAction(actionMapping.get("Invisible"));
+            customLabel.setVisible(false);
         }
         
-    }    
-            
+    }
+    
     // stageWidth = Width of stage in which to center label.
     public void centerLabel(float stageWidth)
     {
@@ -854,7 +778,7 @@ public class CustomLabel
         
         // The function updates the text of the label, using the existing bitmap font.
         
-        // Computes and caches any information needed for drawing.
+        // Update text of the label.
         setLabelText(labelText, bitmapFont);
         
     }

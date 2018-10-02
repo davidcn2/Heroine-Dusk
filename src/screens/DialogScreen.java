@@ -10,6 +10,7 @@ import core.AssetMgr;
 import core.BaseActor;
 import core.BaseGame;
 import core.BaseScreen;
+import core.CoreEnum;
 import gui.CustomLabel;
 import heroinedusk.Dialog;
 import heroinedusk.HeroineDuskGame;
@@ -175,8 +176,8 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 4.  Render the title label.
         titleLabel = new CustomLabel(game.skin, dialog.getTitle(), "uiLabelStyle", 1.0f, 
-          gameHD.getConfig().getTextLineHeight(), CustomLabel.AlignEnum.ALIGN_CENTER, 
-          CustomLabel.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, -12f, 
+          gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
+          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, -12f, 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0, viewWidthMain);
         
         // 5.  Render the buttons and associated labels.
@@ -189,8 +190,8 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Create and display label containing dialog message.
         dialogMsgLabel = new CustomLabel(game.skin, dialog.getMessage(), "uiLabelStyle", 1.0f, 
-          gameHD.getConfig().getTextLineHeight(), CustomLabel.AlignEnum.ALIGN_CENTER, 
-          CustomLabel.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, adjPosY, 
+          gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
+          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, adjPosY, 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0, viewWidthMain);
         
     }
@@ -285,12 +286,9 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // The method is called when removing the screen and allows for clearing of related resources 
         // from memory.
-
+        
         // Call manual dispose method in superclass.
         super.disposeManual();
-        
-        // Clear LibGDX objects in other classes.
-        assetMgr.disposeAssetMgr();
         
     }
     
@@ -301,8 +299,8 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Render the player gold-related label.
         goldLabel = new CustomLabel(game.skin, gameHD.getAvatar().getGold() + " Gold", "uiLabelStyle", 1.0f, 
-          gameHD.getConfig().getTextLineHeight(), CustomLabel.AlignEnum.ALIGN_RIGHT, 
-          CustomLabel.PosRelativeEnum.REL_POS_LOWER_RIGHT, mainStage, -12f, 12f, 
+          gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_RIGHT, 
+          CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, mainStage, -12f, 12f, 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         
     }

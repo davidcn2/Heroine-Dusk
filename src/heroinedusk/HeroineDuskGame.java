@@ -34,6 +34,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     
     create:  Sets up the skin and initializes and displays the title screen.
     createSkin:  Sets up the skin.
+    dispose:  Occurs during the cleanup phase and clears objects from memory.
     disposeScreens:  Disposes of LibGDX objects in screens.
     renderDialogScreen:  Renders the dialog screen, incorporating any necessary updates.
     setDialogScreen:  Switches to (displays) the dialog screen and hides the current.
@@ -229,14 +230,33 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
     }
     
+    @Override
+    public void dispose()
+    {
+
+        // The function occurs during the cleanup phase and clears objects from memory.
+        
+        // Dispose objects in screens from memory.
+        disposeScreens();
+        
+        // Clear objects from memory.
+        super.dispose();
+
+    }
+    
     public void disposeScreens()
     {
         
         // The function disposes of LibGDX objects in screens.
-        // The function also disposes of additional LibGDX, such as those related to sounds and music.
+        // The function also disposes of additional LibGDX ojects, such as those related to sounds and music.
+        // The function also clears memory related to the asset manager.
         
         // Dispose of LibGDX objects related to introduction screen.
         isMain.dispose();
+        
+        // If initialized, dispose of LibGDX objects related to explore screen.
+        if (esMain != null)
+            esMain.dispose();
         
         // If main game screen initialized, then...
         if (gsMain != null)
@@ -245,8 +265,13 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
             // Dispose of LibGDX objects related to main game screen.
             gsMain.dispose();
         
-        // Dispose of LibGDX objects related to title screen.
-        tsMain.dispose();
+        // If initialized, dispose of LibGDX objects related to title screen.
+        if (tsMain != null)
+            tsMain.dispose();
+        
+        // If initialized, dispose of LibGDX objects related to dialog screen.
+        if (dsMain != null)
+            dsMain.dispose();
         
         // Dispose of sound and music objects.
         sounds.disposeSounds();
@@ -271,6 +296,9 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // The function switches to (displays) the dialog screen and hides the current.
         
+        // Switch to dialog state.
+        gameState = HeroineEnum.GameState.STATE_DIALOG;
+        
         // Initialize dialog screen object.
         dsMain = new DialogScreen(this, windowWidth, windowHeight, this, dialog);
         
@@ -283,6 +311,9 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     {
         
         // The function switches to (displays) the explore screen and hides the current.
+        
+        // Update game state to title screen.
+        gameState = HeroineEnum.GameState.STATE_EXPLORE;
         
         // If explore screen object initialized, then...
         if (esMain == null)
@@ -345,6 +376,9 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     {
         
         // The function switches to (displays) the title screen and hides the current.
+        
+        // Update game state to title screen.
+        gameState = HeroineEnum.GameState.STATE_TITLE;
         
         // If title screen object initialized, then...
         if (tsMain == null)

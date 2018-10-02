@@ -1,5 +1,6 @@
 package core;
 
+// LibGDX imports.
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -10,6 +11,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Intersector;
+
+// Java imports.
 import java.util.ArrayList;
 
 /*
@@ -75,23 +78,23 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     setTintColor:  Sets the tint color of the Actor.
     setTintColorToDefault:  Sets the tint color of the Actor to the default.
     */
-
-    @SuppressWarnings({"FieldCanBeLocal"})
-    private String actorName; // Name of actor.
-
-    private ArrayList<? extends BaseActor> parentList; // Stores a reference to an ArrayList to which the Actor has been added.
-    TextureRegion region; // Stores image (similar to a buffer from Direct-X).  Includes more
-    // functionality than a Texture.  Supports storage of multiple images or animation frames.
-    // Stores coordinates (u, v), that determine which rectangular subarea of the Texture to use.
+    
+    // Declare object variables.
     private Polygon boundingPolygon; // Encapsulates a 2D polygon defined by its vertices.
     // A polygon can be translated and rotated.
-    @SuppressWarnings("FieldMayBeFinal")
     private Rectangle boundingRectangle; // Encapsulates a 2D rectangle defined by its corner point in the
     // bottom left and its extents in x (width) and y (height).  The object will contain the X and Y
     // coordinates and height and width of the texture region.
-    private Color tintColor; // Color to tint the Actor.
     private final ColorWorks colorEngine; // Contains color related functionality.
-
+    private ArrayList<? extends BaseActor> parentList; // Stores a reference to an ArrayList to which the Actor has been added.
+    protected TextureRegion region; // Stores image (similar to a buffer from Direct-X).  Includes more
+    // functionality than a Texture.  Supports storage of multiple images or animation frames.
+    // Stores coordinates (u, v), that determine which rectangular subarea of the Texture to use.
+    private Color tintColor; // Color to tint the Actor.
+    
+    // Declare regular variables.
+    private String actorName; // Name of actor.
+    
     public BaseActor()
     {
 
@@ -201,6 +204,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     {
         
         // The constructor creates a base actor using a texture region based on the passed properties.
+        // Allows for ease of use of atlases.
         
         // Call basic logic related to a new base actor.
         this();
@@ -213,6 +217,245 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
         // Position the background with its lower left corner at the corresponding location in the screen.
         setPosition( x, y );
+        
+    }
+    
+    // actorName = Name of actor.
+    // assetKey = Key (as relates to hash map -- textureRegions -- in asset manager) for texture (or region)
+    //   to return.
+    // assetMgr = Reference to the asset manager.
+    // align = Actor alignment desired.  Maps to one of the AlignEnum values.
+    // posRelative = Relative positioning desired.  Maps to one of the PosRelativeEnum values.
+    // stageWidth = Width of the stage.  Helpful for centering and relative positioning.
+    // stageHeight = Height of the stage.  Helpful for centering and relative positioning.
+    // adjPosX = Adjustment of x-coordinate, relative to corner specified in alignRelative or posRelative.
+    //   Null = No horizontal / relative positioning for x-coordinate.
+    // adjPosY = Adjustment of y-coordinate, relative to corner specified in alignRelative or posRelative.
+    //   Null = No horizontal / relative positioning for y-coordinate.
+    // assetKeyType = Asset manager key type (texture, texture region, ...).
+    // elements = Provides values for posX, posY, and stageWidth, as needed, based on enum values.
+    public BaseActor(String actorName, String assetKey, AssetMgr assetMgr, CoreEnum.AlignEnum align, 
+      CoreEnum.PosRelativeEnum posRelative, Float stageWidth, Float stageHeight, Float adjPosX, Float adjPosY, 
+      CoreEnum.AssetKeyTypeEnum assetKeyType, float ... elements)
+    {
+        
+        /*
+        The constructor creates a base actor using a texture region based on the passed properties.
+        Allows for ease of use of atlases.
+        
+        Supports alignment and relative positioning of actor.
+        Centering overrides relative x positioning.
+        Note that the calculated posY refers to the bottom y-coordinate of the actor, NOT the top.
+        
+        For positioning...
+          Relative y-position (at the top of the screen) incorporates the height of the actor.
+          As a result, the bottom of the actor aligns with the adjusted position --
+          the y parameter represents the top.
+          For the lower part of the screen, the y parameter represents the bottom of the actor.
+        
+        Notes about elements...
+        
+        For left alignment, 0 = posX, 1 = posY.  posY = top of actor.
+        For center alignment, 0 = posY.  posY = top of actor.
+        For right alignment, 0 = posX (rightmost edge), 1 = posY.  posY = top of actor.
+        
+        Calculated values...
+        posX = For left alignment, leftmost position of actor.  Use null for centering (ignored).
+               For right alignment, rightmost position of actor.
+        posY = Y-coordinate for placement of the actor -- the bottom, NOT the top.
+        */
+        
+        // Call basic logic related to a new base actor.
+        this();
+        
+        // Declare variables -- must happen after calling other constructor.
+        float actorPosX; // X-coordinate at which to place lower left corner of the actor.
+        float actorPosY; // Y-coordinate at which to place lower left corner of the actor.
+        
+        // Set defaults.
+        actorPosX = 0;
+        actorPosY = 0;
+        
+        // Name actor.
+        this.actorName = actorName;
+        
+        // If working with a texture, then...
+        if (assetKeyType == CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE)
+        {
+            
+            // Working with a texture.
+            
+            // Assign texture to actor.
+            setTexture( assetMgr.getImage_xRef(assetKey) );
+            
+        }
+        
+        else
+        {
+            
+            // Working with a texture region.
+            
+            // Assign texture region to actor.
+            setTextureRegion( assetMgr.getTextureRegion(assetKey) );
+            
+        }
+        
+        // If horizontal alignment passed, then...
+        if (align != null)
+        {
+            
+            // Horizontal alignment passed.
+        
+            // Depending on horizontal alignment, ...
+            switch (align)
+            {
+                case ALIGN_LEFT:
+
+                    // Aligning actor to the left.
+
+                    // Set positions of x and y coordinates based on passed values.
+                    // As necessary, replace with relative positions.
+
+                    // If elements passed, then...
+                    if (elements.length == 2)
+                        {
+                        // Elements passed.
+                        actorPosX = elements[0]; // Leftmost edge.
+                        actorPosY = elements[1] - region.getRegionHeight(); // Bottom edge.
+                        }
+
+                    // Exit selector.
+                    break;
+
+                case ALIGN_CENTER:
+
+                    // Aligning actor to the center.
+
+                    // Set position of y coordinate based on passed value.
+                    // As necessary, replace with relative positions.
+
+                    // If element passed, then...
+                    if (elements.length == 1)
+                        {
+                        // Element passed.
+                        actorPosX = (stageWidth - region.getRegionWidth()) / 2;
+                        actorPosY = elements[0] - region.getRegionHeight(); // Bottom edge.
+                        }
+
+                    // Exit selector.
+                    break;
+
+                case ALIGN_RIGHT:
+
+                    // Aligning actor to the right.
+
+                    // Set positions of x and y coordinates based on passed values.
+                    // As necessary, replace with relative positions.
+
+                    // If elements passed, then...
+                    if (elements.length == 2)
+                        {
+                        // Elements passed.
+                        actorPosX = elements[0] - region.getRegionWidth(); // Rightmost edge.
+                        actorPosY = elements[1] - region.getRegionHeight(); // Bottom edge.
+                        }
+
+                    // Exit selector.
+                    break;
+
+                default:
+
+                    // Unknown alignment type.
+
+                    // Exit selector.
+                    break;
+
+            } // Depending on actor (horizontal) alignment...
+            
+        } // End ... If horizontal alignment passed.
+        
+        // If relative positioning passed, then...
+        if (posRelative != null)
+        {
+            
+            // Relative positioning passed.
+            
+            // Depending on relative positioning, ...
+            switch (posRelative)
+            {
+                case REL_POS_LOWER_LEFT:
+
+                    // Position relative to lower left corner.
+
+                    // If necessary, replace x-coordinate with relative position.
+                    if (adjPosX != null)
+                        actorPosX = adjPosX;
+
+                    // If necessary, replace y-coordinate with relative position.
+                    if (adjPosY != null)
+                        actorPosY = adjPosY;
+
+                    // Exit selector.
+                    break;
+
+                case REL_POS_LOWER_RIGHT:
+
+                    // Position relative to lower right corner.
+
+                    // If necessary, replace x-coordinate with relative position.
+                    if (adjPosX != null)
+                        actorPosX = stageWidth + adjPosX;
+
+                    // If necessary, replace y-coordinate with relative position.
+                    if (adjPosY != null)
+                        actorPosY = adjPosY;
+
+                    // Exit selector.
+                    break;
+
+                case REL_POS_UPPER_LEFT:
+
+                    // Position relative to upper left corner.
+
+                    // If necessary, replace x-coordinate with relative position.
+                    if (adjPosX != null)
+                        actorPosX = adjPosX;
+
+                    // If necessary, replace y-coordinate with relative position.
+                    if (adjPosY != null)
+                        actorPosY = stageHeight - region.getRegionHeight() + adjPosY;
+
+                    // Exit selector.
+                    break;
+
+                case REL_POS_UPPER_RIGHT:
+
+                    // Position relative to upper right corner.
+
+                    // If necessary, replace x-coordinate with relative position.
+                    if (adjPosX != null)
+                        actorPosX = stageWidth + adjPosX;
+
+                    // If necessary, replace y-coordinate with relative position.
+                    if (adjPosY != null)
+                        actorPosY = stageHeight - region.getRegionHeight() + adjPosY;
+
+                    // Exit selector.
+                    break;
+
+                default:
+
+                    // No relative positioning needed.
+
+                    // Exit selector.
+                    break;
+
+            } // Depending on relative positioning...
+            
+        } // End ... If relative positioning passed.
+        
+        // Position the background with its lower left corner at the corresponding location in the screen.
+        setPosition( actorPosX, actorPosY );
         
     }
     
@@ -594,21 +837,8 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         this.actorName = actorName;
     }
 
-    // Color related methods...
-
-    public Color getTintColor()
-    {
-        // The function returns the Color used to tint the Actor.
-        return tintColor;
-    }
-
-    // tintColor = Color to tint the Actor.
-    public void setTintColor(Color tintColor)
-    {
-        // The function sets the Color used to tint the Actor.
-        this.tintColor = tintColor;
-    }
-
+    // Color related methods (except main getter and setter)...
+    
     // red = Red portion of Color to tint the Actor.
     // green = Green portion of Color to tint the Actor.
     // blue = Blue portion of Color to tint the Actor.
@@ -705,6 +935,23 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         // Return the new BaseActor object.
         return newbie;
 
+    }
+    
+    public String getActorName() {
+        return actorName;
+    }
+    
+    public Color getTintColor()
+    {
+        // The function returns the Color used to tint the Actor.
+        return tintColor;
+    }
+
+    // tintColor = Color to tint the Actor.
+    public void setTintColor(Color tintColor)
+    {
+        // The function sets the Color used to tint the Actor.
+        this.tintColor = tintColor;
     }
 
 }

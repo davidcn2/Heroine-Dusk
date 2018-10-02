@@ -1,5 +1,7 @@
 package heroinedusk;
 
+import java.util.ArrayList;
+
 public class Avatar 
 {
 
@@ -11,6 +13,9 @@ public class Avatar
     adjGold:  Adjusts the amount of gold the players owns by the passed amount.
     avatar_sleep:  Handles the player sleeping -- restores HP and MP and sets the respawn point.
     */
+    
+    // Declare object variables.
+    private ArrayList<HeroineEnum.SpellEnum> spellList; // List of player spells.
     
     // Declare regular variables.
     private HeroineEnum.ArmorEnum armor; // Current armor.
@@ -34,7 +39,10 @@ public class Avatar
     public Avatar()
     {
         
-        // The constructor sets the starting values for the player.
+        // The constructor initializes array lists and sets the starting values for the player.
+        
+        // Initialize array lists.
+        spellList = new ArrayList<>();
         
         // Set starting values for the player.
         x = 1;
@@ -44,7 +52,7 @@ public class Avatar
         map_id = 0;
         weapon = HeroineEnum.WeaponEnum.WEAPON_BARE_FISTS;
         armor = HeroineEnum.ArmorEnum.ARMOR_SERF_RAGS;
-        hp = 25;
+        hp = 5; //25;
         max_hp = 25;
         mp = 4;
         max_mp = 4;
@@ -53,7 +61,15 @@ public class Avatar
         bonus_def = 0;
         spellbook = HeroineEnum.SpellEnum.NO_SPELL;
         sleeploc = new MapLocation(0, 1, 1);
-          
+        
+        // temp
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_HEAL);
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_BURN);
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_UNLOCK);
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_LIGHT);
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_FREEZE);
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_REFLECT);
+        
     }
     
     // amount = Amount of gold to add to or subtract from player inventory.
@@ -186,8 +202,13 @@ public class Avatar
 
     public void setSpellbook(HeroineEnum.SpellEnum spellbook) {
         this.spellbook = spellbook;
+        this.spellList.add(spellbook);
     }
 
+    public ArrayList<HeroineEnum.SpellEnum> getSpellList() {
+        return spellList;
+    }
+    
     public HeroineEnum.WeaponEnum getWeapon() {
         return weapon;
     }

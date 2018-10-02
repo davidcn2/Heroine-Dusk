@@ -414,9 +414,6 @@ public class Shops
         // Play a click sound.
         gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_CLICK);
         
-        // Switch to explore mode.
-        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
-        
         // Switch to explore screen.
         gameHD.setExploreScreen();
         

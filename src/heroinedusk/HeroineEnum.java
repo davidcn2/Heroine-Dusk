@@ -18,33 +18,38 @@ public class HeroineEnum
     
     Enumerations include:
     
-    1.  ActionButtonEnum:  Enumerations related to action buttons.
+    1.  ActionButtonEnum:  Enumerations related to action buttons.  Helps with atlas keys.
     2.  ArmorEnum:  Enumerations related to armors.
-    3.  DialogButtonEnum:  Enumerations related to dialog buttons.
+    3.  DialogButtonEnum:  Enumerations related to dialog buttons.  Helps with atlas keys.
     4.  EnemyCategoryEnum:  Enumerations related to enemy categories.
     5.  EnemyEnum:  Enumerations related to enemies.
     6.  EnemyPowerEnum:  Enumerations realted to enemy powers.
     7.  FacingEnum:  Enumerations related to direction player is facing.
     8.  FontEnum:  Enumerations related to fonts.
     9.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
-    10.  ImgBackgroundEnum:  Enumerations related to background images.
-    11.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
-    12.  ImgTileEnum:  Enumerations related to tile images.
-    13.  ItemCategoryEnum:  Enumerations related to item categories.
-    14.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
-    15.  ItemTypeEnum:  Enumerations related to item types.
-    16.  ListEnum:  Enumerations related to list types.
-    17.  MagicItemEnum:  Enumerations related to magic items.
-    18.  MusicEnum:  Enumerations related to music.
-    19.  ShopEnum:  Enumerations related to shops / locations.
-    20.  ShopTypeEnum:  Enumerations related to shop / location types.
-    21.  SoundsEnum:  Enumerations related to sounds.
-    22.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    23.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
-    24:  WeaponEnum:  Enumerations related to weapons.
+    10.  HeroinePlayerEnum:  Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
+    11.  ImgBackgroundEnum:  Enumerations related to background images.
+    12.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
+    13.  ImgTileEnum:  Enumerations related to tile images.
+    14.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
+    15.  ItemCategoryEnum:  Enumerations related to item categories.
+    16.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
+    17.  ItemTypeEnum:  Enumerations related to item types.
+    18.  ListEnum:  Enumerations related to list types.
+    19.  MagicItemEnum:  Enumerations related to magic items.
+    20.  MusicEnum:  Enumerations related to music.
+    21.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
+    22.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
+    23.  SelectPosEnum:  Enumerations related to explore screen button selection.
+    24.  ShopEnum:  Enumerations related to shops / locations.
+    25.  ShopTypeEnum:  Enumerations related to shop / location types.
+    26.  SoundsEnum:  Enumerations related to sounds.
+    27.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    28.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
+    29:  WeaponEnum:  Enumerations related to weapons.
     */
     
-    // Enumerations related to action buttons.
+    // Enumerations related to action buttons.  Helps with atlas keys.
     public enum ActionButtonEnum 
     {
         
@@ -59,7 +64,7 @@ public class HeroineEnum
         ; // semicolon needed when fields / methods follow
 
         private final int actionButtonEnum; // Enumerations related to action buttons.
-        private final String actionButtonKey; // Key associated with texture -- used with asset manager and textureRegions hash map.
+        private final String actionButtonKey; // Key associated with texture region -- used with asset manager and textureRegions hash map.
         private static final Map actionButtonMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         
         // actionButtonEnum = Value to associate.
@@ -95,10 +100,10 @@ public class HeroineEnum
         
         public String getValue_Key() 
         {
-            // The function returns the key associated with the texture.
+            // The function returns the key associated with the texture region.
             // Example for use:  String x = HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT.getValue_Key();
             
-            // Return the key associated with the texture.
+            // Return the key associated with the texture region.
             return actionButtonKey;
         }
         
@@ -115,33 +120,36 @@ public class HeroineEnum
     public enum ArmorEnum
     {
         
-        NO_ARMOR (0, "No Armor", 0, 0), // No armor.
-        ARMOR_SERF_RAGS (1, "Serf Rags", 2, 0), // Serf rags.
-        ARMOR_TRAVEL_CLOAK (2, "Travel Cloak", 4, 50), // Travel cloak.
-        ARMOR_HIDE_CUIRASS (3, "Hide Cuirass", 6, 200), // Hide cuirass.
-        ARMOR_RIVET_LEATHER (4, "Rivet Leather", 8, 1000), // Rivet leather.
-        ARMOR_CHAIN_MAILLE (5, "Chain Maille", 10, 5000), // Chain maille.
-        ARMOR_PLATE_ARMOR (6, "Plate Armor", 12, 20000), // Plate armor.
-        ARMOR_WYVERN_SCALE (7, "Wyvern Scale", 14, 100000) // Wyvern scale.
+        NO_ARMOR (0, "No Armor", 0, 0, HeroinePlayerEnum.HEROINE_PLAYER_BASE), // No armor.
+        ARMOR_SERF_RAGS (1, "Serf Rags", 2, 0, HeroinePlayerEnum.HEROINE_ARMOR_SERF_RAGS), // Serf rags.
+        ARMOR_TRAVEL_CLOAK (2, "Travel Cloak", 4, 50, HeroinePlayerEnum.HEROINE_ARMOR_TRAVEL_CLOAK), // Travel cloak.
+        ARMOR_HIDE_CUIRASS (3, "Hide Cuirass", 6, 200, HeroinePlayerEnum.HEROINE_ARMOR_HIDE_CUIRASS), // Hide cuirass.
+        ARMOR_RIVET_LEATHER (4, "Rivet Leather", 8, 1000, HeroinePlayerEnum.HEROINE_ARMOR_RIVET_LEATHER), // Rivet leather.
+        ARMOR_CHAIN_MAILLE (5, "Chain Maille", 10, 5000, HeroinePlayerEnum.HEROINE_ARMOR_CHAIN_MAILLE), // Chain maille.
+        ARMOR_PLATE_ARMOR (6, "Plate Armor", 12, 20000, HeroinePlayerEnum.HEROINE_ARMOR_PLATE_ARMOR), // Plate armor.
+        ARMOR_WYVERN_SCALE (7, "Wyvern Scale", 14, 100000, HeroinePlayerEnum.HEROINE_ARMOR_WYVERN_SCALE) // Wyvern scale.
         ; // semicolon needed when fields / methods follow
-
+        
         private final int def; // Defense value for the armor.
         private final int gold; // Value of the weapon, in gold.
         private final int armorEnum; // Enumerations related to armors.
         private static final Map armorMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         private final String armorText; // Clean text for the armor.
+        private final HeroinePlayerEnum playerEnum; // Related enumerated value for atlas texture region key.
         
         // armorEnum = Value to associate.
         // armorText = Clean text to associate.
         // def = Defense value to associate.
         // gold = Weapon value, in gold, to associate.
-        private ArmorEnum(int armorEnum, String armorText, int def, int gold) 
+        // playerEnum = Related enumerated value for atlas texture region key.
+        private ArmorEnum(int armorEnum, String armorText, int def, int gold, HeroinePlayerEnum playerEnum) 
         {
             // The constructor sets the values for each enumeration.
             this.armorEnum = armorEnum;
             this.armorText = armorText;
             this.def = def;
             this.gold = gold;
+            this.playerEnum = playerEnum;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -193,6 +201,16 @@ public class HeroineEnum
             return armorText;
         }
         
+        public HeroinePlayerEnum getValue_PlayerEnum() 
+        {
+            // The function returns the HeroinePlayer value for the enumeration.
+            // The value assists with reaching the key to use with the asset manager.
+            // Example for use:  String x = HeroineEnum.ArmorEnum.IRON_KNIFE.getValue_PlayerEnum();
+            
+            // Return the HeroinePlayer value for the enumeration.
+            return playerEnum;
+        }
+        
         // armor = Numeric value to convert to text.
         public static ArmorEnum valueOf(int armor) 
         {
@@ -202,7 +220,7 @@ public class HeroineEnum
         
     }
     
-    // Enumerations related to dialog buttons.
+    // Enumerations related to dialog buttons.  Helps with atlas keys.
     public enum DialogButtonEnum 
     {
         
@@ -212,7 +230,7 @@ public class HeroineEnum
         ; // semicolon needed when fields / methods follow
 
         private final int dialogButtonEnum; // Enumerations related to dialog buttons.
-        private final String dialogButtonKey; // Key associated with texture -- used with asset manager and textureRegions hash map.
+        private final String dialogButtonKey; // Key associated with texture region -- used with asset manager and textureRegions hash map.
         private static final Map dialogButtonMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         
         // dialogButtonEnum = Value to associate.
@@ -248,10 +266,10 @@ public class HeroineEnum
         
         public String getValue_Key() 
         {
-            // The function returns the key associated with the texture.
+            // The function returns the key associated with the texture region.
             // Example for use:  String x = HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key();
             
-            // Return the key associated with the texture.
+            // Return the key associated with the texture region.
             return dialogButtonKey;
         }
         
@@ -699,6 +717,81 @@ public class HeroineEnum
         
     }
     
+    // Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
+    public enum HeroinePlayerEnum 
+    {
+        
+        HEROINE_PLAYER_BASE (0, "heroine_armor_base"), // Player base -- no armor or weapons.
+        HEROINE_ARMOR_SERF_RAGS (1, "heroine_armor_serf_rags"), // Armor:  serf rags.
+        HEROINE_ARMOR_TRAVEL_CLOAK (2, "heroine_armor_travel_cloak"), // Armor:  travel cloak.
+        HEROINE_ARMOR_HIDE_CUIRASS (3, "heroine_armor_hide_cuirass"), // Armor:  hide cuirass.
+        HEROINE_ARMOR_RIVET_LEATHER (4, "heroine_armor_rivet_leather"), // Armor:  rivet leather.
+        HEROINE_ARMOR_CHAIN_MAILLE (5, "heroine_armor_chain_maille"), // Armor:  chain maille.
+        HEROINE_ARMOR_PLATE_ARMOR (6, "heroine_armor_plate_armor"), // Armor:  plate armor.
+        HEROINE_ARMOR_WYVERN_SCALE (7, "heroine_armor_wyvern_scale"), // Armor:  wyvern scale.
+        HEROINE_WEAPON_NONE (8, "heroine_weapon_none"), // Weapon:  none.
+        HEROINE_WEAPON_WOOD_STICK (9, "heroine_weapon_wood_stick"), // Weapon:  wood stick.
+        HEROINE_WEAPON_IRON_KNIFE (10, "heroine_weapon_iron_knife"), // Weapon:  iron knife.
+        HEROINE_WEAPON_BRONZE_MACE (11, "heroine_weapon_bronze_mace"), // Weapon:  bronze mace.
+        HEROINE_WEAPON_STEEL_SWORD (12, "heroine_weapon_steel_sword"), // Weapon:  steel sword.
+        HEROINE_WEAPON_WAR_HAMMER (13, "heroine_weapon_war_hammer"), // Weapon:  war hammer.
+        HEROINE_WEAPON_BATTLE_AXE (14, "heroine_weapon_battle_axe"), // Weapon:  battle axe.
+        HEROINE_WEAPON_GREAT_SWORD (15, "heroine_weapon_great_sword") // Weapon:  great sword.
+        ; // semicolon needed when fields / methods follow
+        
+        private final int heroinePlayerEnum; // Enumerations related to heroine (player / weapon / armor).
+        private final String heroinePlayerKey; // Key associated with texture region -- used with asset manager and textureRegions hash map.
+        private static final Map heroinePlayerMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // heroinePlayerEnum = Value to associate.
+        // heroinePlayerKey = Key associated with texture region -- used with asset manager and textureRegions hash map.
+        private HeroinePlayerEnum(int heroinePlayerEnum, String heroinePlayerKey) 
+        {
+            // The constructor sets the numeric values for each enumeration.
+            this.heroinePlayerEnum = heroinePlayerEnum;
+            this.heroinePlayerKey = heroinePlayerKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (HeroinePlayerEnum heroinePlayerEnum : HeroinePlayerEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                heroinePlayerMap.put(heroinePlayerEnum.heroinePlayerEnum, heroinePlayerEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.HeroinePlayerEnum.HEROINE_ARMOR_WYVERN_SCALE.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return heroinePlayerEnum;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the key associated with the texture region.
+            // Example for use:  String x = HeroineEnum.HeroinePlayerEnum.HEROINE_ARMOR_WYVERN_SCALE.getValue_Key();
+            
+            // Return the key associated with the texture region.
+            return heroinePlayerKey;
+        }
+        
+        // heroinePlayer = Numeric value to convert to text.
+        public static HeroinePlayerEnum valueOf(int heroinePlayer) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (HeroinePlayerEnum) heroinePlayerMap.get(heroinePlayer);
+        }
+        
+    }
+    
     // Enumerations related to background images.
     public enum ImgBackgroundEnum 
     {
@@ -793,10 +886,10 @@ public class HeroineEnum
         
         IMG_INTERFACE_ACTION_BTN (0, "action_buttons.png", "action_buttons.pack", "action_btn", "action_btn_atlas"), // Action buttons.
         IMG_INTERFACE_DIALOG_BTN (1, "dialog_buttons.png", "dialog_buttons.atlas", "dialog_btn", "dialog_btn_atlas"), // Dialog buttons.
-        IMG_INTERFACE_HEROINE (2, "heroine.png", "", "heroine", ""), // Heroine -- character pictures.
-        IMG_INTERFACE_INFO_BTN (3, "info_button.png", "", "info_btn", ""), // Information button.
-        IMG_INTERFACE_MINIMAP (4, "minimap.png", "", "minimap", ""), // Minimap icons.
-        IMG_INTERFACE_MINIMAP_CURSOR (4, "minimap_cursor.png", "", "minimap_cursor", ""), // Minimap cursor.
+        IMG_INTERFACE_HEROINE (2, "heroine.png", "heroine.pack", "heroine", "heroine_atlas"), // Heroine -- character pictures.
+        IMG_INTERFACE_INFO_BTN (3, "info_button.png", "info_button.atlas", "info_btn", "info_btn_atlas"), // Information button.
+        IMG_INTERFACE_MINIMAP (4, "minimap.png", "minimap.pack", "minimap", "minimap_atlas"), // Minimap icons.
+        IMG_INTERFACE_MINIMAP_CURSOR (4, "minimap_cursor.png", "minimap_cursor.pack", "minimap_cursor", "minimap_cursor_atlas"), // Minimap cursor.
         IMG_INTERFACE_SELECT (4, "select.png", "", "select", "") // Button selection.
         ; // semicolon needed when fields / methods follow
 
@@ -988,6 +1081,67 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (ImgTileEnum) imgTileMap.get(imgTile);
+        }
+        
+    }
+    
+    // Enumerations related to information buttons.  Helps with atlas keys.
+    public enum InfoButtonEnum 
+    {
+        
+        INFO_BUTTON (0, "info_button"), // Regular information button -- deselected.
+        INFO_BUTTON_SEL (1, "info_button_sel") // Selected version of information button.
+        ; // semicolon needed when fields / methods follow
+
+        private final int infoButtonEnum; // Enumerations related to information buttons.
+        private final String infoButtonKey; // Key associated with texture region -- used with asset manager and textureRegions hash map.
+        private static final Map infoButtonMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // infoButtonEnum = Value to associate.
+        // infoButtonKey = Key associated with texture -- used with asset manager and textureRegions hash map.
+        private InfoButtonEnum(int infoButtonEnum, String infoButtonKey) 
+        {
+            // The constructor sets the numeric values for each enumeration.
+            this.infoButtonEnum = infoButtonEnum;
+            this.infoButtonKey = infoButtonKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (InfoButtonEnum infoButtonEnum : InfoButtonEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                infoButtonMap.put(infoButtonEnum.infoButtonEnum, infoButtonEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.InfoButtonEnum.INFO_BUTTON.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return infoButtonEnum;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the key associated with the texture region.
+            // Example for use:  String x = HeroineEnum.InfoButtonEnum.INFO_BUTTON.getValue_Key();
+            
+            // Return the key associated with the texture region.
+            return infoButtonKey;
+        }
+        
+        // infoButton = Numeric value to convert to text.
+        public static InfoButtonEnum valueOf(int infoButton) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (InfoButtonEnum) infoButtonMap.get(infoButton);
         }
         
     }
@@ -1466,6 +1620,189 @@ public class HeroineEnum
         
     }
     
+    // Enumerations related to minimap image blocks.  Helps with atlas keys.
+    public enum MinimapEnum 
+    {
+        
+        MINIMAP_BLOCK_BLACK (0, "minimap_black"), // Black minimap block.
+        MINIMAP_BLOCK_BLUE (1, "minimap_blue"), // Blue minimap block
+        MINIMAP_BLOCK_CROSS (2, "minimap_cross"), // Cross minimap block.
+        MINIMAP_BLOCK_WHITE (3, "minimap_white"), // White minimap block.
+        MINIMAP_BLOCK_DARK_BLUE (4, "minimap_dark_blue") // Dark blue minimap block.
+        ; // semicolon needed when fields / methods follow
+        
+        private final int minimapEnum; // Enumerations related to minimap image blocks.
+        private final String minimapKey; // Key associated with texture region -- used with asset manager and textureRegions hash map.
+        private static final Map minimapMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // minimapEnum = Value to associate.
+        // minimapKey = Key associated with texture -- used with asset manager and textureRegions hash map.
+        private MinimapEnum(int minimapEnum, String minimapKey) 
+        {
+            // The constructor sets the numeric values for each enumeration.
+            this.minimapEnum = minimapEnum;
+            this.minimapKey = minimapKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (MinimapEnum minimapEnum : MinimapEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                minimapMap.put(minimapEnum.minimapEnum, minimapEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.MinimapEnum.MINIMAP_BLOCK_CROSS.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return minimapEnum;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the key associated with the texture region.
+            // Example for use:  String x = HeroineEnum.MinimapEnum.MINIMAP_BLOCK_CROSS.getValue_Key();
+            
+            // Return the key associated with the texture region.
+            return minimapKey;
+        }
+        
+        // minimap = Numeric value to convert to text.
+        public static MinimapEnum valueOf(int minimap) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (MinimapEnum) minimapMap.get(minimap);
+        }
+        
+    }
+    
+    // Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
+    public enum MinimapCursorEnum 
+    {
+        
+        MINIMAP_CURSOR_BLOCK_DOWN (0, "minimap_cursor_down"), // Down arrow minimap block.
+        MINIMAP_CURSOR_BLOCK_LEFT (1, "minimap_cursor_left"), // Left arrow minimap block
+        MINIMAP_CURSOR_BLOCK_RIGHT (2, "minimap_cursor_right"), // Right arrow minimap block.
+        MINIMAP_CURSOR_BLOCK_UP (3, "minimap_cursor_up") // Up arrow minimap block.
+        ; // semicolon needed when fields / methods follow
+
+        private final int minimapCursorEnum; // Enumerations related to minimap cursor image blocks.
+        private final String minimapCursorKey; // Key associated with texture region -- used with asset manager and textureRegions hash map.
+        private static final Map minimapCursorMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // minimapCursorEnum = Value to associate.
+        // minimapCursorKey = Key associated with texture -- used with asset manager and textureRegions hash map.
+        private MinimapCursorEnum(int minimapCursorEnum, String minimapCursorKey) 
+        {
+            // The constructor sets the numeric values for each enumeration.
+            this.minimapCursorEnum = minimapCursorEnum;
+            this.minimapCursorKey = minimapCursorKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (MinimapCursorEnum minimapCursorEnum : MinimapCursorEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                minimapCursorMap.put(minimapCursorEnum.minimapCursorEnum, minimapCursorEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.MinimapCursorEnum.MINIMAP_CURSOR_BLOCK_RIGHT.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return minimapCursorEnum;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the key associated with the texture region.
+            // Example for use:  String x = HeroineEnum.MinimapCursorEnum.MINIMAP_CURSOR_BLOCK_RIGHT.getValue_Key();
+            
+            // Return the key associated with the texture region.
+            return minimapCursorKey;
+        }
+        
+        // minimapCursor = Numeric value to convert to text.
+        public static MinimapCursorEnum valueOf(int minimapCursor) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (MinimapCursorEnum) minimapCursorMap.get(minimapCursor);
+        }
+        
+    }
+    
+    // Enumerations related to explore screen button selection.
+    public enum SelectPosEnum 
+    {
+        
+        BUTTON_POS_INFO (0), // Position for information button.
+        BUTTON_POS_ATTACK (1), // Position for attack button.
+        BUTTON_POS_RUN (2), // Position for run button.
+        BUTTON_POS_HEAL (3), // Position for heal button.
+        BUTTON_POS_BURN (4), // Position for burn button.
+        BUTTON_POS_UNLOCK (5), // Position for unlock button.
+        BUTTON_POS_LIGHT (6), // Position for light button.
+        BUTTON_POS_FREEZE (7), // Position for freeze button.
+        BUTTON_POS_REFLECT (8) // Position for reflect button.
+        ; // semicolon needed when fields / methods follow
+
+        private final int selectPosEnum; // Enumerations related to explore screen button selection.
+        private static final Map selectPosMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+
+        // selectPosEnum = Value to associate.
+        private SelectPosEnum(int selectPosEnum) 
+        {
+            // The constructor sets the numeric values for each enumeration.
+            this.selectPosEnum = selectPosEnum;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (SelectPosEnum selectPosEnum : SelectPosEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                selectPosMap.put(selectPosEnum.selectPosEnum, selectPosEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.SelectPosEnum.BUTTON_POS_UNLOCK.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return selectPosEnum;
+        }
+        
+        // selectPos = Numeric value to convert to text.
+        public static SelectPosEnum valueOf(int selectPos) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (SelectPosEnum) selectPosMap.get(selectPos);
+        }
+        
+    }
+    
     // Enumerations related to shops / locations.
     public enum ShopEnum 
     {
@@ -1591,9 +1928,13 @@ public class HeroineEnum
         SOUND_MISS (10, "sounds/miss.wav"), // Sound related to a miss.
         SOUND_MP_DRAIN (11, "sounds/mpdrain.wav"), // Sound related to a magic point drain attack.
         SOUND_RUN (12, "sounds/run.wav"), // Sound related to a run action (fleeing combat).
-        SOUND_UNLOCK (13, "sounds/unlock.wav") // Sound related to unlocking an object.
+        SOUND_UNLOCK (13, "sounds/unlock.wav"), // Sound related to unlocking an object.
+        SOUND_LIGHT (14, "sounds/lightning_a.wav"), // Sound related to light spell.
+        SOUND_FREEZE (15, "sounds/freeze.wav"), // Sound related to freeze spell.
+        SOUND_REFLECT (16, "sounds/rubberband.wav"), // Sound related to reflect spell.
+        SOUND_ERROR (17, "sounds/heal.wav") // Sound when trying to do something at the wrong time.
         ; // semicolon needed when fields / methods follow
-
+        
         private final int soundEnum; // Enumerations related to sounds.
         private final String soundFilePath; // Relative path to the sound file.
         private static final Map soundMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
@@ -1651,16 +1992,17 @@ public class HeroineEnum
     public enum SpellEnum 
     {
         
-        NO_SPELL (0, "No Spell", 0, ""), // No spell.
-        SPELL_HEAL (1, "Heal", 0, "Spellbook: Heal"), // Heal spell.
-        SPELL_BURN (2, "Burn", 100, "Spellbook: Burn"), // Burn spell.
-        SPELL_UNLOCK (3, "Unlock", 500, "Spellbook: Unlock"), // Unlock spell.
-        SPELL_LIGHT (4, "Light", 2500, "Spellbook: Light"), // Light spell.
-        SPELL_FREEZE (5, "Freeze", 10000, "Spellbook: Freeze"), // Freeze spell.
-        SPELL_REFLECT (6, "Reflect", 50000, "Spellbook: Reflect") // Reflect spell.
+        NO_SPELL (0, "No Spell", 0, "", null), // No spell.
+        SPELL_HEAL (1, "Heal", 0, "Spellbook: Heal", ActionButtonEnum.ACTION_BUTTON_HEAL), // Heal spell.
+        SPELL_BURN (2, "Burn", 100, "Spellbook: Burn", ActionButtonEnum.ACTION_BUTTON_BURN), // Burn spell.
+        SPELL_UNLOCK (3, "Unlock", 500, "Spellbook: Unlock", ActionButtonEnum.ACTION_BUTTON_UNLOCK), // Unlock spell.
+        SPELL_LIGHT (4, "Light", 2500, "Spellbook: Light", ActionButtonEnum.ACTION_BUTTON_LIGHT), // Light spell.
+        SPELL_FREEZE (5, "Freeze", 10000, "Spellbook: Freeze", ActionButtonEnum.ACTION_BUTTON_FREEZE), // Freeze spell.
+        SPELL_REFLECT (6, "Reflect", 50000, "Spellbook: Reflect", ActionButtonEnum.ACTION_BUTTON_REFLECT) // Reflect spell.
         ; // semicolon needed when fields / methods follow
 
-        private final int gold; // Value of the weapon, in gold.
+        private final ActionButtonEnum actionButtonEnum; // Associated action button enumeration value.
+        private final int gold; // Value of the spell, in gold.
         private final int spellEnum; // Enumerations related to spells.
         private static final Map spellMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         private final String spellText; // Clean text for the spell.
@@ -1668,15 +2010,18 @@ public class HeroineEnum
         
         // spellEnum = Value to associate.
         // spellText = Clean text to associate.
-        // gold = Weapon value, in gold, to associate.
+        // gold = Spell value, in gold, to associate.
         // treasureDesc = Treasure description for the spell.
-        private SpellEnum(int spellEnum, String spellText, int gold, String treasureDesc) 
+        // actionButtonEnum = Associated action button enumeration value.
+        private SpellEnum(int spellEnum, String spellText, int gold, String treasureDesc, 
+          ActionButtonEnum actionButtonEnum) 
         {
             // The constructor sets the values for each enumeration.
             this.spellEnum = spellEnum;
             this.spellText = spellText;
             this.gold = gold;
             this.treasureDesc = treasureDesc;
+            this.actionButtonEnum = actionButtonEnum;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -1699,6 +2044,15 @@ public class HeroineEnum
             
             // Return the numeric value for the enumeration.
             return spellEnum;
+        }
+        
+        public ActionButtonEnum getValue_ActionButtonEnum() 
+        {
+            // The function returns the associated action button enumerated value.
+            // Example for use:  ActionButtonEnum x = HeroineEnum.SpellEnum.SPELL_LIGHT.getValue_ActionButtonEnum();
+            
+            // Return the associated action button enumerated value.
+            return actionButtonEnum;
         }
         
         public int getValue_Gold() 
@@ -1851,19 +2205,20 @@ public class HeroineEnum
     public enum WeaponEnum 
     {
         
-        WEAPON_BARE_FISTS (0, "Bare Fists", 1, 4, 0), // Bare fists.
-        WEAPON_WOOD_STICK (1, "Wood Stick", 2, 6, 0), // Wood stick.
-        WEAPON_IRON_KNIFE (2, "Iron Knife", 3, 8, 50), // Iron knife.
-        WEAPON_BRONZE_MACE (3, "Bronze Mace", 4, 10, 200), // Bronze mace.
-        WEAPON_STEEL_SWORD (4, "Steel Sword", 5, 12, 1000), // Steel sword.
-        WEAPON_WAR_HAMMER (5, "War Hammer", 6, 14, 5000), // War hammer.
-        WEAPON_BATTLE_AXE (6, "Battle Axe", 7, 16, 20000), // Battle axe.
-        WEAPON_GREAT_SWORD (7, "Great Sword", 8, 18, 100000) // Great sword.
+        WEAPON_BARE_FISTS (0, "Bare Fists", 1, 4, 0, HeroinePlayerEnum.HEROINE_WEAPON_NONE), // Bare fists.
+        WEAPON_WOOD_STICK (1, "Wood Stick", 2, 6, 0, HeroinePlayerEnum.HEROINE_WEAPON_WOOD_STICK), // Wood stick.
+        WEAPON_IRON_KNIFE (2, "Iron Knife", 3, 8, 50, HeroinePlayerEnum.HEROINE_WEAPON_IRON_KNIFE), // Iron knife.
+        WEAPON_BRONZE_MACE (3, "Bronze Mace", 4, 10, 200, HeroinePlayerEnum.HEROINE_WEAPON_BRONZE_MACE), // Bronze mace.
+        WEAPON_STEEL_SWORD (4, "Steel Sword", 5, 12, 1000, HeroinePlayerEnum.HEROINE_WEAPON_STEEL_SWORD), // Steel sword.
+        WEAPON_WAR_HAMMER (5, "War Hammer", 6, 14, 5000, HeroinePlayerEnum.HEROINE_WEAPON_WAR_HAMMER), // War hammer.
+        WEAPON_BATTLE_AXE (6, "Battle Axe", 7, 16, 20000, HeroinePlayerEnum.HEROINE_WEAPON_BATTLE_AXE), // Battle axe.
+        WEAPON_GREAT_SWORD (7, "Great Sword", 8, 18, 100000, HeroinePlayerEnum.HEROINE_WEAPON_GREAT_SWORD) // Great sword.
         ; // semicolon needed when fields / methods follow
-
+        
         private final int atk_max; // Maximum attack value for the weapon.
         private final int atk_min; // Minimum attack value for the weapon.
         private final int gold; // Value of the weapon, in gold.
+        private final HeroinePlayerEnum playerEnum; // Related enumerated value for atlas texture region key.
         private final int weaponEnum; // Enumerations related to weapons.
         private static final Map weaponMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         private final String weaponText; // Clean text for the weapon.
@@ -1873,7 +2228,9 @@ public class HeroineEnum
         // atk_min = Minimum attack value to associate.
         // atk_max = Maximum attack value to associate.
         // gold = Weapon value, in gold, to associate.
-        private WeaponEnum(int weaponEnum, String weaponText, int atk_min, int atk_max, int gold) 
+        // playerEnum = Related enumerated value for atlas texture region key.
+        private WeaponEnum(int weaponEnum, String weaponText, int atk_min, int atk_max, int gold, 
+          HeroinePlayerEnum playerEnum) 
         {
             // The constructor sets the values for each enumeration.
             this.weaponEnum = weaponEnum;
@@ -1881,6 +2238,7 @@ public class HeroineEnum
             this.atk_min = atk_min;
             this.atk_max = atk_max;
             this.gold = gold;
+            this.playerEnum = playerEnum;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -1939,6 +2297,16 @@ public class HeroineEnum
             
             // Return the clean text value for the enumeration.
             return weaponText;
+        }
+        
+        public HeroinePlayerEnum getValue_PlayerEnum() 
+        {
+            // The function returns the HeroinePlayer value for the enumeration.
+            // The value assists with reaching the key to use with the asset manager.
+            // Example for use:  String x = HeroineEnum.WeaponEnum.IRON_KNIFE.getValue_PlayerEnum();
+            
+            // Return the HeroinePlayer value for the enumeration.
+            return playerEnum;
         }
         
         // weapon = Numeric value to convert to text.

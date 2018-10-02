@@ -192,7 +192,7 @@ public class AnimatedActor extends BaseActor { // Extends the BaseActor class.
         // region.setRegion( activeAnim.getKeyFrame(elapsedTime) );
         // Texture t = ((TextureRegion)a.getKeyFrame(0)).getTexture();
         region.setRegion( (TextureRegion)activeAnim.getKeyFrame(elapsedTime) );
-
+        
         // Set the tinting color of and draw the Actor.
         super.draw(batch, parentAlpha);
 

@@ -1,5 +1,6 @@
 package core;
 
+// LibGDX imports.
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.controllers.*;
 import com.badlogic.gdx.Gdx;
@@ -11,8 +12,14 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+
+// Java imports.
 import java.awt.Point;
+import java.util.ArrayList;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -97,7 +104,6 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
              Whenever a resize event occurs, the viewport needs to be informed and updated.
     resume:  Called when the Application is resumed from a paused state, usually when it regains focus.
     show:  Called when the screen becomes the current one for a Game.
-    wakeBaseScreen:  Called when redisplaying the already initialized screen.
 
     LibGDX methods for InputProcessor include:
 
@@ -139,11 +145,20 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
     centerLabelUI:  Centers the label in the specified stage.
     disposeManual:  Allows for manually clearing of LibGDX resources from memory when overriding the 
       normal dispose method.
+    drawBatch:  Uses the batch to draw the passed texture / texture region at the specified coordinates.
+    finishBatch:  Finalizes batch drawing process.
     isPaused:  Returns the pause state of the game (true or false).
     setPaused:  Sets the pause state of the game to the passed value.
+    startBatch:  Sets up the batch for drawing.
     togglePaused:  Reverses the pause state of the game (true to false, false to true).
     update:  The abstract method (defined in the subclasses) occurs during the update phase (render method)
              and contains code related to game logic.
+    wakeBaseScreen:  Called when redisplaying the already initialized screen.
+    
+    Inner classes include:
+    
+    BatchTexture:  Stores information needed to draw a texture with a sprite batch.
+    BatchTextureRegion:  Stores information needed to draw a texture region with a sprite batch.
     */
 
     // Protected variables and methods allow the class itself to access them, classes inside of the
@@ -151,24 +166,30 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
     // A final variable can only be initialized once, either via an initializer or an assignment statement.
 
-    public AssetManager manager; // Loads and stores assets like textures, bitmap fonts, tile maps, sounds, music, ...
+    protected AssetManager manager; // Loads and stores assets like textures, bitmap fonts, tile maps, sounds, music, ...
 
-    public BaseGame game; // Screen object used for current window.
+    protected SpriteBatch batch; // Takes care of all the steps needed to achieve texture mapping and 
+      // displaying texture mapped rectangles on the screen.
+    protected ArrayList<BatchTexture> batchTextureList; // List containing texture details for drawing with batch.
+    protected ArrayList<BatchTextureRegion> batchTextureRegionList; // List containing texture regions for drawing with batch.
+    
+    protected BaseGame game; // Screen object used for current window.
     // Game objects allow an application to easily have multiple screens.
 
-    public Stage mainStage; // Stores a 2D scene graph containing the hierarchies of actors.
+    protected Stage mainStage; // Stores a 2D scene graph containing the hierarchies of actors.
     // Stage handles the viewport and distributes input events.  Contains the non-UI actors.
 
-    public Stage uiStage; // Stores a 2D scene graph containing UI actors.  Includes win text / labels.
+    protected Stage uiStage; // Stores a 2D scene graph containing UI actors.  Includes win text / labels.
 
     // A Table consists of Cell objects, laid out in rows and columns, each Cell containing an Actor.
-    Table uiTable; // Table containing main menu elements.
+    protected Table uiTable; // Table containing main menu elements.
 
     protected int viewHeightMain; // Window height for the main stage.
     protected int viewHeightUI; // Window height for the ui stage.
     protected int viewWidthMain; // Window width for the main stage.
     protected int viewWidthUI; // Window width for the ui stage.
 
+    private boolean batchInd; // Whether to add SpriteBatch to rendering.
     private boolean paused; // Whether game paused.
 
     // g = Screen object for current window.
@@ -185,6 +206,8 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // 4.  Sets up the input multiplexer to receive and pass all input data to current class and stages.
         // 5.  Creates and attaches Table to UI (main menu) stage.
         // 6.  Clear active ControllerListener objects and activate the listener.
+        // 7.  Initialize array lists.
+        // 8.  Initialize sprite batch.
 
         InputMultiplexer im; // Contains a group of input processors.  The base screen and each
         // stage get added to the input multiplexer.  When input events occur, the multiplexer
@@ -192,6 +215,7 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
         // Set defaults.
         this.paused = false;
+        this.batchInd = false;
 
         // Set window size values, based on parameters.
         this.viewWidthMain = windowWidth;
@@ -217,7 +241,14 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         uiTable = new Table(); // Create new Table object.
         uiTable.setFillParent(true); // The method will set the size of the Table to that of the stage.
         uiStage.addActor(uiTable); // Attach Table to the stage.
-
+        
+        // Initialize array lists.
+        batchTextureList = new ArrayList<>();
+        batchTextureRegionList = new ArrayList<>();
+        
+        // Initialize sprite batch.
+        batch = new SpriteBatch();
+        
     }
 
     // g = Screen object for current window.
@@ -236,6 +267,8 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // 4.  Sets up the input multiplexer to receive and pass all input data to current class and stages.
         // 5.  Creates and attaches Table to UI (main menu) stage.
         // 6.  Clear active ControllerListener objects and activate the listener.
+        // 7.  Initialize array lists.
+        // 8.  Initialize sprite batch.
 
         InputMultiplexer im; // Contains a group of input processors.  The base screen and each
         // stage get added to the input multiplexer.  When input events occur, the multiplexer
@@ -269,6 +302,13 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         uiTable.setFillParent(true); // The method will set the size of the Table to that of the stage.
         uiStage.addActor(uiTable); // Attach Table to the stage.
 
+        // Initialize array lists.
+        batchTextureList = new ArrayList<>();
+        batchTextureRegionList = new ArrayList<>();
+        
+        // Initialize sprite batch.
+        batch = new SpriteBatch();
+        
     }
 
     // The abstract method (defined in the subclasses) occurs during the update phase (render method)
@@ -294,7 +334,8 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
         1.  Adjusts Actor positions and other properties in the UI stage.
         2.  If game not paused, adjusts Actor positions and other properties in the main stage and processes player input.
-        3.  Draws the graphics.
+        3.  Draws the actor-related graphics.
+        4.  Draws the batch-related graphics.
         */
 
         // Call the Actor.act(float) method on each actor in the UI stage.
@@ -319,7 +360,7 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
             update(dt);
         }
 
-        // Draw graphics.
+        // Draw actor-related graphics.
 
         // Overdraw the area with the given glClearColor.
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -337,10 +378,51 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
         // Reposition rendering location of the UI stage.
         Gdx.gl.glViewport(0,0, viewWidthUI, viewHeightUI);
-
+        
         // Draw the UI stage.
         uiStage.draw();
+        
+        /*
+        Batch usage:
+        
+        setBatchInd(true);
+        queueDrawBatch(minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLUE), 50f, 50f);
+        queueDrawBatch(minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLUE), 70f, 70f);
+        queueDrawBatch(minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLUE), 90f, 90f);
+        */
+        
+        // If using batch for drawing, then...
+        if (batchInd)
+        {
+            
+            // Using batch for drawing.
+            
+            // Draw batch-related graphics.
+        
+            // Start batch.
+            startBatch();
+            
+            // Loop through textures to render using batch.
+            batchTextureList.forEach((texture) -> {
+                
+                // Draw the current texture in the loop.
+                drawBatch(texture.getTexture(), texture.getX(), texture.getY());
+            
+            });
 
+            // Loop through texture regions to render using batch.
+            batchTextureRegionList.forEach((textureRegion) -> {
+                
+                // Draw the current texture region in the loop.
+                drawBatch(textureRegion.getTextureRegion(), textureRegion.getX(), textureRegion.getY());
+                
+            });
+            
+            // Finish batch.
+            finishBatch();
+            
+        }
+        
     }
 
     // Pause methods follow...
@@ -357,13 +439,89 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // The function sets the pause state of the game to the passed value.
         paused = b;
     }
-
+    
     public void togglePaused()
     {
         // The function reverses the pause state of the game (true to false, false to true).
         paused = !paused;
     }
 
+    // Provide methods for working with batch.
+    
+    // texture = Texture to draw using the batch.
+    // x = X-coordinate at which to draw the texture.
+    // y = Y-coordinate at which to draw the texture.
+    public void drawBatch(Texture texture, float x, float y)
+    {
+        
+        // The function uses the batch to draw the passed texture at the specified coordinates.
+        // Needs batchInd = true to fully operate in render() function.
+        
+        // Add command to batch to draw passed texture at specified coordinates.
+        batch.draw(texture, x, y);
+        
+    }
+    
+    // region = Texture region to draw using the batch.
+    // x = X-coordinate at which to draw the texture region.
+    // y = Y-coordinate at which to draw the texture region.
+    public void drawBatch(TextureRegion region, float x, float y)
+    {
+        
+        // The function uses the batch to draw the passed texture region at the specified coordinates.
+        // Needs batchInd = true to fully operate in render() function.
+        
+        // Add command to batch to draw passed texture region at specified coordinates.
+        batch.draw(region, x, y);
+        
+    }
+    
+    public void finishBatch()
+    {
+        
+        // The function finalizes the batch drawing process
+        // Needs batchInd = true to fully operate in render() function.
+        
+        // Finish batch-related rendering.
+        batch.end();
+        
+    }
+    
+    // texture = Texture to draw using the batch.
+    // x = X-coordinate at which to draw the texture.
+    // y = Y-coordinate at which to draw the texture.
+    public void queueDrawBatch(Texture texture, float x, float y)
+    {
+        
+        // The function queues the batch to draw a texture at the specified coordinates.
+        
+        // Add passed texture to array list.
+        batchTextureList.add( new BatchTexture(texture, x, y) );
+        
+    }
+    
+    // textureRegion = Texture region to draw using the batch.
+    // x = X-coordinate at which to draw the texture.
+    // y = Y-coordinate at which to draw the texture.
+    public void queueDrawBatch(TextureRegion textureRegion, float x, float y)
+    {
+        
+        // The function queues the batch to draw a texture region at the specified coordinates.
+        
+        // Add passed texture region to array list.
+        batchTextureRegionList.add( new BatchTextureRegion(textureRegion, x, y) );
+        
+    }
+    
+    public void startBatch()
+    {
+        // The function sets up the batch for drawing.
+        // Needs batchInd = true to fully operate in render() function.
+        
+        // Set up batch for drawing.
+        batch.begin();
+    }
+    
     // Provide methods required by Screen interface to prevent need to do so in subclasses:  resize, pause, resume, dispose, show, hide.
 
     // width = Current window window.
@@ -725,4 +883,118 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
     }
 
+    // Inner classes below...
+    
+    public class BatchTexture
+    {
+        
+        // The inner class stores information needed to draw a texture with a sprite batch.
+        
+        // Declare object variables.
+        private Texture texture; // Texture associated with sprite batch.
+        
+        // Declare regular variables.
+        private float x; // X-coordinate at which to draw texture.
+        private float y; // Y-coordinate at which to draw texture.
+        
+        // texture = Texture associated with sprite batch.
+        // x = X-coordinate at which to draw texture region.
+        // y = Y-coordinate at which to draw texture region.
+        public BatchTexture(Texture texture, float x, float y)
+        {
+            
+            // The constructor stores information needed to draw a texture with a sprite batch.
+            
+            // Store texture-related details.
+            this.texture = texture;
+            this.x = x;
+            this.y = y;
+            
+        }
+        
+        public Texture getTexture() {
+            return texture;
+        }
+
+        public void setTexture(Texture texture) {
+            this.texture = texture;
+        }
+
+        public float getX() {
+            return x;
+        }
+
+        public void setX(float x) {
+            this.x = x;
+        }
+
+        public float getY() {
+            return y;
+        }
+
+        public void setY(float y) {
+            this.y = y;
+        }
+        
+    }
+    
+    public class BatchTextureRegion
+    {
+        
+        // The inner class stores information needed to draw a texture region with a sprite batch.
+        
+        // Declare object variables.
+        private TextureRegion textureRegion; // Texture region associated with sprite batch.
+        
+        // Declare regular variables.
+        private float x; // X-coordinate at which to draw texture region.
+        private float y; // Y-coordinate at which to draw texture region.
+        
+        // textureRegion = Texture region associated with sprite batch.
+        // x = X-coordinate at which to draw texture region.
+        // y = Y-coordinate at which to draw texture region.
+        public BatchTextureRegion(TextureRegion textureRegion, float x, float y)
+        {
+            
+            // The constructor stores information needed to draw a texture with a sprite batch.
+            
+            // Store texture region related details.
+            this.textureRegion = textureRegion;
+            this.x = x;
+            this.y = y;
+            
+        }
+        
+        public TextureRegion getTextureRegion() {
+            return textureRegion;
+        }
+
+        public void setTextureRegion(TextureRegion textureRegion) {
+            this.textureRegion = textureRegion;
+        }
+
+        public float getX() {
+            return x;
+        }
+
+        public void setX(float x) {
+            this.x = x;
+        }
+
+        public float getY() {
+            return y;
+        }
+
+        public void setY(float y) {
+            this.y = y;
+        }
+        
+    }
+    
+    // Getters and setters below...
+    
+    public void setBatchInd(boolean batchInd) {
+        this.batchInd = batchInd;
+    }
+    
 }

@@ -476,9 +476,6 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                 case TITLE_MENU_MAIN:
 
                     // User clicked start or continue button.
-
-                    // Update the game state.
-                    gameHD.setGameState(HeroineEnum.GameState.STATE_DIALOG);
                     
                     // Set shop location.
                     gameHD.getShopInfo().shop_set(HeroineEnum.ShopEnum.SHOP_A_NIGHTMARE);
@@ -520,10 +517,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                 case TITLE_MENU_EXIT:
 
                     // User clicked exit button.
-
-                    // Dispose of screen related LibGDX objects.
-                    gameHD.disposeScreens();
-
+                    
                     // Exit the game.
                     Gdx.app.exit();
 
@@ -824,6 +818,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         {
             // The user pressed the S key.
             
+            // Play coin sound.
             gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
             
             // Switch to the game screen.
