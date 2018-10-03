@@ -35,11 +35,6 @@ public class Dialog
         
         // The constructor sets defaults and initializes arrays.
         
-        // Set defaults.
-        fadeMessage = false;
-        message = "";
-        title = "";
-        
         // Reset dialog.
         resetDialog();
         
@@ -155,6 +150,9 @@ public class Dialog
         buttonCount = -1; // Not determined yet.
         optionCount = 0;
         select_pos = 2; // Exit or similar button.
+        fadeMessage = false;
+        message = "";
+        title = "";
         
         // Initialize arrays.
         options = new Option[3];

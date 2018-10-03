@@ -9,6 +9,10 @@ public class Shops
     /*
     The class stores information and logic related to the shops / locations / other messaging elements.
     
+    To switch to / activate a shop, ...
+      gameHD.getShopInfo().shop_set(HeroineEnum.ShopEnum.SHOP_CEDAR_ARMS);
+      gameHD.setDialogScreen();
+    
     Methods include:
 
     populateShops:  Populates the shop class.

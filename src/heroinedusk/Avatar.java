@@ -11,7 +11,11 @@ public class Avatar
     Methods include:
 
     adjGold:  Adjusts the amount of gold the players owns by the passed amount.
+    avatar_move:  Updates the (possible) player position based on a movement action.
     avatar_sleep:  Handles the player sleeping -- restores HP and MP and sets the respawn point.
+    avatar_turn_left:  Handles the player turning left.
+    avatar_turn_right:  Handles the player turning right.
+    decrement_mp:  Decreases the magic points of the player by one (used when casting a spell, for example).
     */
     
     // Declare object variables.
@@ -79,6 +83,95 @@ public class Avatar
         gold += amount;
     }
     
+    // forwardInd = Whether moving foward.  true = Forward, false = Backward.  Examples:  true, false.
+    // mazemap = Reference to active region / map information.
+    // gameHD = Reference to HeroineDusk (main) game class.
+    public boolean avatar_move(boolean forwardInd, MazeMap mazemap, HeroineDuskGame gameHD)
+    {
+        
+        // The function updates the (possible) player position based on a movement action.
+        // If the player can walk to the adjusted position, update the current x and y coordinates.
+        
+        boolean movementInd; // Whether movement occurred.
+        int newX; // New x-coordinate.
+        int newY; // New y-coordinate.
+        
+        // If moving forward, then...
+        if (forwardInd)
+        {
+            // Moving forward / up.
+            
+            // Determine pending new location.
+            newX = x + facing.getValue_MoveUpDx();
+            newY = y + facing.getValue_MoveUpDy();
+        }
+        
+        else
+        {
+            // Moving backward / down.
+            
+            // Determine pending new location.
+            newX = x + facing.getValue_MoveDownDx();
+            newY = y + facing.getValue_MoveDownDy();
+        }
+        
+        // If proposed position within current region / map bounds, then...
+        if (newX >= 0 && newY >= 0 && newX < mazemap.getRegionWidth() && newY < mazemap.getRegionHeight())
+        {
+        
+            // Proposed position within current region / map bounds.
+        
+            // If proposed position walkable, then...
+            if (mazemap.getImgTileEnum(newX, newY).getValue_Walkable())
+            {
+
+                // Proposed position walkable.
+
+                // Adjust player position.
+                x = newX;
+                y = newY;
+
+                // Flag movement as occurring.
+                movementInd = true;
+
+            }
+
+            else
+            {
+
+                // Cannot walk to proposed position.
+
+                // Play sound.
+                gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_BLOCKED);
+
+                // Flag movement as NOT occurring.
+                movementInd = false;
+
+            }
+            
+        } // End ... If proposed position within current region / map bounds.
+        
+        else
+        {
+            
+            // Proposed position outside current region / map bounds.
+            
+            // Display warning.
+            System.out.println("Warning:  Trying to move outside map bounds.");
+            
+            // Play sound.
+            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_BLOCKED);
+            
+            // Flag movement as NOT occurring.
+            movementInd = false;
+            
+        }
+        
+        // Return whether movement occurred.
+        return movementInd;
+        
+    }
+    
     public void avatar_sleep()
     {
         
@@ -88,6 +181,36 @@ public class Avatar
         hp = max_hp;
         mp = max_mp;
         // To Do:  avatar.sleeploc = [mazemap.current_id, avatar.x, avatar.y];
+        
+    }
+    
+    public void avatar_turn_left()
+    {
+        
+        // The function handles the player turning to the left.
+        
+        // Adjust direction of player.
+        facing = facing.getValue_TurnLeft();
+        
+    }
+    
+    public void avatar_turn_right()
+    {
+        
+        // The function handles the player turning to the right.
+        
+        // Adjust direction of player.
+        facing = facing.getValue_TurnRight();
+        
+    }
+    
+    public void decrement_mp()
+    {
+        
+        // The function decreases the magic points of the player by one (used when casting a spell, for example).
+        
+        // Decrease player magic points by one.
+        mp--;
         
     }
     
@@ -185,6 +308,10 @@ public class Avatar
         this.map_id = map_id;
     }
 
+    public void setMoved(boolean moved) {
+        this.moved = moved;
+    }
+    
     public MapLocation getSleepLoc() {
         return sleeploc;
     }

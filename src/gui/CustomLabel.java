@@ -813,6 +813,18 @@ public class CustomLabel
         
     }
     
+    // labelText = Text to display in label.
+    public void setLabelText_Center(String labelText)
+    {
+        
+        // The function updates the text of the label and centers the revised object across the screen.
+        // The function uses the existing bitmap font and stage width.
+        
+        // Update and recenter label text.
+        setLabelText_Center(labelText, bitmapFont, this.stageWidth);
+        
+    }
+    
     // Getters and setters below...
     
     public Label getLabel()

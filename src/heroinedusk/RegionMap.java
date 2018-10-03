@@ -35,8 +35,8 @@ public class RegionMap
     
     Inner classes include:
     
-    regionExit:  Stores region exit information.
-    regionShop:  Stores information for a shop in the region.
+    RegionExit:  Stores region exit information.
+    RegionShop:  Stores information for a shop in the region.
     
     Methods include:
     
@@ -50,8 +50,8 @@ public class RegionMap
     private ArrayList<HeroineEnum.EnemyEnum> enemyList; // List of enemies within the region.
     private Map<String, Object> mapJSON; // Hash map containing key / value pairs covering all region data -- 
       // used with JSON.
-    private final ArrayList<regionExit> regionExits; // List of exits within the region.
-    private final ArrayList<regionShop> regionShops; // List of shops within the region.
+    private final ArrayList<RegionExit> regionExits; // List of exits within the region.
+    private final ArrayList<RegionShop> regionShops; // List of shops within the region.
     private final ArrayList<ArrayList<Integer>> regionTiles; // List of tiles composing the region.
     
     // Declare regular variables.
@@ -114,7 +114,7 @@ public class RegionMap
     
     // Inner classes below...
     
-    public class regionExit
+    public class RegionExit
     {
         
         // The inner class stores region exit information.
@@ -131,7 +131,7 @@ public class RegionMap
         // dest_map = Destination map (region) number -- where the exit goes.
         // dest_x = X-coordinate of the exit (in the destination region).
         // dest_y = Y-coordinate of the exit (in the destination region).
-        private regionExit(int exit_x, int exit_y, int dest_map, int dest_x, int dest_y)
+        private RegionExit(int exit_x, int exit_y, int dest_map, int dest_x, int dest_y)
         {
             
             // The constructor stores the region exit information in the class-level variables.
@@ -145,9 +145,21 @@ public class RegionMap
             
         }
         
+        public int getDest_map() {
+            return dest_map;
+        }
+
+        public int getDest_x() {
+            return dest_x;
+        }
+
+        public int getDest_y() {
+            return dest_y;
+        }
+        
     }
     
-    public class regionShop
+    public class RegionShop
     {
         
         // The inner class stores information for a shop in the region.
@@ -164,7 +176,7 @@ public class RegionMap
         // shop_id = Shop identifier.
         // dest_x = X-coordinate of the shop exit.
         // dest_y = Y-coordinate of the shop exit.
-        private regionShop(int exit_x, int exit_y, HeroineEnum.ShopEnum shop_id, int dest_x, int dest_y)
+        private RegionShop(int exit_x, int exit_y, HeroineEnum.ShopEnum shop_id, int dest_x, int dest_y)
         {
             
             // The constructor populates the class-level variables with information for a shop in the region.
@@ -176,6 +188,18 @@ public class RegionMap
             this.dest_x = dest_x;
             this.dest_y = dest_y;
             
+        }
+        
+        public HeroineEnum.ShopEnum getShop_id() {
+            return shop_id;
+        }
+
+        public int getDest_x() {
+            return dest_x;
+        }
+
+        public int getDest_y() {
+            return dest_y;
         }
         
     }
@@ -193,7 +217,7 @@ public class RegionMap
         // The function adds a region exit (based on the passed information) to the list.
         
         // Add region exit.
-        regionExits.add(new regionExit(exit_x, exit_y, dest_map, dest_x, dest_y));
+        regionExits.add(new RegionExit(exit_x, exit_y, dest_map, dest_x, dest_y));
         
         // Increment exit count.
         exitCount++;
@@ -211,7 +235,7 @@ public class RegionMap
         // The function adds a shop to the region (based on the passed information) to the list.
         
         // Add shop to the region.
-        regionShops.add(new regionShop(exit_x, exit_y, shop_id, dest_x, dest_y));
+        regionShops.add(new RegionShop(exit_x, exit_y, shop_id, dest_x, dest_y));
         
         // Increment shop count.
         shopCount++;
@@ -308,7 +332,7 @@ public class RegionMap
             // Region contains one or more exits.
         
             // Loop through region exits.
-            for (regionExit currRegionExit : regionExits)
+            for (RegionExit currRegionExit : regionExits)
             {
 
                 // Reinitialize hash map for current region exit.  Necessary or same data written for each entry.
@@ -341,7 +365,7 @@ public class RegionMap
             // Region contains one or more shops.
         
             // Loop through region exits.
-            for (regionShop currRegionShop : regionShops)
+            for (RegionShop currRegionShop : regionShops)
             {
 
                 // Reinitialize hash map for current region shop.  Necessary or same data written for each entry.
@@ -418,21 +442,97 @@ public class RegionMap
     }
     
     // whichExit = Index number of region exit to return.  Base 0.
-    public regionExit getRegionExit(int whichExit) {
+    public RegionExit getRegionExit(int whichExit) {
         // The function returns information for the specified region exit.
         return regionExits.get(whichExit);
     }
     
-    public ArrayList<regionExit> getRegionExits() {
+    // posX = X-coordinate at which to get exit information.
+    // posY = Y-coordinate at which to get exit information.
+    public RegionExit getRegionExit(int posX, int posY) {
+        
+        // The function looks for an exit at the passed map location.
+        // The function returns an exit if one exists.
+        // Otherwise, the function returns null.
+        
+        RegionExit temp; // Holder for the exit at the map location.
+        
+        // Set defaults.
+        temp = null;
+        
+        // Loop through exits in current region.
+        for (RegionExit regionExit : regionExits)
+        {
+            
+            // If exit exists at passed location, then...
+            if (regionExit.exit_x == posX && regionExit.exit_y == posY)
+            {
+                
+                // Exit exists at passed location.
+                
+                // Copy exit.
+                temp = regionExit;
+                
+                // Exit loop.
+                break;
+                
+            }
+            
+        }
+        
+        // Return exit (or null).
+        return temp;
+        
+    }
+    
+    public ArrayList<RegionExit> getRegionExits() {
         return regionExits;
     }
     
     // whichShop = Index number of region shop to return.  Base 0.
-    public regionShop getRegionShop(int whichShop) {
+    public RegionShop getRegionShop(int whichShop) {
         return regionShops.get(whichShop);
     }
     
-    public ArrayList<regionShop> getRegionShops() {
+    // posX = X-coordinate at which to get shop information.
+    // posY = Y-coordinate at which to get shop information.
+    public RegionShop getRegionShop(int posX, int posY) {
+        
+        // The function looks for a shop at the passed map location.
+        // The function returns a shop if one exists.
+        // Otherwise, the function returns null.
+        
+        RegionShop temp; // Holder for the shop at the map location.
+        
+        // Set defaults.
+        temp = null;
+        
+        // Loop through shops in current region.
+        for (RegionShop regionShop : regionShops)
+        {
+            
+            // If shop exists at passed location, then...
+            if (regionShop.exit_x == posX && regionShop.exit_y == posY)
+            {
+                
+                // Shop exists at passed location.
+                
+                // Copy shop.
+                temp = regionShop;
+                
+                // Exit loop.
+                break;
+                
+            }
+            
+        }
+        
+        // Return shop (or null).
+        return temp;
+        
+    }
+    
+    public ArrayList<RegionShop> getRegionShops() {
         return regionShops;
     }
     

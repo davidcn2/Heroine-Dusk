@@ -466,28 +466,36 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
             // Reset counter.
             counter = 0;
             
-            // Store the image key for the current tile.
-            key = imgTileEnum.getValue_Key();
-            
-            // Clear region information array.
-            Arrays.fill(rects, null);
-            
-            // Loop through tile region enumerated values.
-            for (HeroineEnum.TileRegionEnum tileRegionEnum : HeroineEnum.TileRegionEnum.values())
+            // If NOT the placeholder, then...
+            if (imgTileEnum != HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE)
             {
                 
-                // Load one piece of region information for the current tile - x, y, width, height.
-                // Apply scale factor to get proper region.
-                rects[counter] = new TextureRect(tileRegionEnum.getValue_TextureRect(), gameHD.getConfig().getScale());
+                // NOT the placeholder.
                 
-                // Increment counter.
-                counter++;
+                // Store the image key for the current tile.
+                key = imgTileEnum.getValue_Key();
+
+                // Clear region information array.
+                Arrays.fill(rects, null);
+
+                // Loop through tile region enumerated values.
+                for (HeroineEnum.TileRegionEnum tileRegionEnum : HeroineEnum.TileRegionEnum.values())
+                {
+
+                    // Load one piece of region information for the current tile - x, y, width, height.
+                    // Apply scale factor to get proper region.
+                    rects[counter] = new TextureRect(tileRegionEnum.getValue_TextureRect(), gameHD.getConfig().getScale());
+
+                    // Increment counter.
+                    counter++;
+                }
+
+                // Split tile texture regions.
+                gameHD.getAssetMgr().loadTextureRegionsDynamic(key, rects);
+                
             }
-            
-            // Split tile texture regions.
-            gameHD.getAssetMgr().loadTextureRegionsDynamic(key, rects);
-            
-        }
+              
+        } // End ... Loop through tile image enumerated values.
         
         // 7.  Hide the progress bar.
         progressBar.hideBar();
@@ -565,6 +573,11 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 imagePathList.add(imagePath);
                 }
             
+            // Remove placeholder related to tile image enumerations.
+            imageMapList.remove("assets/tiles/" + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_File());
+            imageMapList.remove(HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_Key());
+            imagePathList.remove("assets/tiles/" + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_File());
+            
             // Loop through interface image enumerations.
             for (HeroineEnum.ImgInterfaceEnum imgEnum : HeroineEnum.ImgInterfaceEnum.values())
                 
@@ -631,6 +644,11 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 imageMapList.add(imgEnum.getValue_Key());
                 imagePathList.add(imagePath);
                 }
+            
+            // Remove placeholder related to tile image enumerations.
+            imageMapList.remove(gameHD.getConfig().getPrescaleFolder_Tiles() + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_File());
+            imageMapList.remove(HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_Key());
+            imagePathList.remove(gameHD.getConfig().getPrescaleFolder_Tiles() + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_File());
             
             // Loop through interface image enumerations.
             for (HeroineEnum.ImgInterfaceEnum imgEnum : HeroineEnum.ImgInterfaceEnum.values())

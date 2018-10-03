@@ -557,20 +557,39 @@ public class HeroineEnum
     public enum FacingEnum 
     {
         
-        NORTH (0), // Player is facing north.
-        SOUTH (1), // Player is facing south.
-        EAST (2), // Player is facing east.
-        WEST (3) // Player is facing west.
+        NORTH (0,  0, -1,  0,  1, 3, 2), // Player is facing north.
+        SOUTH (1,  0,  1,  0, -1, 2, 3), // Player is facing south.
+        EAST  (2,  1,  0, -1,  0, 0, 1), // Player is facing east.
+        WEST  (3, -1,  0,  1,  0, 1, 0) // Player is facing west.
         ; // semicolon needed when fields / methods follow
-
+        
         private final int facingEnum; // Enumerations related to direction player is facing.
         private static final Map facingMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        private final int moveDownDx; // Change in x-position related to moving down / backward.
+        private final int moveDownDy; // Change in y-position related to moving down / backward.
+        private final int moveUpDx; // Change in x-position related to moving up / forward.
+        private final int moveUpDy; // Change in y-position related to moving up / forward.
+        private final int turnLeft; // Value related to new direction upon turning left.
+        private final int turnRight; // Value related to new direction upon turning right.
         
         // facingEnum = Value to associate.
-        private FacingEnum(int facingEnum) 
+        // moveUpDx = Change in x-position related to moving up / forward.
+        // moveUpDy = Change in y-position related to moving up / forward.
+        // moveDownDx = Change in x-position related to moving down / backward.
+        // moveDownDy = Change in y-position related to moving down / backward.
+        // turnLeft = Value related to new direction upon turning left.
+        // turnRight = Value related to new direction upon turning right.
+        private FacingEnum(int facingEnum, int moveUpDx, int moveUpDy, int moveDownDx, int moveDownDy,
+          int turnLeft, int turnRight) 
         {
             // The constructor sets the numeric values for each enumeration.
             this.facingEnum = facingEnum;
+            this.moveUpDx = moveUpDx;
+            this.moveUpDy = moveUpDy;
+            this.moveDownDx = moveDownDx;
+            this.moveDownDy = moveDownDy;
+            this.turnLeft = turnLeft;
+            this.turnRight = turnRight;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -593,6 +612,60 @@ public class HeroineEnum
             
             // Return the numeric value for the enumeration.
             return facingEnum;
+        }
+        
+        public int getValue_MoveDownDx() 
+        {
+            // The function returns the x-position adjustment for moving down / backward.
+            // Example for use:  int x = HeroineEnum.FacingEnum.NORTH.getValue_MoveDownDx();
+            
+            // Return the x-position adjustment.
+            return moveDownDx;
+        }
+        
+        public int getValue_MoveDownDy() 
+        {
+            // The function returns the y-position adjustment for moving down / backward.
+            // Example for use:  int x = HeroineEnum.FacingEnum.NORTH.getValue_MoveDownDx();
+            
+            // Return the y-position adjustment.
+            return moveDownDy;
+        }
+        
+        public int getValue_MoveUpDx() 
+        {
+            // The function returns the x-position adjustment for moving up / forward.
+            // Example for use:  int x = HeroineEnum.FacingEnum.NORTH.getValue_MoveUpDx();
+            
+            // Return the x-position adjustment.
+            return moveUpDx;
+        }
+        
+        public int getValue_MoveUpDy() 
+        {
+            // The function returns the y-position adjustment for moving up / forward.
+            // Example for use:  int x = HeroineEnum.FacingEnum.NORTH.getValue_MoveUpDy();
+            
+            // Return the y-position adjustment.
+            return moveUpDy;
+        }
+        
+        public FacingEnum getValue_TurnLeft() 
+        {
+            // The function returns the adjusted direction upon turning left.
+            // Example for use:  FacingEnum x = HeroineEnum.FacingEnum.NORTH.getValue_TurnLeft();
+            
+            // Return the adjusted direction.
+            return FacingEnum.valueOf(turnLeft);
+        }
+        
+        public FacingEnum getValue_TurnRight() 
+        {
+            // The function returns the adjusted direction upon turning right.
+            // Example for use:  FacingEnum x = HeroineEnum.FacingEnum.NORTH.getValue_TurnRight();
+            
+            // Return the adjusted direction.
+            return FacingEnum.valueOf(turnRight);
         }
         
         // facing = Numeric value to convert to text.
@@ -669,10 +742,10 @@ public class HeroineEnum
     public enum GameState 
     {
         
-        STATE_EXPLORE (0),
-        STATE_COMBAT (1),
-        STATE_INFO (2),
-        STATE_DIALOG (3), // Displayed upon clicking the Start button (in the main menu) or visiting a shop.
+        STATE_EXPLORE (0), // State when moving around the map (NOT in a shop or combat or displaying player information, for example)
+        STATE_COMBAT (1), // State when in combat.
+        STATE_INFO (2), // State when displaying the player information (part of the explore screen).
+        STATE_DIALOG (3), // State upon clicking the Start button (in the main menu) or visiting a shop.  Used with dialogs.
         STATE_TITLE (4) // Game starts in title state.  Displays main menu.
         ; // semicolon needed when fields / methods follow
         
@@ -987,6 +1060,7 @@ public class HeroineEnum
     public enum ImgTileEnum 
     {
         
+        IMG_TILE_IGNORE (0, "ignore1", "ignore2", false), // Placeholder for tile to ignore / not draw.
         IMG_TILE_DUNGEON_FLOOR (1, "dungeon_floor.png", "tile-dungeon floor", true), // Dungeon floor tiles.
         IMG_TILE_DUNGEON_WALL (2, "dungeon_wall.png", "tile-dungeon wall", false), // Dungeon wall tiles.
         IMG_TILE_DUNGEON_DOOR (3, "dungeon_door.png", "tile-dungeon door", true), // Dungeon door tiles.

@@ -1,6 +1,7 @@
 package heroinedusk;
 
 // LibGDX imports.
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import core.BaseActor;
 
@@ -67,6 +68,8 @@ public class MazeMap
     private float minimapIconSize; // Size of an icon in minimap (width and height match).
     private float minimapOffsetX; // X-coordinate of lower left corner of minimap.
     private float minimapOffsetY; // Y-coordinate of lower left corner of minimap.
+    private float minimapHeight; // Height of the minimap, including the background.
+    private float minimapWidth; // Width of the minimap, including the background.
     private String regionName; // Name of current region / map location.
       // Maps to one of the integers in the mapIdentifiers object in the atlas.
     private HeroineEnum.MusicEnum current_song; // Song associated with the current region / map location.
@@ -80,7 +83,9 @@ public class MazeMap
       // format numbers as 000.  Examples:  1 > 001, 2 > 002, ...
     
     // hdg = Reference to Heroine Dusk (main) game.
-    public MazeMap(HeroineDuskGame hdg)
+    // map_id = Current map section in which player resides.
+    // viewHeight = Height of the stage.
+    public MazeMap(HeroineDuskGame hdg, int map_id, int viewHeight)
     {
         
         /*
@@ -132,7 +137,7 @@ public class MazeMap
         this.atlasItems = gameHD.getAtlasItems();
         
         // 4.  Set starting region / map location.
-        current_id = 0;
+        current_id = map_id; // 0;
         
         // 5.  Get region name.
         regionName = atlas.mapIdentifiersRev.get(current_id);
@@ -195,7 +200,7 @@ public class MazeMap
         
         // 12.  Calculate minimap offset (lower left corner) based on scale.
         minimapOffsetX = 2f * gameHD.getConfig().getScale();
-        minimapOffsetY = 106f * gameHD.getConfig().getScale();
+        minimapOffsetY = viewHeight - (regionHeight * minimapIconSize) - (2f * gameHD.getConfig().getScale()); // 106f * gameHD.getConfig().getScale();
         
         // 13.  Calculate destination coordinates for minimap icons.
         
@@ -445,19 +450,40 @@ public class MazeMap
             // Determine tile number ot render.
             tileNbr = regionTiles.get(pos_y).get(pos_x);
             
-            // Store asset manager key for the tile to display.
-            key = HeroineEnum.ImgTileEnum.valueOf(tileNbr).getValue_Key() + "_" + decimalFormat000.format(position);
+            // If tile represents a placeholder, then...
+            if (tileNbr == HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue())
+            {
+                
+                // Tile represents a placeholder (empty location).
+                
+                // Return null.
+                return null;
+            }
             
-            System.out.println("Rendering tile (tile, pos): " + tileNbr + ", " + position);
-            
-            //System.out.println("Tile_" + Integer.toString(tileNbr));
-            //System.out.println("key = " + key);
-            //System.out.println("tile nbr = " + tileNbr);
-            //System.out.println("dest_x = " + dest_x[position]);
-            
-            // Return the base actor for the tile (possibly null if out of bounds).
-            return new BaseActor("Tile_" + Integer.toString(tileNbr), 
-              gameHD.getAssetMgr().getTextureRegion(key), dest_x[position], dest_y[position] );
+            else
+            {
+                
+                // Tile exists in current region and NOT a placeholder (empty location).
+                
+                //System.out.println("tileNbr = " + tileNbr);
+                //System.out.println("position = " + position);
+                
+                // Store asset manager key for the tile to display.
+                key = HeroineEnum.ImgTileEnum.valueOf(tileNbr).getValue_Key() + "_" + 
+                  decimalFormat000.format(position);
+                
+                //System.out.println("Rendering tile (tile, pos): " + tileNbr + ", " + position);
+
+                //System.out.println("Tile_" + Integer.toString(tileNbr));
+                //System.out.println("key = " + key);
+                //System.out.println("tile nbr = " + tileNbr);
+                //System.out.println("dest_x = " + dest_x[position]);
+
+                // Return the base actor for the tile (possibly null if out of bounds).
+                return new BaseActor("Tile_" + Integer.toString(tileNbr), 
+                  gameHD.getAssetMgr().getTextureRegion(key), dest_x[position], dest_y[position] );
+                
+            }
             
         }
         
@@ -476,19 +502,52 @@ public class MazeMap
     public ArrayList<BaseActor> minimap_render()
     {
         
-        // The function returns the icons used to render the minimap for the current map / region.
+        /*
+        The function returns the icons used to render the minimap for the current map / region.
+        
+        The setting up the minimap for rendering (populating the array list) involves the following:
+        
+        1.  Initialize array lists.
+        2.  Add minimap background (included in icon list for simplicity).
+        3.  Render (base) map.
+        4.  Render exits.
+        5.  Render shops.
+        6.  Render minimap cursor.
+        */
         
         int counter; // Used to increment through exits and shops.
         ArrayList<BaseActor> icons; // BaseActor objects associated with icons.
         int tileNbr; // Tile number for which to render icon  in minimap.
         boolean walkable; // Whether tile walkable.
+        BaseActor minimapBackground; // BaseActor serving as the minimap background.
         HeroineEnum.MinimapEnum key; // Key to texture region in hash map for icon to display.
         HeroineEnum.MinimapCursorEnum keyCursor; // Key to texture region in hash map for cursor icon to display.
         
         // 1.  Initialize array lists.
         icons = new ArrayList<>();
+        Color tempColor;
+        tempColor = new Color(Color.LIGHT_GRAY.r, Color.LIGHT_GRAY.g, Color.LIGHT_GRAY.b, 0.50f);
         
-        // 2.  Render (base) map.
+        // 2. Add minimap background (included in icon list for simplicity).
+        
+        // Create and configure base actor for minimap background.
+        minimapBackground = new BaseActor("Minimap_Background", 
+          minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLACK), 
+          -3f, -3f );
+        
+        // Set width and height of minimap background.
+        minimapWidth = (regionWidth * minimapIconSize) + 6f;
+        minimapHeight = (regionHeight * minimapIconSize) + 6f;
+        minimapBackground.setWidth( minimapWidth );
+        minimapBackground.setHeight( minimapHeight );
+        
+        // Apply a partially transparent light gray shade to the background.
+        minimapBackground.setColor(tempColor);
+        
+        // Add the base actor for the background to the array list.
+        icons.add( minimapBackground );
+        
+        // 3.  Render (base) map.
         
         // Loop through vertical tiles.
         for (int counterY = 0; counterY < regionHeight; counterY++)
@@ -501,34 +560,42 @@ public class MazeMap
                 // Determine tile number for which to render icon.
                 tileNbr = regionTiles.get(counterY).get(counterX);
                 
-                // Determine while tile walkable.
-                walkable = HeroineEnum.ImgTileEnum.valueOf(tileNbr).getValue_Walkable();
-                
-                /*
-                Walkable (key) = minimap_white
-                Not walkable (key) = minimap_black
-                */
-                
-                // Determine key containing texture region for icon.
-                
-                // If walkable tile, then...
-                if (walkable)
-                    // Walkable tile.
-                    key = HeroineEnum.MinimapEnum.MINIMAP_BLOCK_WHITE;
-                else
-                    // Non-walkable tile.
-                    key = HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLACK;
-                
-                // Add base actor for current icon in loop.
-                icons.add( new BaseActor("Minimap_(" + Integer.toString(counterX) + "," + 
-                  Integer.toString(counterY) + ")", minimapRegions.get(key), 
-                  minimapDestX.get(counterY).get(counterX), minimapDestY.get(counterY).get(counterX) ) );
+                // If NOT a placeholder tile, then...
+                if (tileNbr != HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue())
+                {
+                    
+                    // NOT a placeholder tile.
+                    
+                    // Determine while tile walkable.
+                    walkable = HeroineEnum.ImgTileEnum.valueOf(tileNbr).getValue_Walkable();
+
+                    /*
+                    Walkable (key) = minimap_white
+                    Not walkable (key) = minimap_black
+                    */
+
+                    // Determine key containing texture region for icon.
+
+                    // If walkable tile, then...
+                    if (walkable)
+                        // Walkable tile.
+                        key = HeroineEnum.MinimapEnum.MINIMAP_BLOCK_WHITE;
+                    else
+                        // Non-walkable tile.
+                        key = HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLACK;
+
+                    // Add base actor for current icon in loop.
+                    icons.add( new BaseActor("Minimap_(" + Integer.toString(counterX) + "," + 
+                      Integer.toString(counterY) + ")", minimapRegions.get(key), 
+                      minimapDestX.get(counterY).get(counterX), minimapDestY.get(counterY).get(counterX) ) );
+                    
+                }
                 
             }
                 
         }
         
-        // 3.  Render exits.
+        // 4.  Render exits.
         
         // Set starting value for counter.
         counter = 0;
@@ -537,7 +604,7 @@ public class MazeMap
         key = HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLUE;
         
         // Loop through exits in current region.
-        for (RegionMap.regionExit exit : currentRegion.getRegionExits())
+        for (RegionMap.RegionExit exit : currentRegion.getRegionExits())
         {
             
             // Add base actor for current exit icon in loop.
@@ -547,7 +614,7 @@ public class MazeMap
             
         }
         
-        // 3.  Render shops.
+        // 5.  Render shops.
         
         // Set starting value for counter.
         counter = 0;
@@ -556,7 +623,7 @@ public class MazeMap
         key = HeroineEnum.MinimapEnum.MINIMAP_BLOCK_DARK_BLUE;
         
         // Loop through shops in current region.
-        for (RegionMap.regionShop shop : currentRegion.getRegionShops())
+        for (RegionMap.RegionShop shop : currentRegion.getRegionShops())
         {
             
             // Add base actor for current shop icon in loop.
@@ -566,7 +633,7 @@ public class MazeMap
             
         }
         
-        // 4.  Render minimap cursor.
+        // 6.  Render minimap cursor.
         
         // Determine key containing texture region for icon.      
         
@@ -643,6 +710,10 @@ public class MazeMap
         return currentRegion;
     }
     
+    public float getMinimapHeight() {
+        return minimapHeight;
+    }
+    
     public float getMinimapOffsetX() {
         return minimapOffsetX;
     }
@@ -651,12 +722,24 @@ public class MazeMap
         return minimapOffsetY;
     }
     
+    public float getMinimapWidth() {
+        return minimapWidth;
+    }
+    
     public int getRegionHeight() {
         return regionHeight;
     }
 
     public int getRegionWidth() {
         return regionWidth;
+    }
+    
+    // posX = X-coordinate at which to get tile information.
+    // posY = Y-coordinate at which to get tile information.
+    public HeroineEnum.ImgTileEnum getImgTileEnum(int posX, int posY) {
+        // Returns the enumerated value for the tile at the passed location.
+        // Reverses y and x to ease working with tiles.
+        return HeroineEnum.ImgTileEnum.valueOf(regionTiles.get(posY).get(posX));
     }
     
 }
