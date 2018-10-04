@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.utils.Array;
 
 // Local project imports.
 import core.BaseActor;
@@ -21,7 +22,9 @@ import heroinedusk.RegionMap;
 // Java imports.
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -106,6 +109,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel regionLabel; // Label showing the current region name.
     private CustomLabel spellsLabel; // Label showing "SPELLS" text.
     private ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
+    private Array<Actor> uiStageActors; // List of actors in ui stage used when waking screen.
     private CustomLabel weaponLabel; // Label showing current player weapon.
     
     // Declare regular variables.
@@ -168,7 +172,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         15.  Populate hash map with starting enabled statuses for action buttons.
         16.  Populate hash map with starting ignore next exit event flags for action buttons.
         17.  Configure and add the actors for the action buttons (excluding information).  Hidden at start.
-        18.  Configure and add the labels for the two lines for responses to spells.  Hidden at start.
+        18.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+             Hidden at start.
         19.  Configure and add the label showing the current region name.  Hidden at start.
         */
         
@@ -178,6 +183,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
         
         // 2.  Initialize arrays, array lists, and hash maps.
+        uiStageActors = new Array<>();
         tiles = new ArrayList<>();
         minimapIcons = new ArrayList<>();
         mapActionButtonMagic = new HashMap<>();
@@ -188,23 +194,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mazemap = new MazeMap(gameHD, gameHD.getAvatar().getMap_id(), viewHeightMain);
         
         // 4.  Configure and add the background Actor.
-        
         // Note:  The application uses a starting background of tempest, which the foreground objects completely hide.
-        
-        // Create new BaseActor for the background.
-        background = new BaseActor();
-        
-        // Name background actor.
-        background.setActorName("Background");
-        
-        // Assign the Texture to the background Actor.
-        background.setTexture(gameHD.getAssetMgr().getImage_xRef(mazemap.getCurrentRegion().getRegionBackground().getValue_Key()));
-        
-        // Position the background with its lower left corner at the corresponding location in the screen.
-        background.setPosition( 0, 0 );
-        
-        // Add the background Actor to the scene graph.
-        mainStage.addActor( background );
+        info_render_background();
         
         // 5.  Render current map location / tiles.
         
@@ -228,6 +219,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, null, 
           (float)(gameHD.getConfig().getScale() * -2), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( facingLabel.getLabel() );
+        
         // 7.  Configure and add the information button Actor.
         
         // Create and configure new BaseActor for the information button.
@@ -245,6 +239,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the information button Actor to the scene graph.
         uiStage.addActor( infoButton );
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( infoButton );
+        
         // 8.  Configure and add the label with the "INFO" text.
         
         // Initialize and add label with the "INFO" text.
@@ -255,6 +252,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Hide the label.
         infoLabel.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( infoLabel.getLabel() );
         
         // Configure and add the selector Actor for the selector for the information button.
         
@@ -277,6 +277,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the information button selector Actor to the scene graph.
         uiStage.addActor( infoButtonSelector );
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( infoButtonSelector );
+        
         // 10.  Configure and add the label with the "SPELLS" text.  Hidden at start.
         
         // Initialize and add label with the "SPELLS" text.
@@ -287,6 +290,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Hide the label.
         spellsLabel.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( spellsLabel.getLabel() );
         
         // 11.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
         info_render_equipment();
@@ -331,7 +337,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 17.  Configure and add the actors for the action buttons (excluding information).
         action_render();
         
-        // 18.  Configure and add the labels for the two lines for responses to spells.  Hidden at start.
+        // 18.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+        //      Hidden at start.
         info_render_powerResponseLines();
         
         // 19.  Configure and add the label showing the current region name.  Hidden at start.
@@ -755,6 +762,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
                     
+                    // Hide the minimap.
+                    minimapGroup.setVisible(false);
+                    
                     // If player in combat, then...
                     if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
                     {
@@ -762,7 +772,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Player in combat.
                         
                         System.out.println("Burn!");
-                    
+                        
                         // Play fire sound.
                         gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_FIRE);
                         
@@ -840,6 +850,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
+                    
+                    // Hide the minimap.
+                    minimapGroup.setVisible(false);
                     
                     // If player in combat, then...
                     if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
@@ -931,6 +944,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
                     
+                    // Hide the minimap.
+                    minimapGroup.setVisible(false);
+                    
                     // If player at maximum hit points, then...
                     if (gameHD.getAvatar().getHp_AtMax())    
                     {
@@ -975,6 +991,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     {
                         
                         // Player below maximum hit points.
+                        
+                        // Play heal sound.
+                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_HEAL);
                         
                         // Calculate number of hit points to heal.
                         heal_amount = (int)Math.floor(gameHD.getAvatar().getMax_hp() / 2) +
@@ -1030,9 +1049,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Set up fade effects for power action and result labels.
                         powerActionLabel.addAction_Fade();
                         powerResultLabel.addAction_Fade();
-                        
-                        // Play heal sound.
-                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_HEAL);
                         
                     } // End ... If player at maximum hit points.
                     
@@ -1098,6 +1114,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
+                    
+                    // Hide the minimap.
+                    minimapGroup.setVisible(false);
                     
                     // If player in combat, then...
                     if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
@@ -1185,6 +1204,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
                     
+                    // Hide the minimap.
+                    minimapGroup.setVisible(false);
+                    
                     System.out.println("Unlock!");
                     
                     // Play unlock sound.
@@ -1253,6 +1275,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
                     
+                    // Hide the minimap.
+                    minimapGroup.setVisible(false);
+                    
                     System.out.println("Light!");
                     
                     // Play light sound.
@@ -1314,6 +1339,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the heal (spell) button Actor to the scene graph.
         uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL) );
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL) );
+        
         // 2.  Configure and add the burn (spell) button Actor.
         
         // Create and configure new BaseActor for the burn (spell) button.
@@ -1343,6 +1371,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Add the burn (spell) button Actor to the scene graph.
         uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN) );
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN) );
         
         // 3.  Configure and add the unlock (spell) button Actor.
         
@@ -1374,6 +1405,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the unlock (spell) button Actor to the scene graph.
         uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK) );
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK) );
+        
         // 4.  Configure and add the light (spell) button Actor.
         
         // Create and configure new BaseActor for the light (spell) button.
@@ -1403,6 +1437,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Add the light (spell) button Actor to the scene graph.
         uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT) );
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT) );
         
         // 5.  Configure and add the freeze (spell) button Actor.
         
@@ -1434,6 +1471,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the freeze (spell) button Actor to the scene graph.
         uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE) );
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE) );
+        
         // 6.  Configure and add the reflect (spell) button Actor.
         
         // Create and configure new BaseActor for the reflect (spell) button.
@@ -1464,6 +1504,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the reflect (spell) button Actor to the scene graph.
         uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT) );
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT) );
+        
         /*
         // if in combat, show fight and run
         if (gamestate == STATE_COMBAT) {
@@ -1484,8 +1527,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         */
         
     }
-    
-    
     
     @Override
     public void dispose()
@@ -1674,6 +1715,28 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    private void info_render_background()
+    {
+        
+        // The function configures and add the actor for the background.
+        
+        // Create new BaseActor for the background.
+        background = new BaseActor();
+        
+        // Name background actor.
+        background.setActorName("Background");
+        
+        // Assign the Texture to the background Actor.
+        background.setTexture(gameHD.getAssetMgr().getImage_xRef(mazemap.getCurrentRegion().getRegionBackground().getValue_Key()));
+        
+        // Position the background with its lower left corner at the corresponding location in the screen.
+        background.setPosition( 0, 0 );
+        
+        // Add the background Actor to the scene graph.
+        mainStage.addActor( background );
+        
+    }
+    
     private void info_render_equipment()
     {
         
@@ -1701,6 +1764,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the player base Actor to the scene graph.
         uiStage.addActor( heroineBase );
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( heroineBase );
+        
         // 2.  Render the armor worn.
         
         // Create and configure new BaseActor for the player armor.
@@ -1722,6 +1788,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the player armor Actor to the scene graph.
         uiStage.addActor( heroineArmor );
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( heroineArmor );
+        
         // 3.  Render the weapon.
         
         // Create and configure new BaseActor for the player weapon.
@@ -1742,6 +1811,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Add the player weapon Actor to the scene graph.
         uiStage.addActor( heroineWeapon );
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( heroineWeapon );
         
     }
     
@@ -1767,6 +1839,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Hide the label.
         goldLabel.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( goldLabel.getLabel() );
         
     }
     
@@ -1794,6 +1869,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         hpLabel.applyVisible(false);
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( hpLabel.getLabel() );
+        
         // 2.  Configure and add the label with the player magic points.  Hidden at start.
         
         // Store text to display for magic points.
@@ -1808,6 +1886,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Hide the label.
         mpLabel.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mpLabel.getLabel() );
         
     }
     
@@ -1828,6 +1909,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         armorLabel.applyVisible(false);
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( armorLabel.getLabel() );
+        
         // 2.  Configure and add the label with the current player weapon.  Hidden at start.
         
         // Initialize and add label with the current player armor.
@@ -1838,6 +1922,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Hide the label.
         weaponLabel.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( weaponLabel.getLabel() );
         
     }
     
@@ -1872,6 +1959,18 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the minimap group to the scene graph.
         uiStage.addActor(minimapGroup);
         
+        /*
+        // Update position of power-related labels.
+        
+        // Place power-related labels slightly below minimap.
+        powerActionLabel.displayLabel((float)(gameHD.getConfig().getScale() * 2), 
+          mazemap.getMinimapOffsetY() - (float)(gameHD.getConfig().getScale() * 2) - 
+          powerActionLabel.getLabel().getHeight());
+        powerResultLabel.displayLabel((float)(gameHD.getConfig().getScale() * 2), 
+          mazemap.getMinimapOffsetY() - (float)(gameHD.getConfig().getScale() * 12) - 
+          powerActionLabel.getLabel().getHeight());
+        */
+        
     }
     
     private void info_render_no_target()
@@ -1882,7 +1981,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
         // Update power action labels.
         powerActionLabel.setLabelText("(NO TARGET)");
-
+        
         // Display power action  labels.
         powerActionLabel.applyVisible(true);
         
@@ -1911,6 +2010,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         powerActionLabel.applyVisible(false);
         
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( powerActionLabel.getLabel() );
+        
         // 2.  Configure and add the label with the power result text.  Hidden at start.
         
         // Initialize and add label with the power result.
@@ -1921,6 +2023,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Hide the label.
         powerResultLabel.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( powerResultLabel.getLabel() );
         
     }
     
@@ -1965,6 +2070,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Build the dialog -- title and buttons and associated text -- associated with the current shop.
         gameHD.getShopInfo().shop_set(regionShop.getShop_id());
+        
+        // Set new location of player.
+        gameHD.getAvatar().setX(regionShop.getDest_x());
+        gameHD.getAvatar().setY(regionShop.getDest_y());
         
         // Switch to the dialog screen.
         gameHD.setDialogScreen();
@@ -2048,6 +2157,24 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Wake up the base screen, setting up viewports, input multiplexer, ....
         wakeBaseScreen();
+        
+        // Add the background Actor to the scene graph.
+        mainStage.addActor( background );
+        
+        // Render updated view.
+        // Note:  Causes a redrawing of the minimap.
+        renderCurrentView();
+        
+        // Add the label with the direction the player is facing.
+        //uiStage.addActor( facingLabel.getLabel() );
+        
+        // Loop through actors required for ui stage.
+        for (Actor actor : uiStageActors)
+        {
+            // Add actor to ui stage.
+            uiStage.addActor(actor);
+            //System.out.println("Adding back actor: " + actor.getName());
+        }
         
         // Configure and add the actors to the stage:  background, ground, planes, and stars.
         //create();

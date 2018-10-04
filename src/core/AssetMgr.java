@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import gui.CustomProgressBar;
+import heroinedusk.HeroineEnum;
 import java.awt.geom.Rectangle2D;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -60,6 +61,9 @@ public class AssetMgr
     disposeAssetMgr:  Clears the asset manager from memory.
     getImage:  Returns the Texture from the asset manager with the passed key.
     getImage_xRef:  Returns the Texture from the asset manager based on the name in the cross reference.
+    getMusicMp3:  Returns the requested music in mp3 format.
+    getMusicOgg:  Returns the requested music in ogg format.
+    getSound:  Returns the requested sound.
     loadResources:  Loads the current resources in the asset manager queue.
     loadTextureRegions:  loads all texture regions associated with the passed atlases.
     loadTextureRegionsDynamic:  Splits the texture with the passed key into regions.
@@ -530,6 +534,33 @@ public class AssetMgr
         
         // Return the rect structure.
         return textureRegionRects.get(regionKey);
+        
+    }
+    
+    // musicEnum = Enumerated value for the desired music.
+    public Music getMusicMp3(HeroineEnum.MusicEnum musicEnum)
+    {
+        
+        // The function returns the requested music in mp3 format.
+        return manager.get(musicEnum.getValue_File_mp3(), Music.class);
+        
+    }
+    
+    // musicEnum = Enumerated value for the desired music.
+    public Music getMusicOgg(HeroineEnum.MusicEnum musicEnum)
+    {
+        
+        // The function returns the requested music in Ogg format.
+        return manager.get(musicEnum.getValue_File_ogg(), Music.class);
+        
+    }
+    
+    // soundEnum = Enumerated value for the desired sound.
+    public Sound getSound(HeroineEnum.SoundEnum soundEnum)
+    {
+        
+        // The function returns the requested sound.
+        return manager.get(soundEnum.getValue_FilePath(), Sound.class);
         
     }
     

@@ -67,7 +67,6 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
     private BaseActor background; // BaseActor object that will act as the background.
     private CustomLabel createdByLabel1; // Created by label - first line.
     private CustomLabel createdByLabel2; // Created by label - second line.
-    private Music backgroundMusic; // Background music -- loops constantly.
     private CustomLabel musicByLabel; // Music by label.
     private CustomProgressBar progressBar; // Reference to custom progress bar object.
     private BaseActor startButton; // BaseActor object that will act as the start button.
@@ -77,9 +76,6 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
     
     // Declare regular variables.
     private boolean stillLoading; // Whether still loading (assets).
-    
-    // Declare constants.
-    private final float audioVolume = 0f; //0.80f; // Volume to use with Music objects.
     
     // hdg = Reference to Heroine Dusk (main) game.
     // windowWidth = Width to use for stages.
@@ -172,14 +168,16 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add label to scene graph.
         mainStage.addActor(titleLabel.displayLabelCenterX(600, viewWidthMain));
         
-        // 2C.  Configure and play the background music.
+        // 2C.  Load and play the background music.
         
-        // Load music to play in the background.
-        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("music/m31.ogg"));
+        // Queue just the starting music.
+        gameHD.getAssetMgr().queueMusic(HeroineEnum.MusicEnum.M31.getValue_File_ogg());
         
-        backgroundMusic.setLooping(true); // Set instrumental music to loop.
-        backgroundMusic.setVolume(audioVolume); // Set volume for instrumental music.
-        backgroundMusic.play(); // Play instrumental music.
+        // Load just the starting music.
+        gameHD.getAssetMgr().loadResources();
+        
+        // Play (loop) starting background music.
+        gameHD.getSounds().playMusicDirect(gameHD.getAssetMgr(), HeroineEnum.MusicEnum.M31);
         
         // 3.  Initialize the custom progress bar.
         progressBar = new CustomProgressBar(game.skin);
@@ -372,9 +370,6 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // The method is called when removing the screen and allows for clearing of related resources 
         // from memory.
-
-        // Clear background music object from memory.
-        backgroundMusic.dispose();
         
         // Call manual dispose method in superclass.
         super.disposeManual();
@@ -393,7 +388,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         2.  Loads texture regions related to atlases.
         3.  Configures and adds the start button Actor.
         4.  Configures and adds the label next to the start button.
-        5.  Initializes sounds.
+        5.  Populate hash maps related to sounds and music.
         6.  Split tile regions for use with explore screen.
         7.  Hides the progress bar.
         */
@@ -454,8 +449,8 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add label to scene graph.
         mainStage.addActor(startLabel.displayLabel( posX, startButton.getY()) );
         
-        // 5.  Initialize sounds.
-        gameHD.setSounds(new Sounds(gameHD));
+        // 5.  Populate hash maps related to sounds and music.
+        gameHD.getSounds().mapAudioHashMaps( gameHD );
         
         // 6.  Split tile regions for use with explore screen.
         
@@ -515,6 +510,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         3.  Queues images.
         4.  Queues atlases.
         5.  Queues sounds.
+        6.  Queues music (ogg format).
         */
         
         // Declare object variables.
@@ -702,6 +698,16 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         
             // Add sound to queue.
             gameHD.getAssetMgr().queueSounds(sound.getValue_FilePath());
+            
+        }
+        
+        // 6.  Queue music (ogg format).
+        
+        // Loop through music (via enumerations).
+        for (HeroineEnum.MusicEnum music : HeroineEnum.MusicEnum.values()) {
+            
+            // Add music to queue.
+            gameHD.getAssetMgr().queueMusic(music.getValue_File_ogg());
             
         }
         

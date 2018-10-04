@@ -1623,20 +1623,20 @@ public class HeroineEnum
     public enum MusicEnum 
     {
         
-        MUSIC_ELEGY_DM (0, "elegy_dm.mp3", "elegy_dm.ogg"), // Elegy DM music.
-        MUSIC_HAPLY (1, "haply.mp3", "haply.ogg"), // Haply music.
-        MUSIC_KAWARAYU (2, "kawarayu.mp3", "kawarayu.ogg"), // Kawarayu music.
-        M31 (3, "m31.mp3", "m31.ogg") // M31 music.
+        MUSIC_ELEGY_DM (0, "music/elegy_dm.mp3", "music/elegy_dm.ogg"), // Elegy DM music.
+        MUSIC_HAPLY (1, "music/haply.mp3", "music/haply.ogg"), // Haply music.
+        MUSIC_KAWARAYU (2, "music/kawarayu.mp3", "music/kawarayu.ogg"), // Kawarayu music.
+        M31 (3, "music/m31.mp3", "music/m31.ogg") // M31 music.
         ; // semicolon needed when fields / methods follow
 
         private final int musicEnum; // Enumerations related to music.
-        private final String mp3File; // Filename (just name and extension, no path) in mp3 format.
-        private final String oggFile; // Filename (just name and extension, no path) in ogg format.
+        private final String mp3File; // Filename for music -- in mp3 format.
+        private final String oggFile; // Filename for music -- in ogg format.
         private static final Map musicMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         
         // musicEnum = Value to associate.
-        // mp3File = Filename (just name and extension, no path) in mp3 format.
-        // oggFile = Filename (just name and extension, no path) in ogg format.
+        // mp3File = Filename for music -- in mp3 format.
+        // oggFile = Filename for music -- in ogg format.
         private MusicEnum(int musicEnum, String mp3File, String oggFile) 
         {
             // The constructor sets the values for each enumeration.
@@ -1669,19 +1669,19 @@ public class HeroineEnum
         
         public String getValue_File_mp3() 
         {
-            // The function returns the mp3 filename (just name and extension, no path).
+            // The function returns the mp3 filename for the music.
             // Example for use:  String x = HeroineEnum.MusicEnum.MUSIC_HAPLY.getValue_File_mp3();
             
-            // Return the mp3 filename (just name and extension, no path).
+            // Return the mp3 filename for the music.
             return mp3File;
         }
         
         public String getValue_File_ogg() 
         {
-            // The function returns the ogg filename (just name and extension, no path).
+            // The function returns the ogg filename for the music.
             // Example for use:  String x = HeroineEnum.MusicEnum.MUSIC_HAPLY.getValue_File_ogg();
             
-            // Return the ogg filename (just name and extension, no path).
+            // Return the ogg filename for the music.
             return oggFile;
         }
         
@@ -2006,7 +2006,7 @@ public class HeroineEnum
         SOUND_LIGHT (14, "sounds/lightning_a.wav"), // Sound related to light spell.
         SOUND_FREEZE (15, "sounds/freeze.wav"), // Sound related to freeze spell.
         SOUND_REFLECT (16, "sounds/rubberband.wav"), // Sound related to reflect spell.
-        SOUND_ERROR (17, "sounds/heal.wav") // Sound when trying to do something at the wrong time.
+        SOUND_ERROR (17, "sounds/error.wav") // Sound when trying to do something at the wrong time.
         ; // semicolon needed when fields / methods follow
         
         private final int soundEnum; // Enumerations related to sounds.

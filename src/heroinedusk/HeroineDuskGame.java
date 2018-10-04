@@ -90,6 +90,9 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // Initialize current dialog window information.
         dialog = new Dialog();
         
+        // Initialize sound and music information.
+        sounds = new Sounds();
+        
     }
     
     @Override
@@ -274,7 +277,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
             dsMain.dispose();
         
         // Dispose of sound and music objects.
-        sounds.disposeSounds();
+        sounds.disposeAudio();
         
         // Clear LibGDX asset manager.
         assetMgr.disposeAssetMgr();
