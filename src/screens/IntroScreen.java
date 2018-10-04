@@ -2,7 +2,6 @@ package screens;
 
 // LibGDX imports.
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -18,7 +17,6 @@ import gui.CustomProgressBar;
 import heroinedusk.HeroineDuskGame;
 import heroinedusk.HeroineEnum;
 import heroinedusk.JSON_Processor;
-import heroinedusk.Sounds;
 
 // Java imports.
 import java.io.File;

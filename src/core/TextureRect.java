@@ -1,5 +1,6 @@
 package core;
 
+// Java imports.
 import java.awt.geom.Rectangle2D;
 
 /*

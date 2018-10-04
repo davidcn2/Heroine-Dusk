@@ -1,5 +1,6 @@
 package core;
 
+// LibGDX imports.
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 

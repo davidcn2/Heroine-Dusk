@@ -1,5 +1,6 @@
 package heroinedusk;
 
+// Java imports.
 import java.util.ArrayList;
 
 public class Avatar 

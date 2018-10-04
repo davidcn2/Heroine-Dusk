@@ -1,9 +1,12 @@
 package gui;
 
+// LibGDX imports.
 import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+
+// Java imports.
 import java.util.HashMap;
 import java.util.Map;
 

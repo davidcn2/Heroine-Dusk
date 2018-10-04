@@ -1,5 +1,6 @@
 package core;
 
+// Java imports.
 import java.util.HashMap;
 import java.util.Map;
 

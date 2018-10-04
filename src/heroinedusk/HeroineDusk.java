@@ -1,6 +1,6 @@
 package heroinedusk;
 
-import com.badlogic.gdx.Gdx;
+// LibGDX imports.
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 

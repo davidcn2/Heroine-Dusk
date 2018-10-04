@@ -1,10 +1,13 @@
 package core;
 
+// LibGDX imports.
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+
+// Java imports.
 import java.util.HashMap;
 
 /*
