@@ -30,23 +30,25 @@ public class HeroineEnum
     10.  HeroinePlayerEnum:  Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
     11.  ImgBackgroundEnum:  Enumerations related to background images.
     12.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
-    13.  ImgTileEnum:  Enumerations related to tile images.
-    14.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
-    15.  ItemCategoryEnum:  Enumerations related to item categories.
-    16.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
-    17.  ItemTypeEnum:  Enumerations related to item types.
-    18.  ListEnum:  Enumerations related to list types.
-    19.  MagicItemEnum:  Enumerations related to magic items.
-    20.  MusicEnum:  Enumerations related to music.
-    21.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
-    22.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
-    23.  SelectPosEnum:  Enumerations related to explore screen button selection.
-    24.  ShopEnum:  Enumerations related to shops / locations.
-    25.  ShopTypeEnum:  Enumerations related to shop / location types.
-    26.  SoundsEnum:  Enumerations related to sounds.
-    27.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    28.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
-    29:  WeaponEnum:  Enumerations related to weapons.
+    13.  ImgOtherEnum:  Enumerations related to other images.
+    14.  ImgTileEnum:  Enumerations related to tile images.
+    15.  ImgTreasureEnum:  Enumerations related to treasure images.
+    16.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
+    17.  ItemCategoryEnum:  Enumerations related to item categories.
+    18.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
+    19.  ItemTypeEnum:  Enumerations related to item types.
+    20.  ListEnum:  Enumerations related to list types.
+    21.  MagicItemEnum:  Enumerations related to magic items.
+    22.  MusicEnum:  Enumerations related to music.
+    23.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
+    24.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
+    25.  SelectPosEnum:  Enumerations related to explore screen button selection.
+    26.  ShopEnum:  Enumerations related to shops / locations.
+    27.  ShopTypeEnum:  Enumerations related to shop / location types.
+    28.  SoundsEnum:  Enumerations related to sounds.
+    29.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    30.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
+    31:  WeaponEnum:  Enumerations related to weapons.
     */
     
     // Enumerations related to action buttons.  Helps with atlas keys.
@@ -962,8 +964,8 @@ public class HeroineEnum
         IMG_INTERFACE_HEROINE (2, "heroine.png", "heroine.pack", "heroine", "heroine_atlas"), // Heroine -- character pictures.
         IMG_INTERFACE_INFO_BTN (3, "info_button.png", "info_button.atlas", "info_btn", "info_btn_atlas"), // Information button.
         IMG_INTERFACE_MINIMAP (4, "minimap.png", "minimap.pack", "minimap", "minimap_atlas"), // Minimap icons.
-        IMG_INTERFACE_MINIMAP_CURSOR (4, "minimap_cursor.png", "minimap_cursor.pack", "minimap_cursor", "minimap_cursor_atlas"), // Minimap cursor.
-        IMG_INTERFACE_SELECT (4, "select.png", "", "select", "") // Button selection.
+        IMG_INTERFACE_MINIMAP_CURSOR (5, "minimap_cursor.png", "minimap_cursor.pack", "minimap_cursor", "minimap_cursor_atlas"), // Minimap cursor.
+        IMG_INTERFACE_SELECT (6, "select.png", "", "select", "") // Button selection.
         ; // semicolon needed when fields / methods follow
 
         private final int imgInterfaceEnum; // Enumerations related to interface images.
@@ -1014,7 +1016,7 @@ public class HeroineEnum
         public String getValue_AtlasFile() 
         {
             // The function returns the filename (just name and extension, no path).
-            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasFile();
+            // Example for use:  String x = HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasFile();
             
             // Return the filename (just name and extension, no path).
             return imgAtlasFile;
@@ -1023,7 +1025,7 @@ public class HeroineEnum
         public String getValue_AtlasKey() 
         {
             // The function returns the atlas key -- used with the asset manager hash map.
-            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasKey();
+            // Example for use:  String x = HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasKey();
             
             // Return the atlas key.
             return imgAtlasKey;
@@ -1041,7 +1043,7 @@ public class HeroineEnum
         public String getValue_Key() 
         {
             // The function returns the image key -- used with the asset manager hash map.
-            // Example for use:  String x = HeroineEnum.ImgBackgroundEnum.IMG_INTERFACE_DIALOG_BTN.getValue_Key();
+            // Example for use:  String x = HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_DIALOG_BTN.getValue_Key();
             
             // Return the image key.
             return imgKey;
@@ -1052,6 +1054,78 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (ImgInterfaceEnum) imgInterfaceMap.get(imgInterface);
+        }
+        
+    }
+    
+    // Enumerations related to other images.
+    public enum ImgOtherEnum 
+    {
+        
+        IMG_OTHER_CHEST (0, "chest.png", "other_chest")
+        ; // semicolon needed when fields / methods follow
+        
+        private final int imgOtherEnum; // Enumerations related to other images.
+        private final String imgFile; // Filename (just name and extension, no path).
+        private final String imgKey; // Key associated with image -- used with asset manager hash map.
+        private static final Map imgOtherMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // imgOtherEnum = Value to associate.
+        // imgFile = Filename (just name and extension, no path).
+        // imgKey = Key associated with image -- used with asset manager hash map.
+        private ImgOtherEnum(int imgOtherEnum, String imgFile, String imgKey) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.imgOtherEnum = imgOtherEnum;
+            this.imgFile = imgFile;
+            this.imgKey = imgKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ImgOtherEnum imgOtherEnum : ImgOtherEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                imgOtherMap.put(imgOtherEnum.imgOtherEnum, imgOtherEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ImgOtherEnum.IMG_OTHER_CHEST.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return imgOtherEnum;
+        }
+        
+        public String getValue_File() 
+        {
+            // The function returns the filename (just name and extension, no path).
+            // Example for use:  String x = HeroineEnum.ImgOtherEnum.IMG_OTHER_CHEST.getValue_File();
+            
+            // Return the filename (just name and extension, no path).
+            return imgFile;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the image key -- used with the asset manager hash map.
+            // Example for use:  String x = HeroineEnum.ImgOtherEnum.IMG_OTHER_CHEST.getValue_Key();
+            
+            // Return the key.
+            return imgKey;
+        }
+        
+        // imgOther = Numeric value to convert to text.
+        public static ImgOtherEnum valueOf(int imgOther) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ImgOtherEnum) imgOtherMap.get(imgOther);
         }
         
     }
@@ -1155,6 +1229,94 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (ImgTileEnum) imgTileMap.get(imgTile);
+        }
+        
+    }
+    
+    // Enumerations related to treasure images.
+    public enum ImgTreasureEnum 
+    {
+        
+        IMG_TREASURE_GOLD_1 (0, "treasure.pack", "gold1"), // Treasure:  one gold.
+        IMG_TREASURE_GOLD_2 (1, "treasure.pack", "gold2"), // Treasure:  two gold.
+        IMG_TREASURE_GOLD_4 (2, "treasure.pack", "gold4"), // Treasure:  four gold.
+        IMG_TREASURE_GOLD_8 (3, "treasure.pack", "gold8"), // Treasure:  eight gold.
+        IMG_TREASURE_GOLD_16 (4, "treasure.pack", "gold16"), // Treasure:  sixteen gold.
+        IMG_TREASURE_GOLD_32 (5, "treasure.pack", "gold32"), // Treasure:  thirty-two gold.
+        IMG_TREASURE_GOLD_64 (6, "treasure.pack", "gold64"), // Treasure:  sixty-four gold.
+        IMG_TREASURE_GOLD_128 (7, "treasure.pack", "gold128"), // Treasure:  one hundred twenty-eight gold.
+        IMG_TREASURE_GOLD_256 (8, "treasure.pack", "gold256"), // Treasure:  two hundred fifty-six gold.
+        IMG_TREASURE_GOLD_512 (9, "treasure.pack", "gold512"), // Treasure:  five hundred twelve gold.
+        IMG_TREASURE_MAGIC (10, "treasure.pack", "magic"), // Treasure:  magic / spell.
+        IMG_TREASURE_RUBY (11, "treasure.pack", "ruby"), // Treasure:  ruby.
+        IMG_TREASURE_SAPPHIRE (12, "treasure.pack", "sapphire"), // Treasure:  sapphire.
+        IMG_TREASURE_EMERALD (13, "treasure.pack", "emerald"), // Tresaure:  emerald.
+        IMG_TREASURE_DIAMOND (14, "treasure.pack", "diamond"), // Treasure:  diamond.
+        IMG_TREASURE_WOOD_STICK (15, "treasure.pack", "wood_stick") // Treasure:  wood stick.
+        
+        ; // semicolon needed when fields / methods follow
+
+        private final int imgTreasureEnum; // Enumerations related to treasure images.
+        private final String imgAtlasFile; // Filename (just name and extension, no path) for atlas.
+        private final String imgAtlasKey; // Key associated with atlas -- used with asset manager hash map.
+        private static final Map imgTreasureMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // imgTreasureEnum = Value to associate.
+        // imgAtlasFile = Filename (just name and extension, no path) for atlas.
+        // imgAtlasKey = Key associated with atlas -- used with asset manager hash map.
+        private ImgTreasureEnum(int imgTreasureEnum, String imgAtlasFile, String imgAtlasKey) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.imgTreasureEnum = imgTreasureEnum;
+            this.imgAtlasFile = imgAtlasFile;
+            this.imgAtlasKey = imgAtlasKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ImgTreasureEnum imgTreasureEnum : ImgTreasureEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                imgTreasureMap.put(imgTreasureEnum.imgTreasureEnum, imgTreasureEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ImgTreasureEnum.IMG_TREASURE_GOLD_256.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return imgTreasureEnum;
+        }
+        
+        public String getValue_AtlasFile() 
+        {
+            // The function returns the filename (just name and extension, no path).
+            // Example for use:  String x = HeroineEnum.ImgTreasureEnum.IMG_TREASURE_GOLD_256.getValue_AtlasFile();
+            
+            // Return the filename (just name and extension, no path).
+            return imgAtlasFile;
+        }
+        
+        public String getValue_AtlasKey() 
+        {
+            // The function returns the atlas key -- used with the asset manager hash map.
+            // Example for use:  String x = HeroineEnum.ImgTreasureEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasKey();
+            
+            // Return the atlas key.
+            return imgAtlasKey;
+        }
+        
+        // imgTreasure = Numeric value to convert to text.
+        public static ImgTreasureEnum valueOf(int imgTreasure) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ImgTreasureEnum) imgTreasureMap.get(imgTreasure);
         }
         
     }
@@ -1277,50 +1439,57 @@ public class HeroineEnum
     public enum ItemEnum 
     {
         
-        ITEM_GOLD (0, "GOLD", ItemTypeEnum.ITEM_TYPE_GOLD, null), // Gold.
-        ITEM_ARMOR_SERF_RAGS (1, ArmorEnum.ARMOR_SERF_RAGS.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Serf rags.
-        ITEM_ARMOR_TRAVEL_CLOAK (2, ArmorEnum.ARMOR_TRAVEL_CLOAK.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Travel cloak.
-        ITEM_ARMOR_HIDE_CUIRASS (3, ArmorEnum.ARMOR_HIDE_CUIRASS.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Hide cuirass.
-        ITEM_ARMOR_RIVET_LEATHER (4, ArmorEnum.ARMOR_RIVET_LEATHER.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Rivet leather.
-        ITEM_ARMOR_CHAIN_MAILLE (5, ArmorEnum.ARMOR_CHAIN_MAILLE.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Chain maille.
-        ITEM_ARMOR_PLATE_ARMOR (6, ArmorEnum.ARMOR_PLATE_ARMOR.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Wyvern scale.
-        ITEM_ARMOR_WYVERN_SCALE (7, ArmorEnum.ARMOR_WYVERN_SCALE.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null), // Wyvern scale.
-        ITEM_MAGIC_SAPPHIRE (8, MagicItemEnum.MAGIC_ITEM_SAPPHIRE.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 12), // Magic sapphire.
-        ITEM_MAGIC_EMERALD (9, MagicItemEnum.MAGIC_ITEM_EMERALD.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 13), // Magic emerald.
-        ITEM_MAGIC_RUBY (10, MagicItemEnum.MAGIC_ITEM_RUBY.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 14), // Magic ruby.
-        ITEM_MAGIC_DIAMOND (11, MagicItemEnum.MAGIC_ITEM_DIAMOND.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 15), // Magic diamond.
-        ITEM_SPELL_HEAL (12, SpellEnum.SPELL_HEAL.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, 11), // Heal spell.
-        ITEM_SPELL_BURN (13, SpellEnum.SPELL_BURN.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Burn spell.
-        ITEM_SPELL_UNLOCK (14, SpellEnum.SPELL_UNLOCK.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Unlock spell.
-        ITEM_SPELL_LIGHT (15, SpellEnum.SPELL_LIGHT.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Light spell.
-        ITEM_SPELL_FREEZE (16, SpellEnum.SPELL_FREEZE.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Freeze spell.
-        ITEM_SPELL_REFLECT (17, SpellEnum.SPELL_REFLECT.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null), // Reflect spell.
-        ITEM_WEAPON_WOOD_STICK (18, WeaponEnum.WEAPON_WOOD_STICK.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, 10), // Wood stick.
-        ITEM_WEAPON_IRON_KNIFE (19, WeaponEnum.WEAPON_IRON_KNIFE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // Iron knife.
-        ITEM_WEAPON_BRONZE_MACE (20, WeaponEnum.WEAPON_BRONZE_MACE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // Bronze mace.
-        ITEM_WEAPON_STEEL_SWORD (21, WeaponEnum.WEAPON_STEEL_SWORD.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // Steel sword.
-        ITEM_WEAPON_WAR_HAMMER (22, WeaponEnum.WEAPON_WAR_HAMMER.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // War hammer.
-        ITEM_WEAPON_BATTLE_AXE (23, WeaponEnum.WEAPON_BATTLE_AXE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null), // Battle axe.
-        ITEM_WEAPON_GREAT_SWORD (24, WeaponEnum.WEAPON_GREAT_SWORD.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null) // Great sword.
+        ITEM_GOLD (0, "GOLD", ItemTypeEnum.ITEM_TYPE_GOLD, null, null, "GOLD"), // Gold.  * Multiple treasure images.
+        ITEM_ARMOR_SERF_RAGS (1, ArmorEnum.ARMOR_SERF_RAGS.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null, null, "SERF RAGS"), // Serf rags.
+        ITEM_ARMOR_TRAVEL_CLOAK (2, ArmorEnum.ARMOR_TRAVEL_CLOAK.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null, null, "TRAVEL CLOAK"), // Travel cloak.
+        ITEM_ARMOR_HIDE_CUIRASS (3, ArmorEnum.ARMOR_HIDE_CUIRASS.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null, null, "HIDE CUIRASS"), // Hide cuirass.
+        ITEM_ARMOR_RIVET_LEATHER (4, ArmorEnum.ARMOR_RIVET_LEATHER.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null, null, "RIVET LEATHER"), // Rivet leather.
+        ITEM_ARMOR_CHAIN_MAILLE (5, ArmorEnum.ARMOR_CHAIN_MAILLE.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null, null, "CHAIN MAILLE"), // Chain maille.
+        ITEM_ARMOR_PLATE_ARMOR (6, ArmorEnum.ARMOR_PLATE_ARMOR.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null, null, "PLATE ARMOR"), // Plate armor.
+        ITEM_ARMOR_WYVERN_SCALE (7, ArmorEnum.ARMOR_WYVERN_SCALE.toString(), ItemTypeEnum.ITEM_TYPE_ARMOR, null, null, "WYVERN SCALE"), // Wyvern scale.
+        ITEM_MAGIC_SAPPHIRE (8, MagicItemEnum.MAGIC_ITEM_SAPPHIRE.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 12, ImgTreasureEnum.IMG_TREASURE_SAPPHIRE, "MAGIC SAPPHIRE (MP UP)"), // Magic sapphire.
+        ITEM_MAGIC_EMERALD (9, MagicItemEnum.MAGIC_ITEM_EMERALD.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 13, ImgTreasureEnum.IMG_TREASURE_EMERALD, "MAGIC EMERALD (HP UP)"), // Magic emerald.
+        ITEM_MAGIC_RUBY (10, MagicItemEnum.MAGIC_ITEM_RUBY.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 14, ImgTreasureEnum.IMG_TREASURE_RUBY, "MAGIC RUBY (ATK UP)"), // Magic ruby.
+        ITEM_MAGIC_DIAMOND (11, MagicItemEnum.MAGIC_ITEM_DIAMOND.toString(), ItemTypeEnum.ITEM_TYPE_MAGIC, 15, ImgTreasureEnum.IMG_TREASURE_DIAMOND, "MAGIC DIAMOND (DEF UP)"), // Magic diamond.
+        ITEM_SPELL_HEAL (12, SpellEnum.SPELL_HEAL.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, 11, ImgTreasureEnum.IMG_TREASURE_MAGIC, "SPELLBOOK: HEAL"), // Heal spell.
+        ITEM_SPELL_BURN (13, SpellEnum.SPELL_BURN.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null, ImgTreasureEnum.IMG_TREASURE_MAGIC, "SPELLBOOK: BURN"), // Burn spell.
+        ITEM_SPELL_UNLOCK (14, SpellEnum.SPELL_UNLOCK.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null, ImgTreasureEnum.IMG_TREASURE_MAGIC, "SPELLBOOK: UNLOCK"), // Unlock spell.
+        ITEM_SPELL_LIGHT (15, SpellEnum.SPELL_LIGHT.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null, ImgTreasureEnum.IMG_TREASURE_MAGIC, "SPELLBOOK: LIGHT"), // Light spell.
+        ITEM_SPELL_FREEZE (16, SpellEnum.SPELL_FREEZE.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null, ImgTreasureEnum.IMG_TREASURE_MAGIC, "SPELLBOOK: FREEZE"), // Freeze spell.
+        ITEM_SPELL_REFLECT (17, SpellEnum.SPELL_REFLECT.toString(), ItemTypeEnum.ITEM_TYPE_SPELL, null, ImgTreasureEnum.IMG_TREASURE_MAGIC, "SPELLBOOK: REFLECT"), // Reflect spell.
+        ITEM_WEAPON_WOOD_STICK (18, WeaponEnum.WEAPON_WOOD_STICK.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, 10, ImgTreasureEnum.IMG_TREASURE_WOOD_STICK, "WOOD STICK"), // Wood stick.
+        ITEM_WEAPON_IRON_KNIFE (19, WeaponEnum.WEAPON_IRON_KNIFE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null, null, "IRON KNIFE"), // Iron knife.
+        ITEM_WEAPON_BRONZE_MACE (20, WeaponEnum.WEAPON_BRONZE_MACE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null, null, "BRONZE MACE"), // Bronze mace.
+        ITEM_WEAPON_STEEL_SWORD (21, WeaponEnum.WEAPON_STEEL_SWORD.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null, null, "STEEL SWORD"), // Steel sword.
+        ITEM_WEAPON_WAR_HAMMER (22, WeaponEnum.WEAPON_WAR_HAMMER.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null, null, "WAR HAMMER"), // War hammer.
+        ITEM_WEAPON_BATTLE_AXE (23, WeaponEnum.WEAPON_BATTLE_AXE.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null, null, "BATTLE AXE"), // Battle axe.
+        ITEM_WEAPON_GREAT_SWORD (24, WeaponEnum.WEAPON_GREAT_SWORD.toString(), ItemTypeEnum.ITEM_TYPE_WEAPON, null, null, "GREAT SWORD") // Great sword.
         ; // semicolon needed when fields / methods follow
         
+        private final ImgTreasureEnum imgTreasureEnum; // Enumerated value related to image to show when finding item as treasure.
         private final int itemEnum; // Enumerations related to items.
         private final String itemName; // Item name -- equivalent to enumerated value.  Examples:  ARMOR_TRAVEL_CLOAK, ARMOR_HIDE_CUIRASS, ...
         private final ItemTypeEnum itemType; // Item type -- gold, armor, magic, spell, or weapon.  Examples:  ITEM_TYPE_GOLD, ITEM_TYPE_WEAPON, ITEM_TYPE_ARMOR, ITEM_TYPE_SPELL, ITEM_TYPE_MAGIC.
         private static final Map itemMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         private final Integer treasure_id; // Treasure identifier.
+        private final String treasureText; // Text to display when finding as treasure.
         
         // itemEnum = Value to associate.
         // itemName = Item name -- equivalent to enumerated value.  Examples:  ARMOR_TRAVEL_CLOAK, ARMOR_HIDE_CUIRASS, ...
         // itemType = Item type -- gold, weapon, armor, spell, or magic.  Examples:  ITEM_TYPE_GOLD, ITEM_TYPE_WEAPON, ITEM_TYPE_ARMOR, ITEM_TYPE_SPELL, ITEM_TYPE_MAGIC.
         // treasure_id = Treasure identifier.
-        private ItemEnum(int itemEnum, String itemName, ItemTypeEnum itemType, Integer treasure_id)
+        // imgTreasureEnum = Enumerated value related to image to show for treasure.
+        // treasureText = Text to display when finding as treasure.
+        private ItemEnum(int itemEnum, String itemName, ItemTypeEnum itemType, Integer treasure_id, 
+          ImgTreasureEnum imgTreasureEnum, String treasureText)
         {
             // The constructor sets the values for each enumeration.
             this.itemEnum = itemEnum;
             this.itemName = itemName;
             this.itemType = itemType;
             this.treasure_id = treasure_id;
+            this.imgTreasureEnum = imgTreasureEnum;
+            this.treasureText = treasureText;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -1343,6 +1512,16 @@ public class HeroineEnum
             
             // Return the numeric value for the enumeration.
             return itemEnum;
+        }
+        
+        public ImgTreasureEnum getValue_ImgTreasureEnum() 
+        {
+            // The function returns the enumerated value related to the image to show when finding the item 
+            // as treasure.
+            // Example for use:  ImgTreasureEnum x = HeroineEnum.ItemEnum.ITEM_WEAPON_IRON_KNIFE.getValue_ImgTreasureEnum();
+            
+            // Return the enumerated value related to the image to show when finding the item as treasure..
+            return imgTreasureEnum;
         }
         
         public String getValue_ItemName() 
@@ -1370,6 +1549,15 @@ public class HeroineEnum
             
             // Return the treasure identifier of the item.
             return treasure_id;
+        }
+        
+        public String getValue_TreasureText() 
+        {
+            // The function returns the treasure text of the item.
+            // Example for use:  int x = HeroineEnum.ItemEnum.ITEM_MAGIC_RUBY.getValue_TreasureText();
+            
+            // Return the treasure text of the item.
+            return treasureText;
         }
         
         // item = Numeric value to convert to text.
@@ -2161,6 +2349,55 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (SpellEnum) spellMap.get(spell);
+        }
+        
+    }
+    
+    // Enumerations related to (special) tile map keys.  Associated with tileMap hash map in MazeMap class.
+    public enum TileMapKeyEnum 
+    {
+        
+        TILE_MAP_KEY_CHEST (0), // Key related to chest "tile".
+        TILE_MAP_KEY_TREASURE (1) // Key related to treasure "tile".
+        ; // semicolon needed when fields / methods follow
+
+        private final Integer tileMapKeyEnum; // Enumerations related to (special) tile map keys (associated with tileMap hash map in MazeMap class).
+        private static final Map tileMapKeyMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // tileMapKeyEnum = Value to associate.
+        private TileMapKeyEnum(int tileMapKeyEnum) 
+        {
+            // The constructor sets the numeric values for each enumeration.
+            this.tileMapKeyEnum = tileMapKeyEnum;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static
+        {
+            
+            // Loop through each of the enumerated values.
+            for (TileMapKeyEnum tileMapKeyEnum : TileMapKeyEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                tileMapKeyMap.put(tileMapKeyEnum.tileMapKeyEnum, tileMapKeyEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_CHEST.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return tileMapKeyEnum;
+        }
+        
+        // tileMapKey = Numeric value to convert to text.
+        public static TileMapKeyEnum valueOf(int tileMapKey) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (TileMapKeyEnum) tileMapKeyMap.get(tileMapKey);
         }
         
     }

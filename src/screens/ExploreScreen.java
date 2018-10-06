@@ -54,8 +54,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     Methods include:
 
     action_render:  Configures and adds the actors for the action buttons (excluding information).
-    addEvent:  Adds events to the passed (information) button (BaseActor).
-    addEvent_Basics:  Adds basic events to the passed action button / BaseActor.
+    addEventBasics:  Adds basic events to the passed action button / BaseActor.
+    addEvent_Information:  Adds events to the passed (information) button (BaseActor).
     addEvent_Minimap:  Adds events related to dragging the minimap.
     addEvent_Touch_Burn:  Adds events to the passed button (BaseActor) -- used for the burn (spell).
     addEvent_Touch_Freeze:  Adds events to the passed button (BaseActor) -- used for the freeze (spell).
@@ -107,6 +107,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel regionLabel; // Label showing the current region name.
     private CustomLabel spellsLabel; // Label showing "SPELLS" text.
     private ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
+    private CustomLabel treasureLabel; // Label showing treasure description.
     private Array<Actor> uiStageActors; // List of actors in ui stage used when waking screen.
     private CustomLabel weaponLabel; // Label showing current player weapon.
     
@@ -133,7 +134,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // The constructor of the class:
         
         // 1.  Calls the constructor for the BaseScreen (parent / super) class.
-        // 2.  Calls the create() function to perform remaining startup logic.
+        // 2.  Stores reference to main game class.
+        // 3.  Calls the create() function to perform remaining startup logic.
         
         // Call the constructor for the BaseScreen (parent / super) class.
         super(hdg, windowWidth, windowHeight);
@@ -173,6 +175,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         18.  Configure and add the labels for the two lines for responses to spells / powers / actions.
              Hidden at start.
         19.  Configure and add the label showing the current region name.  Hidden at start.
+        20.  Configure and add the label showing the treasure description.  Hidden at start.
         */
         
         // 1.  Set defaults.
@@ -199,7 +202,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
-          gameHD.getAvatar().getFacing());
+          gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
+          heroineArmor, armorLabel, hpLabel, mpLabel);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -232,7 +236,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           -2f * gameHD.getConfig().getScale(), CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE_REGION );
         
         // Add events to information button.
-        addEvent( infoButton );
+        addEvent_Information( infoButton );
         
         // Add the information button Actor to the scene graph.
         uiStage.addActor( infoButton );
@@ -267,7 +271,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           0f, CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE );
         
         // Add events to information button selector.
-        addEvent( infoButtonSelector );
+        addEvent_Information( infoButtonSelector );
         
         // Set information button selector as invisible.
         infoButtonSelector.setVisible(false);
@@ -350,10 +354,128 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         regionLabel.applyVisible(false);
         
+        // 20.  Configure and add the label showing the treasure description.  Hidden at start.
+        treasureLabel = new CustomLabel(game.skin, "NO TREASURE HERE", "uiLabelStyle", 
+          0.8f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
+          CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, 0f, 
+          (float)(gameHD.getConfig().getScale() * 12), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // Hide the label.
+        treasureLabel.applyVisible(false);
+        
     }
     
     // buttonActor = Reference to BaseActor for the button.
-    private void addEvent(BaseActor buttonActor)
+    private void addEventBasics(BaseActor buttonActor)
+    {
+        
+        // The function adds basic events to the passed action button / BaseActor.
+        // Events include touchDown, enter, and exit.
+        
+        InputListener buttonEvent; // Events to add to passed button (BaseActor).
+        
+        // Craft event logic to add to passed button (BaseActor).
+        buttonEvent = new InputListener()
+            {
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // fromActor = Reference to actor losing focus.
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
+                {
+                    
+                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
+                    
+                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                    // (pointer will be -1).
+                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
+                    
+                    // If action button enabled, then...
+                    if (mapActionButtonEnabled.get(buttonActor.getActorName()))
+                    {
+                        
+                        // Action button enabled.
+                        
+                        // Apply a dark shade to the button.
+                        buttonActor.setColor(Color.LIGHT_GRAY);
+                        
+                    }
+                    
+                    else
+                    {
+                        
+                        // Action button disabled.
+                        
+                        // Apply a dark shade to the button.
+                        buttonActor.setColor(Color.DARK_GRAY);
+                        
+                    }
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // toActor = Reference to actor gaining focus.
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
+                {
+                    
+                    // The function occurs when the mouse cursor or a finger touch is moved out of the actor.
+                    
+                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                    // (pointer will be -1).
+                    // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
+                    
+                    // If ignoring next exit event, then...
+                    if (mapIgnoreNextExitEvent_ActionButtons.get(buttonActor.getActorName()))
+                        
+                        // Ignoring next exit event.
+                        
+                        // Flag to process next exit event.
+                        mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), false);
+                    
+                    // Otherwise, ...
+                    else
+                        
+                        // Process exit event.
+                        
+                        // If action button enabled, then...
+                        if (mapActionButtonEnabled.get(buttonActor.getActorName()))
+                        {
+
+                            // Action button enabled.
+                            
+                            // Return button to normal color.
+                            buttonActor.setColor(Color.WHITE);
+                        
+                        }
+                    
+                        else
+                        {
+                            
+                            // Action button disabled.
+                            
+                            // Return button to disabled color.
+                            buttonActor.setColor(colorMedGray);
+                            
+                        }
+                    
+                }
+                
+            }; // End ... InputListener.
+        
+        // Add event to button.
+        buttonActor.addListener(buttonEvent);
+        
+    }
+    
+    // buttonActor = Reference to BaseActor for the button.
+    private void addEvent_Information(BaseActor buttonActor)
     {
         
         // The function adds events to the passed (information) button (BaseActor).
@@ -493,115 +615,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Return information button to normal color.
                         infoButton.setColor(Color.WHITE);
                         
-                }
-                
-            }; // End ... InputListener.
-        
-        // Add event to button.
-        buttonActor.addListener(buttonEvent);
-        
-    }
-    
-    // buttonActor = Reference to BaseActor for the button.
-    private void addEventBasics(BaseActor buttonActor)
-    {
-        
-        // The function adds basic events to the passed action button / BaseActor.
-        // Events include touchDown, enter, and exit.
-        
-        InputListener buttonEvent; // Events to add to passed button (BaseActor).
-        
-        // Craft event logic to add to passed button (BaseActor).
-        buttonEvent = new InputListener()
-            {
-                
-                // event = Event for actor input: touch, mouse, keyboard, and scroll.
-                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // pointer = Pointer for the event.
-                // fromActor = Reference to actor losing focus.
-                @Override
-                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
-                {
-                    
-                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
-                    
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
-                    
-                    // If action button enabled, then...
-                    if (mapActionButtonEnabled.get(buttonActor.getActorName()))
-                    {
-                        
-                        // Action button enabled.
-                        
-                        // Apply a dark shade to the button.
-                        buttonActor.setColor(Color.LIGHT_GRAY);
-                        
-                    }
-                    
-                    else
-                    {
-                        
-                        // Action button disabled.
-                        
-                        // Apply a dark shade to the button.
-                        buttonActor.setColor(Color.DARK_GRAY);
-                        
-                    }
-                    
-                }
-                
-                // event = Event for actor input: touch, mouse, keyboard, and scroll.
-                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // pointer = Pointer for the event.
-                // toActor = Reference to actor gaining focus.
-                @Override
-                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
-                {
-                    
-                    // The function occurs when the mouse cursor or a finger touch is moved out of the actor.
-                    
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
-                    
-                    // If ignoring next exit event, then...
-                    if (mapIgnoreNextExitEvent_ActionButtons.get(buttonActor.getActorName()))
-                        
-                        // Ignoring next exit event.
-                        
-                        // Flag to process next exit event.
-                        mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), false);
-                    
-                    // Otherwise, ...
-                    else
-                        
-                        // Process exit event.
-                        
-                        // If action button enabled, then...
-                        if (mapActionButtonEnabled.get(buttonActor.getActorName()))
-                        {
-
-                            // Action button enabled.
-                            
-                            // Return button to normal color.
-                            buttonActor.setColor(Color.WHITE);
-                        
-                        }
-                    
-                        else
-                        {
-                            
-                            // Action button disabled.
-                            
-                            // Return button to disabled color.
-                            buttonActor.setColor(colorMedGray);
-                            
-                        }
-                    
                 }
                 
             }; // End ... InputListener.
@@ -1645,8 +1658,23 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
             }
             
-        }
+            // Hide any visible treasure.
+            
+            // If treasure actor exists, then...
+            if (tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE)) != null)    
+            {
+                // Treasure actor exists.
+                
+                // Hide treasure actor.
+                tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE)).setVisible(false);
+                
+                // Hide treasure label.
+                treasureLabel.applyVisible(false);
+            }
+                
+        } // End ... If information view selected.
         
+        // Otherwise -- switching from information to regular view.
         else
         {
             
@@ -1855,8 +1883,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 1.  Configure and add the label with the player hit points.  Hidden at start.
         
         // Store text to display for hit points.
-        hpText = "HP " + Integer.toString(gameHD.getAvatar().getHp()) + "/" + 
-          Integer.toString(gameHD.getAvatar().getMax_hp());
+        hpText = gameHD.getAvatar().getHpText();
         
         // Initialize and add label with the player hit points.
         hpLabel = new CustomLabel(game.skin, hpText, "uiLabelStyle", 1.0f, 
@@ -1873,8 +1900,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 2.  Configure and add the label with the player magic points.  Hidden at start.
         
         // Store text to display for magic points.
-        mpText = "MP " + Integer.toString(gameHD.getAvatar().getMp()) + "/" + 
-          Integer.toString(gameHD.getAvatar().getMax_mp());
+        mpText = gameHD.getAvatar().getMpText();
         
         // Initialize and add label with the player magic points.
         mpLabel = new CustomLabel(game.skin, mpText, "uiLabelStyle", 1.0f, 
@@ -1899,7 +1925,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 1.  Configure and add the label with the current player armor.  Hidden at start.
         
         // Initialize and add the label with the current player armor.
-        armorLabel = new CustomLabel(game.skin, gameHD.getAvatar().getArmor().getValue_CleanText(), 
+        armorLabel = new CustomLabel(game.skin, gameHD.getAvatar().getArmorText(), 
           "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
           (float)(gameHD.getConfig().getScale() * 47), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -1913,7 +1939,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 2.  Configure and add the label with the current player weapon.  Hidden at start.
         
         // Initialize and add label with the current player armor.
-        weaponLabel = new CustomLabel(game.skin, gameHD.getAvatar().getWeapon().getValue_CleanText(), 
+        weaponLabel = new CustomLabel(game.skin, gameHD.getAvatar().getWeaponText(), 
           "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
           (float)(gameHD.getConfig().getScale() * 37), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -2118,11 +2144,15 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Reinitialize array list for tiles.
         tiles = new ArrayList<>();
         
-        // 4.  Render current map location / tiles.
+        // 4.  Hide any treasure text.
+        treasureLabel.applyVisible(false);
+        
+        // 5.  Render current map location / tiles.
         
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
-          gameHD.getAvatar().getFacing());
+          gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
+          heroineArmor, armorLabel, hpLabel, mpLabel);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -2132,7 +2162,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         });
         
-        // 5.  Reset flag for minimap rendering, indicating regeneration necessary.
+        // 6.  Reset flag for minimap rendering, indicating regeneration necessary.
         minimapRenderInd = false;
         
     }
@@ -2151,7 +2181,21 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     public void wakeScreen()
     {
         
-        // The method gets called when redisplaying the already initialized screen.
+        /*
+        The method gets called when redisplaying the already initialized screen.
+        
+        The following actions occur:
+        
+        1.  Wakes up the base screen.
+        2.  Adds the background actor to the scene graph.
+        3.  Renders the current view -- tiles and minimap.
+        4.  Adds back the actors in the ui stage (based on the list, uiStageActors).
+        5.  Updates the text for the labels.
+        6.  Renders the updated armor and weapon.
+        */
+        
+        String armorKey; // Asset manager key related to armor texture region.
+        String weaponKey; // Asset manager key related to weapon texture region.
         
         // Wake up the base screen, setting up viewports, input multiplexer, ....
         wakeBaseScreen();
@@ -2163,19 +2207,35 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Note:  Causes a redrawing of the minimap.
         renderCurrentView();
         
-        // Add the label with the direction the player is facing.
-        //uiStage.addActor( facingLabel.getLabel() );
-        
         // Loop through actors required for ui stage.
         for (Actor actor : uiStageActors)
         {
             // Add actor to ui stage.
             uiStage.addActor(actor);
-            //System.out.println("Adding back actor: " + actor.getName());
         }
         
-        // Configure and add the actors to the stage:  background, ground, planes, and stars.
-        //create();
+        // Update labels.
+        armorLabel.setLabelText( gameHD.getAvatar().getArmorText() );
+        weaponLabel.setLabelText( gameHD.getAvatar().getWeaponText() );
+        goldLabel.setLabelText( Integer.toString(gameHD.getAvatar().getGold()) + " GOLD" );
+        hpLabel.setLabelText( "HP " + Integer.toString(gameHD.getAvatar().getHp()) + "/" + 
+          Integer.toString(gameHD.getAvatar().getMax_hp()) );
+        mpLabel.setLabelText( "MP " + Integer.toString(gameHD.getAvatar().getMp()) + "/" + 
+          Integer.toString(gameHD.getAvatar().getMax_mp()) );
+        
+        // Determine asset manager key related to armor.
+        armorKey = gameHD.getAvatar().getArmor().getValue_PlayerEnum().toString();
+        armorKey = HeroineEnum.HeroinePlayerEnum.valueOf(armorKey).getValue_Key();
+        
+        // Determine asset manager key related to weapon.
+        weaponKey = gameHD.getAvatar().getWeapon().getValue_PlayerEnum().toString();
+        weaponKey = HeroineEnum.HeroinePlayerEnum.valueOf(weaponKey).getValue_Key();
+        
+        // Render updated armor.
+        heroineArmor.setTextureRegion( gameHD.getAssetMgr().getTextureRegion(armorKey) );
+        
+        // Render updated weapon.
+        heroineWeapon.setTextureRegion( gameHD.getAssetMgr().getTextureRegion(weaponKey) );
         
     }
     
@@ -2197,6 +2257,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         movementNewPosInd = false;
         
         // 1.  Handle player movement -- when in explore mode.
+        
+        // Start with player not moving.
+        gameHD.getAvatar().setMoved(false);
         
         // If in explore mode, then...
         if (gameHD.getGameState() == HeroineEnum.GameState.STATE_EXPLORE)

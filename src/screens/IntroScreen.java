@@ -604,9 +604,36 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                     imagePathList.add(imagePath);
                     }
                     
+                } // End ... Loop through interface image enumerations.
+            
+            // Loop through other image enumerations.
+            for (HeroineEnum.ImgOtherEnum imgEnum : HeroineEnum.ImgOtherEnum.values())
+                
+                {
+                // Specify image path.
+                imagePath = "assets/other/" + imgEnum.getValue_File();
+                
+                // Add to lists.
+                imageMapList.add(imagePath);
+                imageMapList.add(imgEnum.getValue_Key());
+                imagePathList.add(imagePath);
                 }
             
-            }
+            // Loop through treasure image enumerations.
+            for (HeroineEnum.ImgTreasureEnum imgEnum : HeroineEnum.ImgTreasureEnum.values())
+                
+                {
+                // Specify atlas path.
+                atlasPath = "assets/treasure/" + imgEnum.getValue_AtlasFile();
+                
+                // Add to atlas lists.
+                atlasKeyList.add(imgEnum.getValue_AtlasKey());
+                atlasMapList.add(atlasPath);
+                atlasMapList.add(imgEnum.getValue_AtlasKey());
+                atlasPathList.add(atlasPath); 
+                } // End ... Loop through treasure image enumerations.
+            
+            } // End ... If using a manually scaled size.
         
         else
             
@@ -677,9 +704,36 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                     imagePathList.add(imagePath);
                     }
                 
-                }
+                } // End ... Loop through interface image enumerations.
+            
+            // Loop through other image enumerations.
+            for (HeroineEnum.ImgOtherEnum imgEnum : HeroineEnum.ImgOtherEnum.values())
                 
-            }
+                {
+                // Specify image path.
+                imagePath = gameHD.getConfig().getPrescaleFolder_Other() + imgEnum.getValue_File();
+                
+                // Add to lists.
+                imageMapList.add(imagePath);
+                imageMapList.add(imgEnum.getValue_Key());
+                imagePathList.add(imagePath);
+                }
+            
+            // Loop through treasure image enumerations.
+            for (HeroineEnum.ImgTreasureEnum imgEnum : HeroineEnum.ImgTreasureEnum.values())
+                
+                {
+                // Specify atlas path.
+                atlasPath = "assets/treasure/" + imgEnum.getValue_AtlasFile();
+                
+                // Add to atlas list.
+                atlasKeyList.add(imgEnum.getValue_AtlasKey());
+                atlasMapList.add(atlasPath);
+                atlasMapList.add(imgEnum.getValue_AtlasKey());
+                atlasPathList.add(atlasPath);
+                } // End ... Loop through treasure image enumerations.
+                
+            } // End ... If using a prescaled size.
         
         // 3.  Queue images.
         gameHD.getAssetMgr().queueImages(imagePathList);

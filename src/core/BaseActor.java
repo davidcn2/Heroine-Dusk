@@ -11,9 +11,13 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 // Java imports.
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -52,6 +56,8 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
     act:  Overrides the parent / super class act method.  Calls the act method of the
           Actor (parent / super) class.  Updates Actor position based on time.
+    addAction_FadeIn:  Sets up a fade in effect for the actor.
+    addAction_FadeOut:  Sets up a fade out effect for the actor.
     cloneActor:  Returns a BaseActor with the same properties as the current.
     copy:  Copies properties from the passed to the current BaseActor.
     destroy:  Removes the BaseActor from its Stage and parent list (as necessary).
@@ -70,30 +76,39 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
                          the drivers for the width and height.
     setOriginCenter:  Sets the origin of BaseActor to center of associated image, in order for rotations to appear correctly.
     setParentList:  Sets reference to an ArrayList to which the Actor has been added.
+    setPosition:  Sets the position of the lower left corner of the actor.  Used with constructor.
     setRandomTintColor:  Sets the tint color of the Actor to a random color.
     setRectangleBoundary:  Sets the properties of the bounding polygon related to the texture region.
                            The polygon uses a rectangle with the dimensions of the texture region as
                            the bounding polygon shape.
     setTexture:  Sets the properties of a texture.
+    setTextureRegion:  Sets the properties of a texture region.
     setTintColor:  Sets the tint color of the Actor.
     setTintColorToDefault:  Sets the tint color of the Actor to the default.
     */
     
     // Declare object variables.
+    private Map<String, Action> actionMapping; // Collection of actions applied to actor.
     private Polygon boundingPolygon; // Encapsulates a 2D polygon defined by its vertices.
     // A polygon can be translated and rotated.
     private Rectangle boundingRectangle; // Encapsulates a 2D rectangle defined by its corner point in the
     // bottom left and its extents in x (width) and y (height).  The object will contain the X and Y
     // coordinates and height and width of the texture region.
     private final ColorWorks colorEngine; // Contains color related functionality.
+    private HashMap<String, Action> customActions; // Custom actions.
     private ArrayList<? extends BaseActor> parentList; // Stores a reference to an ArrayList to which the Actor has been added.
     protected TextureRegion region; // Stores image (similar to a buffer from Direct-X).  Includes more
+    
     // functionality than a Texture.  Supports storage of multiple images or animation frames.
     // Stores coordinates (u, v), that determine which rectangular subarea of the Texture to use.
     private Color tintColor; // Color to tint the Actor.
     
     // Declare regular variables.
     private String actorName; // Name of actor.
+    private Integer virtualInt; // Virtual field -- integer.
+    private String virtualString; // Virtual field -- string.
+    
+    // Constructors below...
     
     public BaseActor()
     {
@@ -117,12 +132,17 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         boundingRectangle = new Rectangle(); // Create a 2D rectangle to reflect position and borders of image.
         //noinspection MoveFieldAssignmentToInitializer
         parentList = null; // Initialize an empty list of references to ArrayList containing Actor.
-
+        actionMapping = new HashMap<>(); // Initialize hash map for actions.
+        customActions = new HashMap<>(); // Initialize hash map for custom actions.
+        
         // Initialize color engine object.
         colorEngine = new ColorWorks();
 
         // Set additional defaults.
         setAdditionalDefaults();
+        
+        // Initialize hash map for actions.
+        actionMapping = new HashMap<>();
 
     }
 
@@ -240,8 +260,10 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     {
         
         /*
-        The constructor creates a base actor using a texture region based on the passed properties.
-        Allows for ease of use of atlases.
+        The constructor creates a base actor using a texture region (from the asset manager) based on the 
+        passed properties.
+        Allows for ease of use of the asset manager and atlases / packs.
+        Supports both textures and texture regions.
         
         Supports alignment and relative positioning of actor.
         Centering overrides relative x positioning.
@@ -459,33 +481,465 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
     }
     
-    private void setAdditionalDefaults()
-    {
-
-        // The function performs additional operations for the constructor that would cause
-        // overridable method call errors.
-
-        // Set the Color used to tint the Actor to the default.
-        setTintColorToDefault();
-    }
-
-    // pl = Reference to an ArrayList to which the Actor has been added.
-    public void setParentList(ArrayList<? extends BaseActor> pl)
-    {
-        // Set reference to an ArrayList to which the Actor has been added.
-        parentList = pl;
-    }
-
-    // x = X-coordinate at which to place lower left corner of the actor.
-    // y = Y-coordinate at which to place lower left corner of the actor.
+    // Methods below...
+    
+    // dt = Time in seconds since the last frame.  Also called delta.
     @Override
-    public final void setPosition(float x, float y)
+    public void act(float dt)
     {
-        // The method sets the position of the lower left corner of the actor.
-        // The method exists to facilitate its use in the constructor.
+
+        // The function calls the act method of the Actor, which performs
+        // a time based positional update.
+
+        // Calls the act method of the Actor (parent / super) class.
+        // Updates the actor based on time.
+        super.act ( dt );
+
+    }
+    
+    // texture = Texture to which to assign actor.
+    // actionName = Action name.
+    public void addActionCustom(Texture texture, String actionName)
+    {
         
-        // Call method in superclass.
-        super.setPosition(x, y);
+        // The function adds a custom action to the hash map that changes the texture of the actor.
+        
+        Action action; // Action to add to hash map.
+        
+        // If action does not exist yet, then...
+        if (customActions.get(actionName) == null)
+        {
+            
+            // Action does not exist yet.
+        
+            // Create action to add to hash map.
+            action = new Action() {
+                @Override
+                public boolean act(float delta) {
+
+                    // The function changes the texture of the actor.
+                    
+                    // Change texture of the actor.
+                    setTexture(texture);
+                    
+                    // Set the origin of the BaseActor to the center of its associated image.
+                    setOriginCenter();
+                    
+                    // Return a value.
+                    return true;
+
+                }
+            };
+
+            // Add custom action.
+            customActions.put(actionName, action);
+            
+        }
+        
+    }
+    
+    // texture = Texture to which to assign actor.
+    // actionName = Action name.
+    // width = Width to set actor.
+    // height = Height to set actor.
+    public void addActionCustom(Texture texture, String actionName, float width, float height)
+    {
+        
+        // The function adds a custom action to the hash map that changes the texture of the actor.
+        // The function also supports the resizing of the actor.
+        
+        Action action; // Action to add to hash map.
+        
+        // If action does not exist yet, then...
+        if (customActions.get(actionName) == null)
+        {
+            
+            // Action does not exist yet.
+        
+            // Create action to add to hash map.
+            action = new Action() {
+                @Override
+                public boolean act(float delta) {
+
+                    // The function changes the texture of the actor.
+
+                    // Change texture of the actor.
+                    setTexture(texture);
+
+                    // Resize actor.
+                    setWidth( width );
+                    setHeight( height );
+                    
+                    // Set the origin of the BaseActor to the center of its associated image.
+                    setOriginCenter();
+                    
+                    // Return a value.
+                    return true;
+
+                }
+            };
+
+            // Add custom action.
+            customActions.put(actionName, action);
+            
+        }
+        
+    }
+    
+    // textureRegion = Texture region to which to assign actor.
+    // actionName = Action name.
+    public void addActionCustom(TextureRegion textureRegion, String actionName)
+    {
+        
+        // The function adds a custom action to the hash map that changes the texture of the actor.
+        
+        Action action; // Action to add to hash map.
+        
+        // If action does not exist yet, then...
+        if (customActions.get(actionName) == null)
+        {
+            
+            // Action does not exist yet.
+        
+            // Create action to add to hash map.
+            action = new Action() {
+                @Override
+                public boolean act(float delta) {
+
+                    // The function changes the texture of the actor.
+
+                    // Change texture region of the actor.
+                    setTextureRegion(textureRegion);
+
+                    // Set the origin of the BaseActor to the center of its associated image.
+                    setOriginCenter();
+                    
+                    // Return a value.
+                    return true;
+
+                }
+            };
+
+            // Add custom action.
+            customActions.put(actionName, action);
+            
+        }
+        
+    }
+    
+    // textureRegion = Texture region to which to assign actor.
+    // actionName = Action name.
+    // width = Width to set actor.
+    // height = Height to set actor.
+    public void addActionCustom(TextureRegion textureRegion, String actionName, float width, float height)
+    {
+        
+        // The function adds a custom action to the hash map that changes the texture of the actor.
+        // The function also supports the resizing of the actor.
+        
+        Action action; // Action to add to hash map.
+        
+        // If action does not exist yet, then...
+        if (customActions.get(actorName) == null)
+        {
+            
+            // Action does not exist yet.
+        
+            // Create action to add to hash map.
+            action = new Action() {
+                @Override
+                public boolean act(float delta) {
+
+                    // The function changes the texture of the actor.
+
+                    // Change texture region of the actor.
+                    setTextureRegion(textureRegion);
+
+                    // Resize actor.
+                    setWidth( width );
+                    setHeight( height );
+                    
+                    // Set the origin of the BaseActor to the center of its associated image.
+                    setOriginCenter();
+                    
+                    // Return a value.
+                    return true;
+
+                }
+            };
+
+            // Add custom action.
+            customActions.put(actionName, action);
+            
+        }
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade.
+    public void addAction_FadeIn(float delay, float fadeIn)
+    {
+        
+        // The function sets up a fade in effect for the actor.
+        // Fade in over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade in over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeIn", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.alpha(0),
+            Actions.visible(true),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the actor.
+        addAction(actionMapping.get("FadeIn"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade.
+    // texture = Texture to which to change actor.
+    // actionName = Action name.
+    public void addAction_FadeIn(float delay, float fadeIn, Texture texture, String actionName)
+    {
+        
+        // The function sets up a fade in effect for the actor.
+        // Part of the effect involves changes to a new texture.
+        // Fade in (new texture) over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade in over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f, texture);
+        
+        // Add custom action to hash map.
+        addActionCustom(texture, actionName);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeInTexture", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.alpha(0),
+            Actions.visible(true),
+            customActions.get(actionName),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the actor.
+        addAction(actionMapping.get("FadeInTexture"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade.
+    // texture = Texture to which to change actor.
+    // actionName = Action name.
+    // width = Width to set actor.
+    // height = Height to set actor.
+    public void addAction_FadeIn(float delay, float fadeIn, Texture texture, String actionName, float width,
+      float height)
+    {
+        
+        // The function sets up a fade in effect for the actor.
+        // Part of the effect involves changes to a new texture, including resizing.
+        // Fade in (new texture) over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade in over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f, texture);
+        
+        // Add custom action to hash map -- with resizing.
+        addActionCustom(texture, actionName, width, height);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeInTexture", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.alpha(0),
+            Actions.visible(true),
+            customActions.get(actionName),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the actor.
+        addAction(actionMapping.get("FadeInTexture"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade.
+    // textureRegion = Texture region to which to change actor.
+    // actionName = Action name.
+    public void addAction_FadeIn(float delay, float fadeIn, TextureRegion textureRegion, String actionName)
+    {
+        
+        // The function sets up a fade in effect for the actor.
+        // Part of the effect involves changes to a new texture region.
+        // Fade in (new texture) over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade in over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f, textureRegion);
+        
+        // Add custom action to hash map.
+        addActionCustom(textureRegion, actionName);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeInTextureRegion", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.alpha(0),
+            Actions.visible(true),
+            customActions.get(actionName),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the actor.
+        addAction(actionMapping.get("FadeInTextureRegion"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade.
+    // textureRegion = Texture region to which to change actor.
+    // actionName = Action name.
+    // width = Width to set actor.
+    // height = Height to set actor.
+    public void addAction_FadeIn(float delay, float fadeIn, TextureRegion textureRegion, String actionName,
+      float width, float height)
+    {
+        
+        // The function sets up a fade in effect for the actor.
+        // Part of the effect involves changes to a new texture region, including resizing.
+        // Fade in (new texture) over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade in over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f, textureRegion);
+        
+        // Add custom action to hash map -- with resizing.
+        addActionCustom(textureRegion, actionName, width, height);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeInTextureRegion", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.alpha(0),
+            Actions.visible(true),
+            customActions.get(actionName),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the actor.
+        addAction(actionMapping.get("FadeInTextureRegion"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeOut = Duration, in seconds, of fade.
+    public void addAction_FadeOut(float delay, float fadeOut)
+    {
+        
+        // The function sets up a fade out effect for the actor.
+        // Fade out over the course of "fadeOut" seconds after "delay" elapse.
+        
+        // Example for use:  To fade out over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeOut(2.0f, 1.0f);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeOut", 
+          Actions.sequence(
+            Actions.fadeIn(0.0f), 
+            Actions.visible(true),
+            Actions.delay(delay), 
+            Actions.fadeOut(fadeOut), 
+            Actions.visible(false)
+          ));
+        
+        // Set up fade effect for the actor.
+        addAction(actionMapping.get("FadeOut"));
+        
+    }
+    
+    @SuppressWarnings({"MethodDoesntCallSuperMethod", "CloneDoesntCallSuperClone", "CloneDeclaresCloneNotSupported"})
+    @Override
+    public BaseActor clone()
+    {
+
+        // The function returns a BaseActor with the same properties as the current.
+
+        BaseActor newbie; // BaseActor to which to copy properties.
+
+        // Instantiate new BaseActor object.
+        newbie = new BaseActor();
+
+        // Copy properties of current (class-level) to new BaseActor object.
+        newbie.copy( this );
+
+        // Return the new BaseActor object.
+        return newbie;
+
+    }
+    
+    // original = Actor from which to copy properties.
+    public void copy(BaseActor original)
+    {
+
+        // The function copies properties from the passed to the current BaseActor.
+        // Properties include:  image texture (buffer), bounding polygon, position, origin, width,
+        // height, tint color, and visibility status.
+
+        // If image texture (buffer) exists in passed Actor, then...
+        if (original.region.getTexture() != null )
+
+            // Image texture (buffer) exists in passed Actor.
+
+            // Copy image texture (buffer) from passed to current Actor.
+            this.region = new TextureRegion( original.region );
+
+        // If bounding polygon exists in passed Actor, then...
+        if (original.boundingPolygon != null)
+        {
+            // Bounding polygon exists in passed Actor.
+
+            // Create bounding polygon in current with vertices in bounding polygon of passed Actor.
+            this.boundingPolygon = new Polygon( original.boundingPolygon.getVertices() );
+
+            // Set origin of bounding polygon to that of passed Actor.
+            this.boundingPolygon.setOrigin( original.getOriginX(), original.getOriginY() );
+        }
+
+        // Set position of current to that of passed Actor (based on bottom left corner).
+        this.setPosition( original.getX(), original.getY() );
+
+        // Copy properties indicating top left corner of passed to current Actor.
+        this.setOriginX( original.getOriginX() );
+        this.setOriginY( original.getOriginY() );
+
+        // Copy width and height from passed to current Actor.
+        this.setWidth( original.getWidth() );
+        this.setHeight( original.getHeight() );
+
+        // Copy visibility flag from passed to current Actor.
+        this.setVisible( original.isVisible() );
+
+        // Copy tinting color from passed to current Actor.
+        //this.tintColor = new Color();
+        //this.tintColor.r = original.getColor().r;
+        //this.tintColor.g = original.getColor().g;
+        //this.tintColor.b = original.getColor().b;
+        //this.tintColor.a = original.getColor().a;
+        this.setTintColor( original.getTintColor() );
+        
+        // Copy name from passed to current Actor.
+        this.actorName = original.actorName;
+
+        // Copy the action hash map.
+        this.actionMapping.putAll(original.actionMapping);
+        
+        // Copy virtual variables.
+        this.virtualInt = original.virtualInt;
+        this.virtualString = original.virtualString;
+        
     }
     
     public void destroy()
@@ -504,167 +958,41 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
     }
 
-    public void setOriginCenter()
+    // A Batch is used to draw 2D rectangles that reference a texture (region).
+    // The class will batch the drawing commands and optimize them for processing by the GPU.
+
+    // batch = Sprite used to draw image, dependent on and referencing a texture (buffer).
+    // parentAlpha = Alpha / transparency to use when drawing image.
+    @Override
+    public void draw(Batch batch, float parentAlpha)
     {
 
-        // The function sets the origin of the BaseActor to the center of its associated image, in order for rotations to
-        // appear correctly.
+        // The function sets the tinting color of and draws the Actor (when visible).
 
-        // If width of BaseActor set (automatic when applying image), then...
-        if ( getWidth() > 0 )
+        // System.out.println("\nActor:  " + actorName);
 
-            // Width of BaseActor set.
+        // Set the color used to tint images when they are added to the Batch.
+        // Default:  Color.WHITE.
 
-            // Set origin of the BaseActor to the center of its associated image.
-            setOrigin( getWidth() / 2, getHeight() / 2 );
+        // Set the Color values (red, green, blue, and alpha / transparency) of the
+        // Batch object to equal those of the tintColor class variable.
+        batch.setColor(tintColor.r, tintColor.g, tintColor.b, tintColor.a);
 
-        else
+        // If the Actor is visible, then...
+        if ( isVisible() )
 
-            // Width of BaseActor NOT set.
+            // Actor is visible.
+            // Draw the texture, taking into account its position,
+            // origin (center of rotation), width and height, scaling factors, and
+            // rotation angle.
+            batch.draw( region, getX(), getY(), getOriginX(), getOriginY(),
+                    getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation() );
 
-            // Display warning message.
-            System.err.println("error: actor size not set");
-
-    }
-
-    // target = Target BaseActor to center within the current -- based on rectangular regions.
-    public void moveToOrigin(BaseActor target)
-    {
-
-        // The function centers a smaller (the target) within a larger (the current) rectangle,
-        // using the borders of the current and target BaseActor objects.
-        // Origin = Position used for rotating and scaling operations.
-        // Position... getX() = X position of the actor's left edge, getY() = Returns the Y position of the actor's bottom edge.
-
-        // Set position of target BaseActor to center within current.
-        this.setPosition(
-                target.getX() + target.getOriginX() - this.getOriginX(),
-                target.getY() + target.getOriginY() - this.getOriginY() );
-
-    }
-
-    // t = Texture (stores a single image).
-    public final void setTexture(Texture t)
-    {
-
-        // The function sets the properties of a texture.
-
-        int h; // Height of the passed texture.
-        int w; // Width of the passed texture.
-
-        // Set texture properties.
-        w = t.getWidth(); // Get the width of the passed texture.
-        h = t.getHeight(); // Get the height of the passed texture.
-        setWidth( w ); // Set the width of the texture region to that of the passed texture.
-        setHeight( h ); // Set the height of the texture region to that of the passed texture.
-        region.setRegion( t ); // Set the texture region and coordinates to the size of the specified texture.
-
-        // Set default color the Actor will be tinted when drawn.
-        tintColor = getColor();
-
-    }
-
-    // t = TextureRegion (stores a single image).
-    public final void setTextureRegion(TextureRegion t)
-    {
-
-        // The function sets the properties of a texture.
-
-        int h; // Height of the passed texture region.
-        int w; // Width of the passed texture region.
-
-        // Set texture properties.
-        w = t.getRegionWidth(); // Get the width of the passed texture.
-        h = t.getRegionHeight(); // Get the height of the passed texture.
-        setWidth( w ); // Set the width of the texture region to that of the passed texture.
-        setHeight( h ); // Set the height of the texture region to that of the passed texture.
-        region.setRegion( t ); // Set the texture region and coordinates to the size of the specified texture.
-
-        // Set default color the Actor will be tinted when drawn.
-        tintColor = getColor();
+        // Call the constructor of the parent class to redraw the group.
+        super.draw(batch, parentAlpha);
 
     }
     
-    public void setRectangleBoundary()
-    {
-
-        // The function sets the properties of the bounding polygon related to the texture region.
-        // The polygon uses a rectangle with the dimensions of the texture region as the bounding
-        // polygon shape.
-
-        float h; // Height of the Actor.
-        float w; // Width of the actor.
-
-        // Set the properties of the bounding rectangle related to the texture region.
-        // Use the properties of the texture region.
-
-        // Store Actor dimensions.
-        w = getWidth(); // Store width of the Actor.
-        h = getHeight(); // Store height of the Actor.
-
-        // Set up vertices of the Actor (rectangle / polygon).
-        float [] vertices = {0,0, w,0, w,h, 0,h}; // Array of vertices related to the bounding polygon.
-
-        // Set the properties of the bounding polygon (rectangular shape) related to the texture region.
-        boundingPolygon = new Polygon(vertices);
-
-        // Set the position of the top left corner of the polygon to that of the texture region.
-        boundingPolygon.setOrigin( getOriginX(), getOriginY() );
-
-    }
-
-    public void setEllipseBoundary()
-    {
-
-        // The function sets the properties of the bounding polygon related to the texture region.
-        // The polygon uses an ellipse with the dimensions of the texture region as the drivers
-        // for the width and height.
-
-        // The method contains a loop to generate a set of n equally spaced values for t in the
-        // interval [0, 6.28], then calculates the corresponding x and y coordinates, and stores
-        // them in an array used to initialize the polygon.  Changing the method to use a value of
-        // 4 for n would generate a diamond shape.  Using a value of 8 for n generates an octagon
-        // shape.  As the method uses larger values for n, the generated shape gets smoother.
-
-        float h; // Height of the Actor.
-        float t; // Values ranging from 0 to 6.28 (pi x 2), used to generate vertices in ellipse.
-        float[] vertices; // Array of vertices related to the bounding polygon.
-        float w; // Width of the Actor.
-        final int n; // Number of vertices.
-
-        n = 12; // Set number of vertices.
-        w = getWidth(); // Store width of the Actor.
-        h = getHeight(); // Store height of the Actor.
-        vertices = new float[n * 2]; // Initialize the array of vertices.
-
-        // Loop through and set the vertices of the bounding polygon.
-        for (int i = 0; i < n; i++)
-        {
-
-            // Generate ellipse, letting x = cos(t) and y = sin(t),
-            // where t ranges from 0 to pi x 2 (about 6.28).
-            // x = w/2 * cos(t) + w/2
-            // y = h/2 * sin(t) + h/2
-
-            // Store next driver value for ellipse.
-            t = 6.28f * i / n;
-
-            // Generate X-coordinate for current vertex in ellipse.
-            vertices[i * 2] = w / 2 * MathUtils.cos(t) + w / 2;
-
-            // Generate Y-coordinate for current vertex in ellipse.
-            vertices[i * 2 + 1] = h / 2 * MathUtils.sin(t) + h / 2;
-
-        }
-
-        // Set the properties of the bounding polygon (shape of an ellipse) related to the texture region.
-        boundingPolygon = new Polygon(vertices);
-
-        // Set the position of the top left corner of the polygon to that of the texture region.
-        boundingPolygon.setOrigin( getOriginX(), getOriginY() );
-
-    }
-
     public Polygon getBoundingPolygon()
     {
 
@@ -682,7 +1010,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         return boundingPolygon;
 
     }
-
+    
     public Rectangle getBoundingRectangle()
     {
 
@@ -697,7 +1025,23 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         return boundingRectangle;
 
     }
+    
+    // target = Target BaseActor to center within the current -- based on rectangular regions.
+    public void moveToOrigin(BaseActor target)
+    {
 
+        // The function centers a smaller (the target) within a larger (the current) rectangle,
+        // using the borders of the current and target BaseActor objects.
+        // Origin = Position used for rotating and scaling operations.
+        // Position... getX() = X position of the actor's left edge, getY() = Returns the Y position of the actor's bottom edge.
+
+        // Set position of target BaseActor to center within current.
+        this.setPosition(
+                target.getX() + target.getOriginX() - this.getOriginX(),
+                target.getY() + target.getOriginY() - this.getOriginY() );
+
+    }
+    
     // other = Other Actor to check for collision detection.
     // resolve = Whether to move the other Actor along the minimum translation vector to prevent overlap.
     public boolean overlaps(BaseActor other, @SuppressWarnings("SameParameterValue") boolean resolve)
@@ -780,54 +1124,216 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         return polyOverlap;
 
     }
-
-    // dt = Time in seconds since the last frame.  Also called delta.
-    @Override
-    public void act(float dt)
+    
+    private void setAdditionalDefaults()
     {
 
-        // The function calls the act method of the Actor, which performs
-        // a time based positional update.
+        // The function performs additional operations for the constructor that would cause
+        // overridable method call errors.
 
-        // Calls the act method of the Actor (parent / super) class.
-        // Updates the actor based on time.
-        super.act ( dt );
+        // Set the Color used to tint the Actor to the default.
+        setTintColorToDefault();
+    }
+
+    public void setEllipseBoundary()
+    {
+
+        // The function sets the properties of the bounding polygon related to the texture region.
+        // The polygon uses an ellipse with the dimensions of the texture region as the drivers
+        // for the width and height.
+
+        // The method contains a loop to generate a set of n equally spaced values for t in the
+        // interval [0, 6.28], then calculates the corresponding x and y coordinates, and stores
+        // them in an array used to initialize the polygon.  Changing the method to use a value of
+        // 4 for n would generate a diamond shape.  Using a value of 8 for n generates an octagon
+        // shape.  As the method uses larger values for n, the generated shape gets smoother.
+
+        float h; // Height of the Actor.
+        float t; // Values ranging from 0 to 6.28 (pi x 2), used to generate vertices in ellipse.
+        float[] vertices; // Array of vertices related to the bounding polygon.
+        float w; // Width of the Actor.
+        final int n; // Number of vertices.
+
+        n = 12; // Set number of vertices.
+        w = getWidth(); // Store width of the Actor.
+        h = getHeight(); // Store height of the Actor.
+        vertices = new float[n * 2]; // Initialize the array of vertices.
+
+        // Loop through and set the vertices of the bounding polygon.
+        for (int i = 0; i < n; i++)
+        {
+
+            // Generate ellipse, letting x = cos(t) and y = sin(t),
+            // where t ranges from 0 to pi x 2 (about 6.28).
+            // x = w/2 * cos(t) + w/2
+            // y = h/2 * sin(t) + h/2
+
+            // Store next driver value for ellipse.
+            t = 6.28f * i / n;
+
+            // Generate X-coordinate for current vertex in ellipse.
+            vertices[i * 2] = w / 2 * MathUtils.cos(t) + w / 2;
+
+            // Generate Y-coordinate for current vertex in ellipse.
+            vertices[i * 2 + 1] = h / 2 * MathUtils.sin(t) + h / 2;
+
+        }
+
+        // Set the properties of the bounding polygon (shape of an ellipse) related to the texture region.
+        boundingPolygon = new Polygon(vertices);
+
+        // Set the position of the top left corner of the polygon to that of the texture region.
+        boundingPolygon.setOrigin( getOriginX(), getOriginY() );
+
+    }
+    
+    public void setOriginCenter()
+    {
+
+        // The function sets the origin of the BaseActor to the center of its associated image, in order for rotations to
+        // appear correctly.
+
+        // If width of BaseActor set (automatic when applying image), then...
+        if ( getWidth() > 0 )
+
+            // Width of BaseActor set.
+
+            // Set origin of the BaseActor to the center of its associated image.
+            setOrigin( getWidth() / 2, getHeight() / 2 );
+
+        else
+
+            // Width of BaseActor NOT set.
+
+            // Display warning message.
+            System.err.println("error: actor size not set");
+
+    }
+    
+    // pl = Reference to an ArrayList to which the Actor has been added.
+    public void setParentList(ArrayList<? extends BaseActor> pl)
+    {
+        // Set reference to an ArrayList to which the Actor has been added.
+        parentList = pl;
+    }
+
+    // x = X-coordinate at which to place lower left corner of the actor.
+    // y = Y-coordinate at which to place lower left corner of the actor.
+    @Override
+    public final void setPosition(float x, float y)
+    {
+        // The method sets the position of the lower left corner of the actor.
+        // The method exists to facilitate its use in the constructor.
+        
+        // Call method in superclass.
+        super.setPosition(x, y);
+    }
+    
+    public void setRandomTintColor()
+    {
+        // The function sets a random tint Color for the Actor.
+        this.tintColor = colorEngine.getRandomColor();
+    }
+    
+    public void setRectangleBoundary()
+    {
+
+        // The function sets the properties of the bounding polygon related to the texture region.
+        // The polygon uses a rectangle with the dimensions of the texture region as the bounding
+        // polygon shape.
+
+        float h; // Height of the Actor.
+        float w; // Width of the actor.
+
+        // Set the properties of the bounding rectangle related to the texture region.
+        // Use the properties of the texture region.
+
+        // Store Actor dimensions.
+        w = getWidth(); // Store width of the Actor.
+        h = getHeight(); // Store height of the Actor.
+
+        // Set up vertices of the Actor (rectangle / polygon).
+        float [] vertices = {0,0, w,0, w,h, 0,h}; // Array of vertices related to the bounding polygon.
+
+        // Set the properties of the bounding polygon (rectangular shape) related to the texture region.
+        boundingPolygon = new Polygon(vertices);
+
+        // Set the position of the top left corner of the polygon to that of the texture region.
+        boundingPolygon.setOrigin( getOriginX(), getOriginY() );
+
+    }
+    
+    // t = Texture (stores a single image).
+    public final void setTexture(Texture t)
+    {
+
+        // The function sets the properties of a texture.
+
+        int h; // Height of the passed texture.
+        int w; // Width of the passed texture.
+
+        // Set texture properties.
+        w = t.getWidth(); // Get the width of the passed texture.
+        h = t.getHeight(); // Get the height of the passed texture.
+        setWidth( w ); // Set the width of the texture region to that of the passed texture.
+        setHeight( h ); // Set the height of the texture region to that of the passed texture.
+        region.setRegion( t ); // Set the texture region and coordinates to the size of the specified texture.
+
+        // Set default color the Actor will be tinted when drawn.
+        tintColor = getColor();
 
     }
 
-    // A Batch is used to draw 2D rectangles that reference a texture (region).
-    // The class will batch the drawing commands and optimize them for processing by the GPU.
-
-    // batch = Sprite used to draw image, dependent on and referencing a texture (buffer).
-    // parentAlpha = Alpha / transparency to use when drawing image.
-    @Override
-    public void draw(Batch batch, float parentAlpha)
+    // t = TextureRegion (stores a single image).
+    public final void setTextureRegion(TextureRegion t)
     {
 
-        // The function sets the tinting color of and draws the Actor (when visible).
+        // The function sets the properties of a texture region.
 
-        // System.out.println("\nActor:  " + actorName);
+        int h; // Height of the passed texture region.
+        int w; // Width of the passed texture region.
 
-        // Set the color used to tint images when they are added to the Batch.
-        // Default:  Color.WHITE.
+        // Set texture region properties.
+        w = t.getRegionWidth(); // Get the width of the passed texture region.
+        h = t.getRegionHeight(); // Get the height of the passed texture region.
+        setWidth( w ); // Set the width of the texture region to that of the passed texture region.
+        setHeight( h ); // Set the height of the texture region to that of the passed texture region.
+        region.setRegion( t ); // Set the texture region and coordinates to the size of the one passed.
 
-        // Set the Color values (red, green, blue, and alpha / transparency) of the
-        // Batch object to equal those of the tintColor class variable.
-        batch.setColor(tintColor.r, tintColor.g, tintColor.b, tintColor.a);
+        // Set default color the Actor will be tinted when drawn.
+        tintColor = getColor();
 
-        // If the Actor is visible, then...
-        if ( isVisible() )
+    }
+    
+    // red = Red portion of Color to tint the Actor.
+    // green = Green portion of Color to tint the Actor.
+    
 
-            // Actor is visible.
-            // Draw the texture, taking into account its position,
-            // origin (center of rotation), width and height, scaling factors, and
-            // rotation angle.
-            batch.draw( region, getX(), getY(), getOriginX(), getOriginY(),
-                    getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation() );
-
-        // Call the constructor of the parent class to redraw the group.
-        super.draw(batch, parentAlpha);
-
+    @SuppressWarnings("WeakerAccess")
+    public void setTintColorToDefault()
+    {
+        // The function sets the Color used to tint the Actor to the default.
+        this.tintColor = getColor();
+    }
+    
+    // Getters and setters below...
+    
+    public int getActionMapCount() {
+        return actionMapping.size();
+    }
+    
+    // key = Key to check for in the action map hash map.
+    public boolean getActionMapKeyInd(String key) {
+        
+        // The function returns whether the action map hash map contains the passed key.
+        
+        // Return whether the action map hash map contains the passed key.
+        return actionMapping.containsKey(key);
+        
+    }
+    
+    public String getActorName() {
+        return actorName;
     }
     
     // actorName = Name to give Actor.
@@ -836,109 +1342,9 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         // The function sets the Actor name to the passed value.
         this.actorName = actorName;
     }
-
-    // Color related methods (except main getter and setter)...
     
-    // red = Red portion of Color to tint the Actor.
-    // green = Green portion of Color to tint the Actor.
-    // blue = Blue portion of Color to tint the Actor.
-    // alpha = Alpha portion of Color to tint the Actor.
-    public void setTintColor(float red, float green, float blue, float alpha)
-    {
-        // The function sets the Color used to tint the Actor used the passed values for
-        // red, green, blue, and alpha.
-        this.tintColor = new com.badlogic.gdx.graphics.Color(red, green, blue, alpha);
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public void setTintColorToDefault()
-    {
-        // The function sets the Color used to tint the Actor to the default.
-        this.tintColor = getColor();
-    }
-
-    public void setRandomTintColor()
-    {
-        // The function sets a random tint Color for the Actor.
-        this.tintColor = colorEngine.getRandomColor();
-    }
-
-    // Copy related methods...
-
-    // original = Actor from which to copy properties.
-    void copy(BaseActor original)
-    {
-
-        // The function copies properties from the passed to the current BaseActor.
-        // Properties include:  image texture (buffer), bounding polygon, position, origin, width,
-        // height, tint color, and visibility status.
-
-        // If image texture (buffer) exists in passed Actor, then...
-        if (original.region.getTexture() != null )
-
-            // Image texture (buffer) exists in passed Actor.
-
-            // Copy image texture (buffer) from passed to current Actor.
-            this.region = new TextureRegion( original.region );
-
-        // If bounding polygon exists in passed Actor, then...
-        if (original.boundingPolygon != null)
-        {
-            // Bounding polygon exists in passed Actor.
-
-            // Create bounding polygon in current with vertices in bounding polygon of passed Actor.
-            this.boundingPolygon = new Polygon( original.boundingPolygon.getVertices() );
-
-            // Set origin of bounding polygon to that of passed Actor.
-            this.boundingPolygon.setOrigin( original.getOriginX(), original.getOriginY() );
-        }
-
-        // Set position of current to that of passed Actor (based on bottom left corner).
-        this.setPosition( original.getX(), original.getY() );
-
-        // Copy properties indicating top left corner of passed to current Actor.
-        this.setOriginX( original.getOriginX() );
-        this.setOriginY( original.getOriginY() );
-
-        // Copy width and height from passed to current Actor.
-        this.setWidth( original.getWidth() );
-        this.setHeight( original.getHeight() );
-
-        // Copy visibility flag from passed to current Actor.
-        this.setVisible( original.isVisible() );
-
-        // Copy tinting color from passed to current Actor.
-        //this.tintColor = new Color();
-        //this.tintColor.r = original.getColor().r;
-        //this.tintColor.g = original.getColor().g;
-        //this.tintColor.b = original.getColor().b;
-        //this.tintColor.a = original.getColor().a;
-        this.setTintColor( original.getTintColor() );
-
-    }
-
-    @SuppressWarnings({"MethodDoesntCallSuperMethod", "CloneDoesntCallSuperClone", "CloneDeclaresCloneNotSupported"})
-    @Override
-    public BaseActor clone()
-    {
-
-        // The function returns a BaseActor with the same properties as the current.
-
-        BaseActor newbie; // BaseActor to which to copy properties.
-
-        // Instantiate new BaseActor object.
-        newbie = new BaseActor();
-
-        // Copy properties of current (class-level) to new BaseActor object.
-        newbie.copy( this );
-
-        // Return the new BaseActor object.
-        return newbie;
-
-    }
-    
-    public String getActorName() {
-        return actorName;
+    public TextureRegion getRegion() {
+        return region;
     }
     
     public Color getTintColor()
@@ -952,6 +1358,33 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     {
         // The function sets the Color used to tint the Actor.
         this.tintColor = tintColor;
+    }
+    
+    // red = Red portion of Color to tint the Actor.
+    // green = Green portion of Color to tint the Actor.
+    // blue = Blue portion of Color to tint the Actor.
+    // alpha = Alpha portion of Color to tint the Actor.
+    public void setTintColor(float red, float green, float blue, float alpha)
+    {
+        // The function sets the Color used to tint the Actor used the passed values for
+        // red, green, blue, and alpha.
+        this.tintColor = new com.badlogic.gdx.graphics.Color(red, green, blue, alpha);
+    }
+    
+    public Integer getVirtualInt() {
+        return virtualInt;
+    }
+
+    public void setVirtualInt(Integer virtualInt) {
+        this.virtualInt = virtualInt;
+    }
+
+    public String getVirtualString() {
+        return virtualString;
+    }
+
+    public void setVirtualString(String virtualString) {
+        this.virtualString = virtualString;
     }
 
 }

@@ -1,6 +1,9 @@
 package heroinedusk;
 
 // Java imports.
+import core.AssetMgr;
+import core.BaseActor;
+import gui.CustomLabel;
 import java.util.ArrayList;
 
 public class Avatar 
@@ -68,12 +71,12 @@ public class Avatar
         sleeploc = new MapLocation(0, 1, 1);
         
         // temp
-        setSpellbook(HeroineEnum.SpellEnum.SPELL_HEAL);
-        setSpellbook(HeroineEnum.SpellEnum.SPELL_BURN);
-        setSpellbook(HeroineEnum.SpellEnum.SPELL_UNLOCK);
-        setSpellbook(HeroineEnum.SpellEnum.SPELL_LIGHT);
-        setSpellbook(HeroineEnum.SpellEnum.SPELL_FREEZE);
-        setSpellbook(HeroineEnum.SpellEnum.SPELL_REFLECT);
+        //setSpellbook(HeroineEnum.SpellEnum.SPELL_HEAL);
+        //setSpellbook(HeroineEnum.SpellEnum.SPELL_BURN);
+        //setSpellbook(HeroineEnum.SpellEnum.SPELL_UNLOCK);
+        //setSpellbook(HeroineEnum.SpellEnum.SPELL_LIGHT);
+        //setSpellbook(HeroineEnum.SpellEnum.SPELL_FREEZE);
+        //setSpellbook(HeroineEnum.SpellEnum.SPELL_REFLECT);
         
     }
     
@@ -215,6 +218,167 @@ public class Avatar
         
     }
     
+    // itemEnum = Enumerated value for item to give to the player.
+    // heroineWeapon = BaseActor object that acts as the player weapon.
+    // weaponLabel = Label showing current player weapon.
+    // heroineArmor = BaseActor object that acts as the player armor.
+    // armorLabel = Label showing current player armor.
+    // itemCount = Number of item to give to player.
+    // assetMgr = Reference to the asset manager.
+    // hpLabel = Label showing player hit points.
+    // mpLabel = Label showing player magic points.
+    public void takeItem(HeroineEnum.ItemEnum itemEnum, BaseActor heroineWeapon, CustomLabel weaponLabel, 
+      BaseActor heroineArmor, CustomLabel armorLabel, int itemCount, AssetMgr assetMgr, CustomLabel hpLabel,
+      CustomLabel mpLabel)
+    {
+        
+        // The process handles giving an item to the player.
+        // The process also updates the player images / labels in the information view on the explore screen.
+        
+        HeroineEnum.ArmorEnum armorEnum; // Armor found in chest.
+        String armorKey; // Asset manager key related to armor texture region.
+        HeroineEnum.WeaponEnum weaponEnum; // Weapon found in chest.
+        String weaponKey; // Asset manager key related to weapon texture region.
+        
+        // Depending on the item type, ...
+        switch (itemEnum.getValue_ItemType()) {
+
+            case ITEM_TYPE_GOLD:
+
+                // Found gold.
+
+                // Give gold to player.
+                gold += itemCount;
+
+            case ITEM_TYPE_WEAPON:
+
+                // Found a weapon.
+
+                // Store enumeration for weapon found in chest.
+                weaponEnum = HeroineEnum.WeaponEnum.valueOf(itemEnum.getValue_ItemName());
+
+                // If weapon better than current one owned by player, then...
+                if (weaponEnum.getValue() > weapon.getValue())
+                {
+                    
+                    // Weapon better than current one owned by player.
+                    
+                    // Update weapon owned by player.
+                    weapon = weaponEnum;
+                    
+                    // Determine asset manager key related to weapon.
+                    weaponKey = weaponEnum.getValue_PlayerEnum().toString();
+                    weaponKey = HeroineEnum.HeroinePlayerEnum.valueOf(weaponKey).getValue_Key();
+
+                    // Update player weapon label.
+                    weaponLabel.setLabelText( getWeaponText() );
+                    
+                    // Render updated player weapon.
+                    heroineWeapon.setTextureRegion( assetMgr.getTextureRegion(weaponKey) );
+                    
+                }
+
+                // Exit selector.
+                break;
+
+            case ITEM_TYPE_ARMOR:
+
+                // Found an armor.
+
+                // Store enumeration for armor found in chest.
+                armorEnum = HeroineEnum.ArmorEnum.valueOf(itemEnum.getValue_ItemName());
+
+                // If armor better than current one owned by player, then...
+                if (armorEnum.getValue() > armor.getValue())
+                {
+
+                    // Armor better than current one owned by player.
+
+                    // Update armor owned by player.
+                    armor = armorEnum;
+
+                    // Determine asset manager key related to armor.
+                    armorKey = armorEnum.getValue_PlayerEnum().toString();
+                    armorKey = HeroineEnum.HeroinePlayerEnum.valueOf(armorKey).getValue_Key();
+                    
+                    // Update player armor label.
+                    armorLabel.setLabelText( getArmorText() );
+                    
+                    // Render updated player armor.
+                    heroineArmor.setTextureRegion( assetMgr.getTextureRegion(armorKey) );
+
+                }
+
+                // Exit selector.
+                break;
+
+            case ITEM_TYPE_SPELL:
+
+                // Found a spell.
+
+                // Grant spell to player.
+                setSpellbook( HeroineEnum.SpellEnum.valueOf(itemEnum.getValue_ItemName()) );
+                
+                // Exit selector.
+                break;
+
+            case ITEM_TYPE_MAGIC:
+
+                // Found a magic item.
+
+                // Adjust bonus attack, as necessary.
+                bonus_atk += 
+                  HeroineEnum.MagicItemEnum.valueOf(itemEnum.getValue_ItemName()).getValue_AttrAdj_BonusAtk();
+                
+                // Adjust bonus defense, as necessary.
+                bonus_def += 
+                  HeroineEnum.MagicItemEnum.valueOf(itemEnum.getValue_ItemName()).getValue_AttrAdj_BonusDef();
+                
+                // Adjust hit points, as necessary.
+                hp +=
+                  HeroineEnum.MagicItemEnum.valueOf(itemEnum.getValue_ItemName()).getValue_AttrAdj_HP();
+                
+                // Adjust maximum hit points, as necessary.
+                max_hp +=
+                  HeroineEnum.MagicItemEnum.valueOf(itemEnum.getValue_ItemName()).getValue_AttrAdj_MaxHP();
+                
+                // Adjust magic points, as necessary.
+                mp +=
+                  HeroineEnum.MagicItemEnum.valueOf(itemEnum.getValue_ItemName()).getValue_AttrAdj_MP();
+                
+                // Adjust maximum magic points, as necessary.
+                max_mp +=
+                  HeroineEnum.MagicItemEnum.valueOf(itemEnum.getValue_ItemName()).getValue_AttrAdj_MaxMP();
+                
+                // Update player armor label.
+                armorLabel.setLabelText( getArmorText() );
+                
+                // Update player weapon label.
+                weaponLabel.setLabelText( getWeaponText() );
+                
+                // Update player hit points label.
+                hpLabel.setLabelText( getHpText() );
+                
+                // Update player magic points label.
+                mpLabel.setLabelText( getMpText() );
+                
+                // Exit selector.
+                break;
+
+            default:
+
+                // Invalid item type.
+
+                // Display warning.
+                System.out.println("Warning:  Found an invalid item type!");
+
+                // Exit selector.
+                break;
+
+        }
+        
+    }
+    
     // Getters and setters below...
     
     public HeroineEnum.ArmorEnum getArmor() {
@@ -224,7 +388,12 @@ public class Avatar
     public void setArmor(HeroineEnum.ArmorEnum armor) {
         this.armor = armor;
     }
-
+    
+    public String getArmorText() {
+        return armor.getValue_CleanText().toUpperCase() + 
+          (bonus_def > 0 ? " +" + Integer.toString(bonus_def) : "");
+    }
+    
     public int getBonus_atk() {
         return bonus_atk;
     }
@@ -269,6 +438,10 @@ public class Avatar
         return hp == max_hp;
     }
     
+    public String getHpText() {
+        return "HP " + Integer.toString(hp) + "/" + Integer.toString(max_hp);
+    }
+    
     public int getMax_mp() {
         return max_mp;
     }
@@ -289,6 +462,10 @@ public class Avatar
         this.mp = mp;
     }
 
+    public String getMpText() {
+        return "MP " + Integer.toString(mp) + "/" + Integer.toString(max_mp);
+    }
+    
     public boolean get_HpMp_AtMax() {
         return hp == max_hp && mp == max_mp;
     }
@@ -345,6 +522,11 @@ public class Avatar
         this.weapon = weapon;
     }
 
+    public String getWeaponText() {
+        return weapon.getValue_CleanText().toUpperCase() + 
+          (bonus_atk > 0 ? " +" + Integer.toString(bonus_atk) : "");
+    }
+    
     public int getX() {
         return x;
     }

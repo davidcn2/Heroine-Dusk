@@ -33,6 +33,7 @@ public class Config
     private String prescaleFolder_Backgrounds; // Folder to use for backgrounds, based on prescale factor.
     private String prescaleFolder_Enemies; // Folder to use for enemies, based on prescale factor.
     private String prescaleFolder_Interface; // Folder to use for interface, based on prescale factor.
+    private String prescaleFolder_Other; // Folder to use for backgrounds, based on prescale factor.
     private String prescaleFolder_Tiles; // Folder to use for tiles, based on prescale factor.
     private int scale; // Output scale factor -- multiple of 160 and 120.
       // If stretchToScreen = true, determines based on window size.
@@ -65,6 +66,7 @@ public class Config
         prescaleFolder_Enemies = prescaleFolder + "enemies/";
         prescaleFolder_Interface = prescaleFolder + "interface/";
         prescaleFolder_Tiles = prescaleFolder + "tiles/";
+        prescaleFolder_Other = prescaleFolder + "other/";
         stretchToScreen = false; // Using prescaled images.
         scale = prescale;
         
@@ -104,6 +106,10 @@ public class Config
         return prescaleFolder_Interface;
     }
 
+    public String getPrescaleFolder_Other() {
+        return prescaleFolder_Other;
+    }
+    
     public String getPrescaleFolder_Tiles() {
         return prescaleFolder_Tiles;
     }

@@ -250,6 +250,7 @@ public class AtlasItems
         // Declare regular variables.
         private final int addlItemCount; // Number of additional items in chest.
         private final ArrayList<HeroineEnum.ItemEnum> addlItemList; // List of additional items in chest.
+        private int chestIndex; // Index in array -- chestList.
         private final int pos_x; // X-coordinate of the tile with the chest (the array index).
         private final int pos_y; // Y-coordinate of the tile with the chest (the array index).
         private final HeroineEnum.ItemEnum primaryItem; // Primary item in chest.
@@ -275,7 +276,13 @@ public class AtlasItems
             this.primaryItem = primaryItem;
             this.primaryItemCount = primaryItemCount;
             this.addlItemList = new ArrayList<>(Arrays.asList(otherItems));
-            this.addlItemCount = otherItems.length;
+            
+            // Temp, remove later.
+            this.addlItemList.add(HeroineEnum.ItemEnum.ITEM_MAGIC_DIAMOND);
+            this.addlItemList.add(HeroineEnum.ItemEnum.ITEM_MAGIC_RUBY);
+            //
+            
+            this.addlItemCount = 2; //otherItems.length;
             
             // If one or more additional item(s) passed, then...
             //if (otherItems.length > 0)
@@ -313,6 +320,14 @@ public class AtlasItems
             return addlItemList;
         }
 
+        public int getChestIndex() {
+            return chestIndex;
+        }
+        
+        public void setChestIndex(int index) {
+            this.chestIndex = index;
+        }
+        
         public int getPos_x() {
             return pos_x;
         }
@@ -1291,6 +1306,7 @@ public class AtlasItems
         
         // The function stores the hash maps and array lists with the information by region / location.
         
+        int counterIndex; // Counter used to increment through list indices.
         ArrayList<Object> temp; // Used when first adding an array list to the hash map with items by location.
         String key; // Key value for populating hash map with items by location.
         
@@ -1350,6 +1366,8 @@ public class AtlasItems
             key = Integer.toString(alterMap.regionNbr) + "," + Integer.toString(alterMap.pos_x) + "," + 
               Integer.toString(alterMap.pos_y) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_ALTER_MAP;
             
+            // If necessary, initialize array list for map / region items for the current key.
+            
             // If item type exists in hash map for location, then...
             if (mapRegionItems.get(key) != null)
             {
@@ -1384,6 +1402,8 @@ public class AtlasItems
             key = Integer.toString(bonePile.regionNbr) + "," + Integer.toString(bonePile.pos_x) + "," + 
               Integer.toString(bonePile.pos_y) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_BONE_PILE;
             
+            // If necessary, initialize array list for map / region items for the current key.
+            
             // If item type exists in hash map for location, then...
             if (mapRegionItems.get(key) != null)
             {
@@ -1410,6 +1430,9 @@ public class AtlasItems
             
         }
         
+        // Reset index counter.
+        counterIndex = 0;
+        
         // Loop through chests.
         for (Chest chest : chestList)
         {
@@ -1417,6 +1440,8 @@ public class AtlasItems
             // Determine key.
             key = Integer.toString(chest.regionNbr) + "," + Integer.toString(chest.pos_x) + "," + 
               Integer.toString(chest.pos_y) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_CHEST;
+            
+            // If necessary, initialize array list for map / region items for the current key.
             
             // If item type exists in hash map for location, then...
             if (mapRegionItems.get(key) != null)
@@ -1436,11 +1461,17 @@ public class AtlasItems
                 
             }
             
+            // Store index.
+            chest.setChestIndex(counterIndex);
+            
             // Add item to array list.
             temp.add(chest);
             
             // Add item to hash map.
             mapRegionItems.put(key, temp);
+            
+            // Increment counter.
+            counterIndex++;
             
         }
         
@@ -1451,6 +1482,8 @@ public class AtlasItems
             // Determine key.
             key = Integer.toString(hayBale.regionNbr) + "," + Integer.toString(hayBale.pos_x) + "," + 
               Integer.toString(hayBale.pos_y) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_HAY_BALE;
+            
+            // If necessary, initialize array list for map / region items for the current key.
             
             // If item type exists in hash map for location, then...
             if (mapRegionItems.get(key) != null)
@@ -1486,6 +1519,8 @@ public class AtlasItems
             key = Integer.toString(lockedDoor.regionNbr) + "," + Integer.toString(lockedDoor.pos_x) + "," + 
               Integer.toString(lockedDoor.pos_y) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_LOCKED_DOOR;
             
+            // If necessary, initialize array list for map / region items for the current key.
+            
             // If item type exists in hash map for location, then...
             if (mapRegionItems.get(key) != null)
             {
@@ -1519,6 +1554,8 @@ public class AtlasItems
             // Determine key.
             key = Integer.toString(specificEnemy.regionNbr) + "," + Integer.toString(specificEnemy.pos_x) + "," + 
               Integer.toString(specificEnemy.pos_y) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_SPECIFIC_ENEMY;
+            
+            // If necessary, initialize array list for map / region items for the current key.
             
             // If item type exists in hash map for location, then...
             if (mapRegionItems.get(key) != null)
@@ -1570,6 +1607,192 @@ public class AtlasItems
         return bonePileList;
     }
 
+    // whichChest = Index number of chest to return.  Base 0.
+    public Chest getChest(int whichChest) {
+        // The function returns information for the specified chest.
+        return chestList.get(whichChest);
+    }
+    
+    public void adjChestCount(int chestCount) {
+        this.chestCount += chestCount;
+    }
+    
+    public void setChestCount(int chestCount) {
+        this.chestCount = chestCount;
+    }
+    
+    // map_id = Region / map location (number) for which to return chest(s).
+    // x = X-coordinate within map for which to return chest(s).
+    // y = Y-coordinate within map for which to return chest(s).
+    public boolean getChestInd(int map_id, int x, int y) {
+        
+        // The function returns whether chest(s) exist at the passed location.
+        
+        String key; // Key to use when getting chest list.
+        
+        // Determine key.
+        key = Integer.toString(map_id) + "," + Integer.toString(x) + "," + Integer.toString(y) + "," + 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_CHEST;
+        
+        // Return whether chest(s) exist at passed location.
+        return mapRegionItems.get(key) != null;
+        
+    }
+    
+    // map_id = Region / map location (number) for which to return chest(s).
+    // x = X-coordinate within map for which to return chest(s).
+    // y = Y-coordinate within map for which to return chest(s).
+    public ArrayList<Chest> getChestList(int map_id, int x, int y) {
+        
+        /*
+        The function returns the list of chests at the passed location.
+        
+        The function retrieves the chest list from the hash map, mapRegionItems.
+        The hash map stores a list of objects, by type, at each location.
+        Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
+        *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
+        The "value" in the hash map contains an array list of the specified item category.
+        For example, the "value" would contain one to many chests if category = ITEM_CTGY_CHEST.
+        */
+        
+        int count; // Number of chests at passed location.
+        String key; // Key to use when getting chest list.
+        ArrayList<Chest> temp; // Holder for list of chests at passed location.
+        
+        // Determine key.
+        key = Integer.toString(map_id) + "," + Integer.toString(x) + "," + Integer.toString(y) + "," + 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_CHEST;
+        
+        // Initialize array list.
+        temp = new ArrayList<>();
+        
+        // If chests exist at passed location, then...
+        if (mapRegionItems.get(key) != null)
+        {
+            
+            // Chests exist at passed location.
+            
+            // Store number of chests at passed location.
+            count = mapRegionItems.get(key).size();
+            
+            // Loop through chests at passed location.
+            for (int counter = 0; counter < count; counter++)
+            {
+                // Add chest to list to pass back.
+                temp.add((Chest)mapRegionItems.get(key).get(counter));
+            }
+        }
+        
+        // Pass back list of chests at specified location.
+        return temp;
+    
+    }
+    
+    public ArrayList<Chest> getChestList() {
+        return chestList;
+    }
+    
+    // index = Array index of chest to remove (in the array list, chestList).
+    // map_id = Map / region number in which to remove the chest.
+    public void removeChest(int index, int map_id) {
+        
+        /*
+        The function encapsulates logic for removing the passed chest (based on index) from the 
+        specified region, except for the hash map.
+        
+        Notes:
+        1.  A list of chests for a specific location can be retrieved with getChestList( map_id, posX, posY );
+        2.  The hash map, mapRegionItems, stores a list of objects, by type, at each location.
+        3.  Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
+        4.  *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
+        5.  The "value" in the hash map contains an array list of the specified item category.
+        6.  For example, the "value" would contain one to many chests if category = ITEM_CTGY_CHEST.
+        7.  The function does NOT remove the chest from the hash map, as one to many chests exist 
+            for each entry.
+        */
+        
+        // Remove the chest from the array list.
+        chestList.remove(index);
+        
+        // Reduce chest count.
+        chestCount--;
+        
+        // For the passed map / region, reduce number of chests stored in array list with quantities.
+        itemCountList.get(map_id).itemCount_Chest--;
+        
+        // Reduce the total item count for the current region.
+        itemTotalList.set(map_id, itemTotalList.get(map_id) - 1);
+        
+    }
+    
+    // tempChests = List of chests to remove.
+    // map_id = Map / region number in which to remove the chests.
+    // posX = X-coordinate associated with the chest(s).
+    // posY = Y-coordinate associated with the chest(s).
+    public void removeChests(ArrayList<Chest> tempChests, int map_id, int posX, int posY)
+    {
+        
+        /*
+        The function encapsulates logic for removing the passed chests from the 
+        specified region, including for the hash map.
+        */
+        
+        ArrayList<Integer> removeList; // List of indices to remove (for chests).
+        
+        // Initialize array list.
+        removeList = new ArrayList<>();
+        
+        /*
+        System.out.println("\nBefore...");
+        System.out.println("Chest list size: " + chestList.size());
+        System.out.println("Chest count: " + chestCount);
+        System.out.println("Item count: " + itemCountList.get(map_id).itemCount_Chest);
+        System.out.println("Item total: " + itemTotalList.get(map_id));
+        */
+        
+        // Loop through chests.
+        tempChests.forEach((chest) -> {
+            
+            // Add chest to removal list.
+            removeList.add(chest.getChestIndex());
+        
+        });
+        
+        // Loop through and remove chests in array list.
+        removeList.forEach((index) -> {
+
+            // Remove chest from array list.
+            removeChest((int)index, map_id);
+
+        });
+        
+        // Remove entry from mapRegionItems hash map.
+        removeChestEntry(map_id, posX, posY);
+        
+        /*
+        System.out.println("\nAfter...");
+        System.out.println("Chest list size: " + chestList.size());
+        System.out.println("Chest count: " + chestCount);
+        System.out.println("Item count: " + itemCountList.get(map_id).itemCount_Chest);
+        System.out.println("Item total: " + itemTotalList.get(map_id));
+        */
+        
+    }
+    
+    // map_id = Map / region number in which to remove the chest.
+    // posX = X-coordinate associated with the chest(s).
+    // posY = Y-coordinate associated with the chest(s).
+    public void removeChestEntry(int map_id, int posX, int posY)
+    {
+        
+        // The function removes the chest based on the passed information from the hash map, mapRegionItems.
+        
+        // Remove chest from hash map.
+        mapRegionItems.remove(Integer.toString(map_id) + "," + Integer.toString(posX) + "," + 
+          Integer.toString(posY) + ",CHEST");
+        
+    }
+    
     // whichHayBale = Index number of hay bale to return.  Base 0.
     public HayBale getHayBale(int whichHayBale) {
         // The function returns information for the specified hay bale.
@@ -1578,6 +1801,18 @@ public class AtlasItems
     
     public ArrayList<HayBale> getHayBaleList() {
         return hayBaleList;
+    }
+    
+    public ArrayList<ItemCounts> getItemCountList() {
+        return itemCountList;
+    }
+
+    public void adjItemCountChest(int map_id, int countAdj) {
+        itemCountList.get(map_id).itemCount_Chest += countAdj;
+    }
+    
+    public void adjItemTotal(int map_id, int countAdj) {
+        itemTotalList.set(map_id, itemTotalList.get(map_id) + countAdj);
     }
     
     // whichLockedDoor = Index number of locked door to return.  Base 0.

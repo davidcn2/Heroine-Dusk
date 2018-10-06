@@ -60,6 +60,8 @@ public class CustomLabel
     Methods include:
     
     addAction_Fade:  Sets up a fade effect for the label, fading out over the course of 1.0 seconds after 2.0 elapse.
+    addAction_FadeIn:   Sets up a fade in effect for the label.
+    addAction_FadeOut:  Sets up a fade out effect for the label.
     addAction_FadePartial:  Sets up a color fade effect for the label.
     addEvent:  Adds the passed event logic to the label.
     applyVisible:  Depending on the passed parameter, either instantly displays or hides the label.
@@ -74,11 +76,15 @@ public class CustomLabel
     removeActor:  Removes the actor associated with the label.
     setLabelText:  Updates the text of the label, using the existing bitmap font.
     setLabelTextCenter:  Updates the text of the label and centers the revised object across the screen.
+    setPosition:  Sets the position of the lower left corner of the label.
+    setPosX:  Sets the x-position of the left edge of the label.
+    setPosY:  Sets the y-position of the bottom edge of the label.
     */
     
     // Declare object variables.
     private Map<String, Action> actionMapping; // Collection of actions applied to label.
     private BitmapFont bitmapFont; // BitmapFont used for the label.
+    private HashMap<String, Action> customActions; // Custom actions.
     private Label customLabel; // LibGDX Label object that will display text.
     
     // Declare regular variables.
@@ -105,8 +111,9 @@ public class CustomLabel
         // The constructor creates a label with basic settings -- essentially text, style, and scale.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f, "Key");
         
-        // Initialize the hash map for actions.
+        // Initialize the hash maps.
         actionMapping = new HashMap<>();
+        customActions = new HashMap<>();
         
         // Store values passed to function.
         this.labelText = labelText;
@@ -514,14 +521,41 @@ public class CustomLabel
     
     // Methods below...
     
+    // labelText = Text to display in label.
+    public void addActionCustom_Center(String labelText)
+    {
+        
+        // The function adds a custom action to the hash map that displays new text that centers horizontally.
+        
+        Action action; // Action to add to hash map.
+        
+        // Create action to add to hash map.
+        action = new Action() {
+            @Override
+            public boolean act(float delta) {
+
+                // The function changes the texture of the actor.
+
+                // Update the label text and center horizontally.
+                setLabelText_Center( labelText );
+                
+                // Return a value.
+                return true;
+
+            }
+        };
+
+        // Add custom action.
+        customActions.put( "CENTER NEW TEXT", action );
+        
+    }
+    
     public void addAction_Fade()
     {
         
         // The function sets up a fade effect for the label.
         // Fade out over the course of 1.0 seconds after 2.0 elapse.
         // Note that the function first displays the label.
-        
-        // Add action to hash map.
         
         // Add fade action to hash map.
         actionMapping.putIfAbsent("Fade", 
@@ -535,6 +569,87 @@ public class CustomLabel
         
         // Set up fade effect for the label.
         customLabel.addAction(actionMapping.get("Fade"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade.
+    public void addAction_FadeIn(float delay, float fadeIn)
+    {
+        
+        // The function sets up a fade in effect for the label.
+        // Fade in over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade in over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeIn", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.alpha(0),
+            Actions.visible(true),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the label.
+        customLabel.addAction(actionMapping.get("FadeIn"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade.
+    // labelText = Text to display in label.
+    public void addAction_FadeIn_Center(float delay, float fadeIn, String labelText)
+    {
+        
+        // The function sets up a fade in effect for the label.
+        // Fade in over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade in over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f);
+        
+        // Add custom action to hash map.
+        addActionCustom_Center(labelText);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeInCenter", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.alpha(0),
+            Actions.visible(true),
+            customActions.get("CENTER NEW TEXT"),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the label.
+        customLabel.addAction(actionMapping.get("FadeInCenter"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeOut = Duration, in seconds, of fade.
+    public void addAction_FadeOut(float delay, float fadeOut)
+    {
+        
+        // The function sets up a fade out effect for the label.
+        // Fade out over the course of "fadeOut" seconds after "delay" elapse.
+        
+        // Example for use:  To fade out over the course of 1.0 seconds after 
+        //   2.0 elapse ... addAction_FadeOut(2.0f, 1.0f);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeOut", 
+          Actions.sequence(
+            Actions.fadeIn(0.0f), 
+            Actions.visible(true),
+            Actions.delay(delay), 
+            Actions.fadeOut(fadeOut), 
+            Actions.visible(false)
+          ));
+        
+        // Set up fade effect for the label.
+        customLabel.addAction(actionMapping.get("FadeOut"));
         
     }
     
@@ -825,7 +940,45 @@ public class CustomLabel
         
     }
     
+    // x = X-coordinate at which to place lower left corner of the label.
+    // y = Y-coordinate at which to place lower left corner of the label.
+    public final void setPosition(float x, float y)
+    {
+        // The method sets the position of the lower left corner of the label.
+        
+        // Call method in actor.
+        customLabel.setPosition(x, y);
+    }
+    
+    // x = X-coordinate at which to place lower left corner of the label.
+    public final void setPosX(float x)
+    {
+        // The method sets the x-position of the left edge of the label.
+        
+        // Call method in actor.
+        customLabel.setX(x);
+    }
+    
+    // y = Y-coordinate at which to place lower left corner of the label.
+    public final void setPosY(float y)
+    {
+        // The method sets the y-position of the bottom edge of the label.
+        
+        // Call method in actor.
+        customLabel.setY(y);
+    }
+    
     // Getters and setters below...
+    
+    // key = Key to check for in the action map hash map.
+    public boolean getActionMapKeyInd(String key) {
+        
+        // The function returns whether the action map hash map contains the passed key.
+        
+        // Return whether the action map hash map contains the passed key.
+        return actionMapping.containsKey(key);
+        
+    }
     
     public Label getLabel()
     {
