@@ -273,12 +273,12 @@ public class AtlasItems
             this.pos_x = pos_x;
             this.pos_y = pos_y;
             this.regionNbr = regionNbr;
-            this.primaryItem = primaryItem;
-            this.primaryItemCount = primaryItemCount;
+            this.primaryItem = HeroineEnum.ItemEnum.ITEM_GOLD; // primaryItem;
+            this.primaryItemCount = 100; //primaryItemCount; //1; //primaryItemCount;
             this.addlItemList = new ArrayList<>(Arrays.asList(otherItems));
             
             // Temp, remove later.
-            this.addlItemList.add(HeroineEnum.ItemEnum.ITEM_MAGIC_DIAMOND);
+            this.addlItemList.add(HeroineEnum.ItemEnum.ITEM_WEAPON_WOOD_STICK);
             this.addlItemList.add(HeroineEnum.ItemEnum.ITEM_MAGIC_RUBY);
             //
             

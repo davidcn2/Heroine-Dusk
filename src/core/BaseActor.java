@@ -98,13 +98,16 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     private HashMap<String, Action> customActions; // Custom actions.
     private ArrayList<? extends BaseActor> parentList; // Stores a reference to an ArrayList to which the Actor has been added.
     protected TextureRegion region; // Stores image (similar to a buffer from Direct-X).  Includes more
-    
     // functionality than a Texture.  Supports storage of multiple images or animation frames.
     // Stores coordinates (u, v), that determine which rectangular subarea of the Texture to use.
+    
     private Color tintColor; // Color to tint the Actor.
     
     // Declare regular variables.
     private String actorName; // Name of actor.
+    private boolean groupOnlyInd; // Whether operating only as a group.
+    private float groupHeight; // Height of group.
+    private float groupWidth; // Width of group.
     private Integer virtualInt; // Virtual field -- integer.
     private String virtualString; // Virtual field -- string.
     
@@ -134,6 +137,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         parentList = null; // Initialize an empty list of references to ArrayList containing Actor.
         actionMapping = new HashMap<>(); // Initialize hash map for actions.
         customActions = new HashMap<>(); // Initialize hash map for custom actions.
+        groupOnlyInd = false; // Start off as not just a group.
         
         // Initialize color engine object.
         colorEngine = new ColorWorks();
@@ -654,7 +658,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
                     // Change texture region of the actor.
                     setTextureRegion(textureRegion);
-
+                    
                     // Resize actor.
                     setWidth( width );
                     setHeight( height );
@@ -967,7 +971,9 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     public void draw(Batch batch, float parentAlpha)
     {
 
-        // The function sets the tinting color of and draws the Actor (when visible).
+        // The function sets the tinting color of and draws the Actor (when visible and not simply acting as 
+        // a group).
+        // Always draws the members of the group -- letting the superclass handle visibility.
 
         // System.out.println("\nActor:  " + actorName);
 
@@ -979,7 +985,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         batch.setColor(tintColor.r, tintColor.g, tintColor.b, tintColor.a);
 
         // If the Actor is visible, then...
-        if ( isVisible() )
+        if ( isVisible() && !groupOnlyInd )
 
             // Actor is visible.
             // Draw the texture, taking into account its position,
@@ -987,7 +993,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
             // rotation angle.
             batch.draw( region, getX(), getY(), getOriginX(), getOriginY(),
                     getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation() );
-
+        
         // Call the constructor of the parent class to redraw the group.
         super.draw(batch, parentAlpha);
 
@@ -1125,6 +1131,22 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
     }
     
+    public void removeActions()
+    {
+        
+        // The function removes all actions from the actor.
+        
+        // Loop through actions in hash map.
+        actionMapping.values().forEach((action) -> {
+            // Remove action from actor.
+            removeAction(action);
+        });
+        
+        // Reinitialize the hash map for actions.
+        actionMapping = new HashMap<>();
+        
+    }
+    
     private void setAdditionalDefaults()
     {
 
@@ -1190,8 +1212,8 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     public void setOriginCenter()
     {
 
-        // The function sets the origin of the BaseActor to the center of its associated image, in order for rotations to
-        // appear correctly.
+        // The function sets the origin of the BaseActor to the center of its associated image, in order 
+        // for rotations to appear correctly.
 
         // If width of BaseActor set (automatic when applying image), then...
         if ( getWidth() > 0 )
@@ -1207,6 +1229,29 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
             // Display warning message.
             System.err.println("error: actor size not set");
+
+    }
+    
+    public void setOriginCenter_Group()
+    {
+
+        // The function sets the origin of the BaseActor to the center of its associated group, in order 
+        // for rotations to appear correctly.
+
+        // If width and height of group set (manually applied), then...
+        if ( groupWidth > 0 && groupHeight > 0 )
+            
+            // Width and height of group set.
+
+            // Set origin of the BaseActor to the center of its associated group.
+            setOrigin( groupWidth / 2, groupHeight / 2 );
+
+        else
+
+            // Width and, or height of group NOT set.
+
+            // Display warning message.
+            System.err.println("error: actor group size not set");
 
     }
     
@@ -1341,6 +1386,30 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     {
         // The function sets the Actor name to the passed value.
         this.actorName = actorName;
+    }
+    
+    public float getGroupHeight() {
+        return groupHeight;
+    }
+
+    public void setGroupHeight(float groupHeight) {
+        this.groupHeight = groupHeight;
+    }
+    
+    public boolean isGroupOnlyInd() {
+        return groupOnlyInd;
+    }
+
+    public void setGroupOnlyInd(boolean groupOnlyInd) {
+        this.groupOnlyInd = groupOnlyInd;
+    }
+    
+    public float getGroupWidth() {
+        return groupWidth;
+    }
+
+    public void setGroupWidth(float groupWidth) {
+        this.groupWidth = groupWidth;
     }
     
     public TextureRegion getRegion() {

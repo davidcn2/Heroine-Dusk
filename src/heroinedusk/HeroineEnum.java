@@ -1237,25 +1237,27 @@ public class HeroineEnum
     public enum ImgTreasureEnum 
     {
         
-        IMG_TREASURE_GOLD_1 (0, "treasure.pack", "gold1"), // Treasure:  one gold.
-        IMG_TREASURE_GOLD_2 (1, "treasure.pack", "gold2"), // Treasure:  two gold.
-        IMG_TREASURE_GOLD_4 (2, "treasure.pack", "gold4"), // Treasure:  four gold.
-        IMG_TREASURE_GOLD_8 (3, "treasure.pack", "gold8"), // Treasure:  eight gold.
-        IMG_TREASURE_GOLD_16 (4, "treasure.pack", "gold16"), // Treasure:  sixteen gold.
-        IMG_TREASURE_GOLD_32 (5, "treasure.pack", "gold32"), // Treasure:  thirty-two gold.
-        IMG_TREASURE_GOLD_64 (6, "treasure.pack", "gold64"), // Treasure:  sixty-four gold.
-        IMG_TREASURE_GOLD_128 (7, "treasure.pack", "gold128"), // Treasure:  one hundred twenty-eight gold.
-        IMG_TREASURE_GOLD_256 (8, "treasure.pack", "gold256"), // Treasure:  two hundred fifty-six gold.
-        IMG_TREASURE_GOLD_512 (9, "treasure.pack", "gold512"), // Treasure:  five hundred twelve gold.
-        IMG_TREASURE_MAGIC (10, "treasure.pack", "magic"), // Treasure:  magic / spell.
-        IMG_TREASURE_RUBY (11, "treasure.pack", "ruby"), // Treasure:  ruby.
-        IMG_TREASURE_SAPPHIRE (12, "treasure.pack", "sapphire"), // Treasure:  sapphire.
-        IMG_TREASURE_EMERALD (13, "treasure.pack", "emerald"), // Tresaure:  emerald.
-        IMG_TREASURE_DIAMOND (14, "treasure.pack", "diamond"), // Treasure:  diamond.
-        IMG_TREASURE_WOOD_STICK (15, "treasure.pack", "wood_stick") // Treasure:  wood stick.
+        IMG_TREASURE_GOLD_1 (0, "treasure.pack", "gold1", 1), // Treasure:  one gold.
+        IMG_TREASURE_GOLD_2 (1, "treasure.pack", "gold2", 2), // Treasure:  two gold.
+        IMG_TREASURE_GOLD_4 (2, "treasure.pack", "gold4", 4), // Treasure:  four gold.
+        IMG_TREASURE_GOLD_8 (3, "treasure.pack", "gold8", 8), // Treasure:  eight gold.
+        IMG_TREASURE_GOLD_16 (4, "treasure.pack", "gold16", 16), // Treasure:  sixteen gold.
+        IMG_TREASURE_GOLD_32 (5, "treasure.pack", "gold32", 32), // Treasure:  thirty-two gold.
+        IMG_TREASURE_GOLD_64 (6, "treasure.pack", "gold64", 64), // Treasure:  sixty-four gold.
+        IMG_TREASURE_GOLD_128 (7, "treasure.pack", "gold128", 128), // Treasure:  one hundred twenty-eight gold.
+        IMG_TREASURE_GOLD_256 (8, "treasure.pack", "gold256", 256), // Treasure:  two hundred fifty-six gold.
+        IMG_TREASURE_GOLD_512 (9, "treasure.pack", "gold512", 512), // Treasure:  five hundred twelve gold.
+        IMG_TREASURE_MAGIC (10, "treasure.pack", "magic", 0), // Treasure:  magic / spell.
+        IMG_TREASURE_RUBY (11, "treasure.pack", "ruby", 0), // Treasure:  ruby.
+        IMG_TREASURE_SAPPHIRE (12, "treasure.pack", "sapphire", 0), // Treasure:  sapphire.
+        IMG_TREASURE_EMERALD (13, "treasure.pack", "emerald", 0), // Tresaure:  emerald.
+        IMG_TREASURE_DIAMOND (14, "treasure.pack", "diamond", 0), // Treasure:  diamond.
+        IMG_TREASURE_WOOD_STICK (15, "treasure.pack", "wood_stick", 0) // Treasure:  wood stick.
         
         ; // semicolon needed when fields / methods follow
 
+        private static final Map<Integer, String> goldMap = new HashMap<>(); // Hash map containing cross reference between image to use for gold and associated quantity.
+        private final Integer gold; // Amount of gold.  Only relevant to gold type treasure.
         private final int imgTreasureEnum; // Enumerations related to treasure images.
         private final String imgAtlasFile; // Filename (just name and extension, no path) for atlas.
         private final String imgAtlasKey; // Key associated with atlas -- used with asset manager hash map.
@@ -1264,23 +1266,26 @@ public class HeroineEnum
         // imgTreasureEnum = Value to associate.
         // imgAtlasFile = Filename (just name and extension, no path) for atlas.
         // imgAtlasKey = Key associated with atlas -- used with asset manager hash map.
-        private ImgTreasureEnum(int imgTreasureEnum, String imgAtlasFile, String imgAtlasKey) 
+        // goldKey = Key (gold amount) to use in hash map -- used with asset manager hash map.
+        private ImgTreasureEnum(int imgTreasureEnum, String imgAtlasFile, String imgAtlasKey, int goldKey) 
         {
             // The constructor sets the values for each enumeration.
             this.imgTreasureEnum = imgTreasureEnum;
             this.imgAtlasFile = imgAtlasFile;
             this.imgAtlasKey = imgAtlasKey;
+            this.gold = goldKey;
         }
         
-        // Populate the hash map containing the text and numbers.
+        // Populate the hash maps.
         static 
         {
             
             // Loop through each of the enumerated values.
             for (ImgTreasureEnum imgTreasureEnum : ImgTreasureEnum.values()) 
             {
-                // Add the current enumeration to the hash map.
+                // Add the current enumeration to the hash maps.
                 imgTreasureMap.put(imgTreasureEnum.imgTreasureEnum, imgTreasureEnum);
+                goldMap.put(imgTreasureEnum.gold, imgTreasureEnum.imgAtlasKey);
             }
             
         }
@@ -1310,6 +1315,16 @@ public class HeroineEnum
             
             // Return the atlas key.
             return imgAtlasKey;
+        }
+        
+        // goldAmount = Amount of gold.
+        public static String getValue_AtlasKey_Gold(int goldAmount) 
+        {
+            // The function returns the atlas key based on the gold amount -- used with the asset manager hash map.
+            // Example for use:  String x = HeroineEnum.ImgTreasureEnum.IMG_INTERFACE_DIALOG_BTN.getValue_AtlasKey_Gold();
+            
+            // Return the atlas key.
+            return goldMap.get(goldAmount);
         }
         
         // imgTreasure = Numeric value to convert to text.
@@ -2358,7 +2373,8 @@ public class HeroineEnum
     {
         
         TILE_MAP_KEY_CHEST (0), // Key related to chest "tile".
-        TILE_MAP_KEY_TREASURE (1) // Key related to treasure "tile".
+        TILE_MAP_KEY_TREASURE (1), // Key related to treasure "tile".
+        TILE_MAP_KEY_TREASURE_GROUP (2) // Key related to treasure group "tile".
         ; // semicolon needed when fields / methods follow
 
         private final Integer tileMapKeyEnum; // Enumerations related to (special) tile map keys (associated with tileMap hash map in MazeMap class).

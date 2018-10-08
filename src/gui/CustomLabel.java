@@ -607,7 +607,7 @@ public class CustomLabel
         // Fade in over the course of "fadeIn" seconds after "delay" elapse.
         
         // Example for use:  To fade in over the course of 1.0 seconds after 
-        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f);
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f, "test");
         
         // Add custom action to hash map.
         addActionCustom_Center(labelText);
@@ -650,6 +650,38 @@ public class CustomLabel
         
         // Set up fade effect for the label.
         customLabel.addAction(actionMapping.get("FadeOut"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade in effect.
+    // fadeOut = Duration, in seconds, of fade out effect.
+    // labelText = Text to display in label.
+    public void addAction_FadeOutIn_Center(float delay, float fadeOut, float fadeIn, String labelText)
+    {
+        
+        // The function sets up a fade out / in effect for the label.
+        // Fade in over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade out and in over the course of 1.0 seconds each after 
+        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f, 1.0f, "test");
+        
+        // Add custom action to hash map.
+        addActionCustom_Center(labelText);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeOutInCenter", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.fadeOut(fadeOut),
+            Actions.alpha(0),
+            Actions.visible(true),
+            customActions.get("CENTER NEW TEXT"),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the label.
+        customLabel.addAction(actionMapping.get("FadeOutInCenter"));
         
     }
     
@@ -955,6 +987,9 @@ public class CustomLabel
     {
         // The method sets the x-position of the left edge of the label.
         
+        // Store updated x-coordinate.
+        this.posX = x;
+        
         // Call method in actor.
         customLabel.setX(x);
     }
@@ -963,6 +998,9 @@ public class CustomLabel
     public final void setPosY(float y)
     {
         // The method sets the y-position of the bottom edge of the label.
+        
+        // Store updated y-coordinate.
+        this.posY = y;
         
         // Call method in actor.
         customLabel.setY(y);

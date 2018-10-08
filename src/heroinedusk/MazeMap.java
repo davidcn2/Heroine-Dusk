@@ -3,7 +3,6 @@ package heroinedusk;
 // LibGDX imports.
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -54,9 +53,11 @@ public class MazeMap
     // Declare object variables.
     private final Atlas atlas; // Reference to the atlas information.
     private final AtlasItems atlasItems; // Reference to the atlas items information.
-    private ArrayList<HeroineEnum.ItemEnum> chestOtherItems; // Additional items in current chest.  Also, contains any items in secondary chests.
+    private ArrayList<HeroineEnum.ItemEnum> chestOtherItems; // Additional items in chest(s).
+    private ArrayList<Integer> chestOtherItemsQty; // Quantity of each additional item in chest(s).
     private final RegionMap currentRegion; // Reference to current region / map.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
+    private ArrayList<BaseActor> goldPile; // List of gold actors.
     private final HashMap<HeroineEnum.MinimapCursorEnum, TextureRegion> minimapCursorRegions; // Unique set of
       // texture regions used with minimap cursors.
     private final HashMap<HeroineEnum.MinimapEnum, TextureRegion> minimapRegions; // Unique set of texture
@@ -89,6 +90,10 @@ public class MazeMap
     private final int regionWidth; // Region width, in tiles.
     
     // Declare constants.
+    //private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{65, 56, 74, 74, 50, 63, 41, 90, 87, 29};
+    private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{36, 27, 45, 45, 21, 34, 12, 61, 58, 0};
+    //private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{93, 96, 95, 86, 80, 78, 92, 76, 94, 77};
+    private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{17, 20, 19, 10, 4, 2, 16, 0, 18, 1};
     private final String decFormatText000 = "000"; // Text used for decimal style used to format numbers as 000.
       // Examples:  1 > 001, 2 > 002, ...
     private final DecimalFormat decimalFormat000 = new DecimalFormat(decFormatText000); // Decimal style used to
@@ -129,6 +134,7 @@ public class MazeMap
         minimapDestX = new ArrayList<>();
         minimapDestY = new ArrayList<>();
         chestOtherItems = new ArrayList<>();
+        chestOtherItemsQty = new ArrayList<>();
         
         // Initialize hash maps.
         minimapRegions = new HashMap<>();
@@ -262,6 +268,7 @@ public class MazeMap
     
     // chestActor = Reference to BaseActor for the chest tile.
     // treasureActor = Reference to BaseActor for the treasure tile.
+    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
     // viewWidth = Width of the stage.
     // treasureLabel = Reference to label with the treasure description.
     // heroineWeapon = BaseActor object that acts as the player weapon.
@@ -270,9 +277,11 @@ public class MazeMap
     // armorLabel = Label showing current player armor.
     // hpLabel = Label showing player hit points.
     // mpLabel = Label showing player magic points.
-    private void addEvent_ChestActor(BaseActor chestActor, BaseActor treasureActor, int viewWidth,
-      CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, 
-      CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel)
+    // goldLabel = Label showing player gold.
+    private void addEvent_ChestActor(BaseActor chestActor, BaseActor treasureActor, BaseActor treasureGroup,
+      int viewWidth, CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, 
+      BaseActor heroineArmor, CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel,
+      CustomLabel goldLabel)
     {
         
         // The function adds events to the passed chest-related tile (BaseActor).
@@ -321,16 +330,12 @@ public class MazeMap
                     // Notes:  Occurs when user releases mouse on button.
                     
                     ArrayList<Chest> chestList; // List of chests at the tile.
-                    HeroineEnum.ImgTreasureEnum imgTreasureEnum; // Enumerated value for treasure.
                     int chestCount; // Number of chests.
                     int index1; // Position of first comma in virtual text.
                     int index2; // Position of second comma in virtual text.
                     int posX; // X-coordinate associated with the tile.
                     int posY; // Y-coordinate associated with the tile.
-                    float treasureHeight; // Height to which to resize treasure.
                     boolean treasureImageInd; // Whether treasure image exists for primary item in first chest.
-                    String treasureKey; // Key to texture region for treasure in asset manager.
-                    float treasureWidth; // Width to which to resize treasure.
                     
                     // Flag to ignore next exit event.
                     ignoreNextExitEvent = true;
@@ -366,8 +371,9 @@ public class MazeMap
                     // Get list of chests at the tile.
                     chestList = gameHD.getAtlasItems().getChestList( map_id, posX, posY );
                     
-                    // Reinitialize list of extra chest items.
+                    // Reinitialize lists of extra chest items.
                     chestOtherItems = new ArrayList<>();
+                    chestOtherItemsQty = new ArrayList<>();
                     
                     // Reset index for current element in extra chest items.
                     chestOtherItemIndex = 0;
@@ -382,26 +388,34 @@ public class MazeMap
                         // Give the primary item to the player.
                         gameHD.getAvatar().takeItem(chest.getPrimaryItem(), heroineWeapon, weaponLabel, 
                           heroineArmor, armorLabel, chest.getPrimaryItemCount(), gameHD.getAssetMgr(),
-                          hpLabel, mpLabel);
+                          hpLabel, mpLabel, goldLabel);
                         
                         // If in second or later chest, then...
                         if (chestCount > 0)
+                        {
+                            
                             // In second or later chest.
-                            // Add to list of other chest items.
+                            
+                            // Add to lists of other chest items.
                             chestOtherItems.add(chest.getPrimaryItem());
+                            chestOtherItemsQty.add(chest.getPrimaryItemCount());
+                            
+                        }
                         
                         // Give additional items to the player.
-                        System.out.println("Addl item count: " + chest.getAddlItemList().size());
+                        
                         // Loop through additional items in chest.
                         for (HeroineEnum.ItemEnum itemEnum : chest.getAddlItemList())
                         {
                             
                             // Give the additional item to the player.
                             gameHD.getAvatar().takeItem(itemEnum, heroineWeapon, weaponLabel, 
-                              heroineArmor, armorLabel, 1, gameHD.getAssetMgr(), hpLabel, mpLabel);
+                              heroineArmor, armorLabel, 1, gameHD.getAssetMgr(), hpLabel, mpLabel,
+                              goldLabel);
                             
                             // Add to list of other chest items.
                             chestOtherItems.add(itemEnum);
+                            chestOtherItemsQty.add(1);
                             
                         }
                         
@@ -414,74 +428,8 @@ public class MazeMap
                     
                     // Display the first chest / item.
                     treasureImageInd = render_treasure( chestList.get(0).getPrimaryItem(), chestActor, 
-                      treasureActor, viewWidth, treasureLabel );
-                    
-                    /*
-                    // Get treasure enumeration value.
-                    imgTreasureEnum = chestList.get(0).getPrimaryItem().getValue_ImgTreasureEnum();
-                    
-                    // If enumeration value points at an image, then...
-                    if (imgTreasureEnum != null)
-                    {
-                        // Enumeration value points at an image.
-                        
-                        // Get key for texture region associated with treasure in asset manager.
-                        treasureKey = imgTreasureEnum.getValue_AtlasKey();
-                        
-                        // Update image for treasure actor.
-                        treasureActor.setTextureRegion( gameHD.getAssetMgr().getTextureRegion(treasureKey) );
-
-                        // Determine width and height to resize treasure.
-
-                        // Magnify by scale factor.
-                        treasureWidth = gameHD.getConfig().getScale() * treasureActor.getWidth();
-                        treasureHeight = gameHD.getConfig().getScale() * treasureActor.getHeight();
-
-                        // If treasure width greater than chest, then... > Limit to chest width.
-                        if (treasureWidth > chestActor.getWidth())
-                            treasureWidth = chestActor.getWidth();
-
-                        // If treasure height greater than chest, then... > Limit to chest height.
-                        if (treasureHeight > chestActor.getHeight())
-                            treasureHeight = chestActor.getHeight();
-
-                        // Take the lower of the treasure width and height.
-                        treasureWidth = Math.min(treasureWidth, treasureHeight);
-                        treasureHeight = treasureWidth;
-
-                        // Resize treasure actor based on scale.
-                        treasureActor.setWidth( treasureWidth );
-                        treasureActor.setHeight( treasureHeight );
-
-                        // Set treasure origin to center to allow for proper rotation.
-                        treasureActor.setOriginCenter();
-
-                        // Position treasure actor at center of stage horizontally and chest vertically.
-                        treasureActor.setPosition( (viewWidth - treasureWidth) / 2, chestActor.getOriginY() );
-
-                        // Set up an action to fade in the treasure.
-                        treasureActor.addAction_FadeIn( 1.00f, 0.50f );
-
-                        // Add event to treasure actor to fade out upon click.
-                        addEvent_TreasureActor(treasureActor, treasureLabel);
-                        
-                    }
-                    
-                    else
-                    {
-                        // Enumeration value empty.
-                        // Only display label.
-                    }
-                    
-                    // 4.  Perform actions on treasure label.
-                    
-                    // Update the treasure description in the associated label and center horizontally.
-                    treasureLabel.setLabelText_Center( 
-                      "FOUND " + chestList.get(0).getPrimaryItem().getValue_TreasureText() +
-                      ((chestList.size() > 1 || chestList.get(0).getAddlItemCount() > 0) ? "++" : "") + 
-                      "!" );
-                    */
-                    
+                      treasureActor, treasureGroup, viewWidth, treasureLabel, 
+                      chestList.get(0).getPrimaryItemCount() );
                     
                     // If showing treasure, then...
                     if (treasureImageInd)
@@ -489,15 +437,46 @@ public class MazeMap
                         
                         // Showing treasure.
                         
-                        // Set up an action to fade in the treasure.
-                        treasureActor.addAction_FadeIn( 1.00f, 0.50f );
-
-                        // Add event to treasure actor to fade out upon click.
-                        addEvent_TreasureActor( treasureActor, treasureLabel, chestActor );
+                        // If rendering group, then...
+                        if (goldPile != null)
+                        {
+                            
+                            // Rendering group.
+                            
+                            // Remove existing actions on treasure group.
+                            treasureGroup.removeActions();
+                            
+                            // Set up an action to fade in the treasure group.
+                            treasureGroup.addAction_FadeIn( 1.00f, 0.50f );
+                            
+                            // Update the vertical position of the label to center between the treasure group 
+                            // and the bottom of the stage.
+                            treasureLabel.setPosY( (treasureGroup.getY() - 
+                              treasureLabel.getLabelHeight()) / 2 );
+                            
+                        }
+                            
+                        else
+                        {
+                            
+                            // Rendering non-group.
+                            
+                            // Remove existing actions on treasure actor.
+                            treasureActor.removeActions();
+                            
+                            // Set up an action to fade in the treasure group.
+                            treasureActor.addAction_FadeIn( 1.00f, 0.50f );
+                            
+                            // Update the vertical position of the label to center between the treasure and 
+                            // bottom of the stage.
+                            treasureLabel.setPosY( (treasureActor.getY() - 
+                              treasureLabel.getLabelHeight()) / 2 );
+                            
+                        }
                         
-                        // Update the vertical position of the label to center between the treasure and 
-                        // bottom of the stage.
-                        treasureLabel.setPosY( (treasureActor.getY() - treasureLabel.getLabelHeight()) / 2 );
+                        // Add event to treasure actor to fade out upon click.
+                        addEvent_TreasureActor( treasureActor, treasureLabel, chestActor, treasureGroup, 
+                          viewWidth );
                         
                     }
                         
@@ -516,8 +495,6 @@ public class MazeMap
                     
                     // Set up an action to fade in the label.
                     treasureLabel.addAction_FadeIn( 1.00f, 0.50f );
-                    
-                    
                     
                     // 5.  Remove chests from array list and hash map in atlas items.
                     
@@ -618,18 +595,20 @@ public class MazeMap
     // treasureActor = Reference to actor acting as the treasure.
     // treasureLabel = Reference to label with the treasure description.
     // chestActor = Reference to BaseActor for the chest tile.
+    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    // viewWidth = Width of the stage.
     private void addEvent_TreasureActor(BaseActor treasureActor, CustomLabel treasureLabel,
-      BaseActor chestActor)
+      BaseActor chestActor, BaseActor treasureGroup, int viewWidth)
     {
         
         // The function adds events to the passed treasure actor and label.
         // Clicking the tresaure actor causes the actor and label to fade out.
         // Events include touchDown, touchUp, enter, and exit.
         
-        InputListener labelEvent; // Events to add to passed label.
+        InputListener treasureEvent; // Events to add to passed objects.
         
         // Craft event logic to add to passed label.
-        labelEvent = new InputListener()
+        treasureEvent = new InputListener()
             {
                 
                 boolean ignoreNextExitEvent; // Whether to ignore next exit event (used with touchUp / exit).
@@ -671,8 +650,8 @@ public class MazeMap
                     HeroineEnum.ImgTreasureEnum imgTreasureEnum; // Enumerated value for treasure.
                     float treasureHeight; // Height to which to resize treasure.
                     float treasureWidth; // Width to which to resize treasure.
-                    String otherItemsText; // Text to show when more items exist to take -> ++.
-                    String treasureText; // Text to display for treasure.
+                    boolean switchFromGold; // Whether switching from gold to non-gold.
+                    boolean switchToGold; // Whether switching from non-gold to gold.
                     
                     // Flag to ignore next exit event.
                     ignoreNextExitEvent = true;
@@ -686,61 +665,193 @@ public class MazeMap
                         
                         // Additional items remain to display.
                         
-                        // Get treasure enumeration value.
-                        imgTreasureEnum = chestOtherItems.get(chestOtherItemIndex).getValue_ImgTreasureEnum();
+                        // Set defaults.
+                        switchFromGold = false;
+                        switchToGold = false;
                         
-                        // If enumeration value points at an image, then...
-                        if (imgTreasureEnum != null)
+                        // If gold pile exists, then...
+                        if (goldPile != null)
                         {
-                            // Enumeration value points at an image.
-                            
-                            // Determine width and height to resize treasure.
-            
-                            // Magnify by scale factor.
-                            treasureWidth = gameHD.getConfig().getScale() * 
-                              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionWidth();
-                            treasureHeight = gameHD.getConfig().getScale() * 
-                              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionHeight();
-                            
-                            // If treasure width greater than chest, then... > Limit to chest width.
-                            if (treasureWidth > chestActor.getWidth())
-                                treasureWidth = chestActor.getWidth();
+                            // Gold pile exists.
 
-                            // If treasure height greater than chest, then... > Limit to chest height.
-                            if (treasureHeight > chestActor.getHeight())
-                                treasureHeight = chestActor.getHeight();
+                            // Remove actors in gold pile from treasure group.
+                            goldPile.forEach((actor) -> {
 
-                            // Take the lower of the treasure width and height.
-                            treasureWidth = Math.min(treasureWidth, treasureHeight);
-                            treasureHeight = treasureWidth;
+                                // Remove current actor in loop from group.
+                                treasureGroup.removeActor(actor);
+
+                            });
+
+                            // Clear out gold pile.
+                            goldPile = null;
                             
-                            // Fade in the next treasure actor / image.
-                            treasureActor.addAction_FadeIn( 0.50f, 0.50f, 
-                              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()), 
-                              imgTreasureEnum.toString(), treasureWidth, treasureHeight );
+                            // Store whether switching from gold to non-gold.
+                            switchFromGold = chestOtherItems.get(chestOtherItemIndex) != 
+                              HeroineEnum.ItemEnum.ITEM_GOLD;
+                            
+                        }
+                        
+                        else
+                        {
+                            
+                            // No gold pile exists.
+                            
+                            // If switching from non-gold to gold, then...
+                            if (chestOtherItems.get(chestOtherItemIndex) == HeroineEnum.ItemEnum.ITEM_GOLD)
+                                switchToGold = true;
+                            
+                        }
+                        
+                        // If item represents gold, then...
+                        if (chestOtherItems.get(chestOtherItemIndex) == HeroineEnum.ItemEnum.ITEM_GOLD)
+                        {
+                            
+                            // Item represents gold.
+                            
+                            // Update actor information for gold pile and treasure group.
+                            render_gold(chestActor, treasureGroup, viewWidth, 
+                              chestOtherItemsQty.get(chestOtherItemIndex));
+                            
+                            // Remove existing actions on treasure group.
+                            treasureGroup.removeActions();
+                            
+                            // If switching from treasure actor to gold pile, then...
+                            if (switchToGold)
+                            {
+                                
+                                // Switching from treasure actor to gold pile.
+                                
+                                // Fade out treasure actor.
+                                treasureActor.addAction_FadeOut( 0.00f, 0.50f );
+                                
+                            }
+                            
+                            // Set up an action to fade in the treasure group.
+                            treasureGroup.addAction_FadeIn( 0.50f, 0.50f );
                             
                             // Update the treasure description in the associated label and center horizontally.
-                            
-                            // Remove existing treasure label actions.
-                            treasureLabel.removeActions();
-                            
-                            // Populate other items text.
-                            otherItemsText = (chestOtherItemIndex + 1) < chestOtherItems.size() ? "++" : "";
-                            
-                            // Store text to display for treasure.
-                            treasureText = "FOUND " + 
-                              chestOtherItems.get(chestOtherItemIndex).getValue_TreasureText() + 
-                              otherItemsText + "!";
-                            
-                            // Fade in the next treasure label text.
-                            treasureLabel.addAction_FadeIn_Center( 0.50f, 0.50f, treasureText );
+                            render_treasure_label( treasureLabel );
                             
                             // Move to the next item.
                             chestOtherItemIndex++;
                             
-                        }
-                        
-                    }
+                        } // End ... If item represents gold.
+                            
+                        else
+                        {
+                            
+                            // Item NOT gold.
+                            
+                            // Get treasure enumeration value.
+                            imgTreasureEnum = chestOtherItems.get(chestOtherItemIndex).getValue_ImgTreasureEnum();
+                            
+                            // If enumeration value points at an image, then...
+                            if (imgTreasureEnum != null)
+                            {
+                                // Enumeration value points at an image.
+                                
+                                // Switch treasure actor to more than a group.
+                                treasureActor.setGroupOnlyInd(false);
+                                
+                                // Determine width and height to resize treasure.
+
+                                // Magnify by scale factor.
+                                treasureWidth = gameHD.getConfig().getScale() * 
+                                  gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionWidth();
+                                treasureHeight = gameHD.getConfig().getScale() * 
+                                  gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionHeight();
+
+                                // If treasure width greater than chest, then... > Limit to chest width.
+                                if (treasureWidth > chestActor.getWidth())
+                                    treasureWidth = chestActor.getWidth();
+
+                                // If treasure height greater than chest, then... > Limit to chest height.
+                                if (treasureHeight > chestActor.getHeight())
+                                    treasureHeight = chestActor.getHeight();
+
+                                // Take the lower of the treasure width and height.
+                                treasureWidth = Math.min(treasureWidth, treasureHeight);
+                                treasureHeight = treasureWidth;
+                                
+                                // Remove existing treasure actor actions.
+                                treasureActor.removeActions();
+                                
+                                // If switching from gold, then...
+                                if (switchFromGold)
+                                {
+                                    
+                                    // Switching from gold.
+                                    
+                                    // Fade out gold pile.
+                                    treasureGroup.addAction_FadeOut( 0.00f, 0.50f );
+                                
+                                    // Update image for treasure actor.
+                                    treasureActor.setTextureRegion( gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()) );
+                                    
+                                    // Set dimensions of treasure actor.
+                                    treasureActor.setWidth( treasureWidth );
+                                    treasureActor.setHeight( treasureHeight );
+                                    
+                                    // Set treasure origin to center to allow for proper rotation.
+                                    treasureActor.setOriginCenter();
+
+                                    // Position treasure actor at center of stage horizontally and chest 
+                                    // vertically.
+                                    treasureActor.setPosition( (viewWidth - treasureWidth) / 2, 
+                                      chestActor.getOriginY() );
+                                    
+                                    // Set treasure actor to not visible to allow for fade in effect.
+                                    treasureActor.setVisible( false );
+                                    
+                                    // Remove existing actions on treasure actor.
+                                    treasureActor.removeActions();
+                                    
+                                    // Add fade in effect to treasure actor.
+                                    treasureActor.addAction_FadeIn( 0.50f, 0.50f );
+                                    
+                                }
+                                
+                                else
+                                {
+                                    // Displaying another non-gold item.
+                                    
+                                    // Remove existing actions on treasure actor.
+                                    treasureActor.removeActions();
+                                    
+                                    // Fade in the next treasure actor / image.
+                                    treasureActor.addAction_FadeIn( 0.50f, 0.50f, 
+                                      gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()), 
+                                      imgTreasureEnum.toString(), treasureWidth, treasureHeight );
+                                }
+                                
+                                // Update the treasure description in the associated label and center horizontally.
+                                render_treasure_label( treasureLabel );
+                                
+                                // Move to the next item.
+                                chestOtherItemIndex++;
+                                
+                            } // End ... If enumeration value points at an image.
+                            
+                            else
+                            {
+                                
+                                // Enumeration value lacks an image.
+                                
+                                // Fade out the treasure actor and group.
+                                treasureActor.addAction_FadeOut( 0.50f, 0.50f );
+                                treasureGroup.addAction_FadeOut( 0.50f, 0.50f );
+                                
+                                // Update the treasure description in the associated label and center horizontally.
+                                render_treasure_label( treasureLabel );
+                                
+                                // Move to the next item.
+                                chestOtherItemIndex++;
+                                
+                            } // End ... If enumeration value lacks an image.
+                            
+                        } // End ... If item NOT gold.
+                         
+                    } // End ... If additional items remain to display.
                     
                     else
                     {
@@ -822,8 +933,10 @@ public class MazeMap
                 
             }; // End ... InputListener.
         
-        // Add event to label.
-        treasureActor.addListener(labelEvent);
+        // Add event to actor and label.
+        treasureActor.addListener(treasureEvent);
+        treasureGroup.addListener(treasureEvent);
+        treasureLabel.getLabel().addListener(treasureEvent);
         
     }
     
@@ -850,9 +963,10 @@ public class MazeMap
     // armorLabel = Label showing current player armor.
     // hpLabel = Label showing player hit points.
     // mpLabel = Label showing player magic points.
+    // goldLabel = Label showing player gold.
     public ArrayList<BaseActor> mazemap_render(int x, int y, HeroineEnum.FacingEnum facing, int viewWidth,
       CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, 
-      CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel)
+      CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel)
     {
         
         /*
@@ -883,13 +997,15 @@ public class MazeMap
         Integer key; // Key to use when adding value to hash map.
         ArrayList<BaseActor> removeList; // List of actors to remove.
         BaseActor tempChest; // Holder for the additional (chest) actor to add.
-        BaseActor tempTreasure; // Holder for the additional (treasure) actor to add.
+        BaseActor tempTreasure; // Holder for the additional (treasure) actor to add.  For non-group functionality.
+        BaseActor tempTreasureGroup; // Holder for the additional (treasure) actor to add.  For group functionality.
         ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
         String virtualString; // Virtual field (string) for the actor with the chest(s).
         
         // 1.  Set defaults.
         chestInd = false;
         virtualString = "";
+        goldPile = null;
         
         // 2.  Initialize array lists and hash maps.
         tiles = new ArrayList<>();
@@ -1098,20 +1214,26 @@ public class MazeMap
             
             // A.  Set up treasure...
             
-            // Create new BaseActor for the treasure, setting most properties when opening the chest.
+            // Create new BaseActor objects for the treasure and group, setting most properties when opening the 
+            // chest.
             tempTreasure = new BaseActor();
+            tempTreasureGroup = new BaseActor();
             
-            // Name treasure actor.
+            // Name treasure actor and group.
             tempTreasure.setActorName( "Treasure" );
+            tempTreasureGroup.setActorName( "Treasure Group" );
             
-            // Set treasure actor to hidden.
+            // Set treasure actor and group to hidden.
             tempTreasure.setVisible( false );
+            tempTreasureGroup.setVisible( false );
             
-            // Add treasure actor to the list.
+            // Add treasure actor and group to the list.
             tiles.add( tempTreasure );
+            tiles.add( tempTreasureGroup );
             
-            // Add entry to cross reference hash map.
+            // Add entries to cross reference hash map.
             tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE.getValue(), counter );
+            tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP.getValue(), counter );
             
             // Incement hash map counter.
             counter++;
@@ -1134,8 +1256,8 @@ public class MazeMap
             tempChest.setVirtualString( virtualString );
             
             // Add events to actor.
-            addEvent_ChestActor( tempChest, tempTreasure, viewWidth, treasureLabel, heroineWeapon, 
-              weaponLabel, heroineArmor, armorLabel, hpLabel, mpLabel );
+            addEvent_ChestActor( tempChest, tempTreasure, tempTreasureGroup, viewWidth, treasureLabel, 
+              heroineWeapon, weaponLabel, heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel );
             
             // Add chest actor to the list.
             tiles.add( tempChest );
@@ -1480,13 +1602,126 @@ public class MazeMap
 
     }
     
+    // chestActor = Reference to BaseActor for the chest tile.
+    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    // viewWidth = Width of the stage.
+    // quantity = Number of items to render.
+    private void render_gold(BaseActor chestActor, BaseActor treasureGroup, int viewWidth, int quantity)
+    {
+        
+        // The function populates the gold pile (array list of actors) and related treasure group.
+        
+        ArrayList<Integer> bitwiseList; // List of numbers that add up to gold amount.
+        int destIndex; // Index in arrays, GOLD_BASE_POS_X_LIST and GOLD_BASE_POS_Y_LIST, of positions to 
+          // place gold.
+        float goldHeight; // Height of current gold actor (in group).
+        float goldMaxX; // Maximum x-coordinate for placement of gold (in group).
+        float goldMaxY; // Maximum y-coordinate for placement of gold (in group).
+        float goldMinX; // Minimum x-coordinate for placement of gold (in group).
+        float goldMinY; // Minimum y-coordinate for placement of gold (in group).
+        float goldPosX; // X-coordinate to place current gold actor (in group).
+        float goldPosY; // Y-coordinate to place current gold actor (in group).
+        float goldWidth; // Width of current gold actor (in group).
+        HeroineEnum.ImgTreasureEnum imgTreasureEnum; // Enumerated value for treasure.
+        BaseActor tempGold; // Temporary actor for displaying current gold in loop.
+        float treasureHeight; // Height to which to resize treasure.
+        float treasureWidth; // Width to which to resize treasure.
+        
+        // Set defaults for gold.
+        goldMinX = 999999;
+        goldMinY = 999999;
+        goldMaxX = 0;
+        goldMaxY = 0;
+
+        // Populate list of numbers that add up to gold amount.
+        bitwiseList = routines.UtilityRoutines.bitwiseList(quantity);
+
+        // Initialize array list for gold pile.
+        goldPile = new ArrayList<>();
+
+        // Loop through gold amounts to show.
+        for (Integer gold : bitwiseList)
+        {
+
+            //System.out.println("Gold image: " + HeroineEnum.ImgTreasureEnum.getValue_AtlasKey_Gold(gold));
+
+            // Get treasure enumeration value.
+            imgTreasureEnum = HeroineEnum.ImgTreasureEnum.valueOf("IMG_TREASURE_GOLD_" + Integer.toString(gold));
+
+            // Determine index in position lists with location to place gold.
+            destIndex = imgTreasureEnum.getValue();
+
+            // Determine x and y coordinates to place current gold actor (in group / loop).
+            goldPosX = GOLD_BASE_POS_X_LIST[destIndex] * gameHD.getConfig().getScale();
+            goldPosY = GOLD_BASE_POS_Y_LIST[destIndex] * gameHD.getConfig().getScale();
+
+            // Determine dimensions of current gold actor (in group / loop).
+            goldWidth = gameHD.getConfig().getScale() * 
+              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionWidth();
+            goldHeight = gameHD.getConfig().getScale() * 
+              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionHeight();
+
+            // Configure and add actor to gold pile.
+
+            // Create new actor.
+            tempGold = new BaseActor("GOLD" + Integer.toString(gold), imgTreasureEnum.getValue_AtlasKey(), 
+              goldPosX, goldPosY, gameHD.getAssetMgr());
+
+            // Scale actor.
+            tempGold.setWidth(goldWidth);
+            tempGold.setHeight(goldHeight);
+
+            // Add image to gold pile.
+            goldPile.add(tempGold);
+
+            // Store minimum and maximum x and y to calculate dimensions and adjust base location to 0, 0.
+            goldMinX = Math.min(goldMinX, goldPosX);
+            goldMinY = Math.min(goldMinY, goldPosY);
+            goldMaxX = Math.max(goldMaxX, goldPosX + goldWidth);
+            goldMaxY = Math.max(goldMaxY, goldPosY + goldHeight);
+
+        }
+
+        // Loop through gold actors in group.
+        for (BaseActor gold : goldPile)
+        {
+            // Adjust base location to 0, 0 -- allows easy positioning of group and proper centering.
+            gold.setX(gold.getX() - goldMinX);
+            gold.setY(gold.getY() - goldMinY);
+
+            // Add actor to group.
+            treasureGroup.addActor(gold);
+        }
+
+        // Set treasure actor to function / draw as group only.
+        treasureGroup.setGroupOnlyInd(true);
+
+        // Determine width and height of treasure.
+        treasureWidth = goldMaxX - goldMinX;
+        treasureHeight = goldMaxY - goldMinY;
+
+        // Store width and height of treasure (group) in actor.
+        treasureGroup.setGroupWidth(treasureWidth);
+        treasureGroup.setGroupHeight(treasureHeight);
+
+        // Set treasure origin to center to allow for proper rotation.
+        treasureGroup.setOriginCenter_Group();
+
+        // Position treasure actor (group) at center of stage horizontally and chest vertically.
+        treasureGroup.setPosition( (viewWidth - treasureWidth) / 2, chestActor.getOriginY() );
+        
+    }
+    
     // itemEnum = Enumerated value for the item to render the associated treasure image.
     // chestActor = Reference to BaseActor for the chest tile.
     // treasureActor = Reference to BaseActor for the treasure tile.
+    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
     // viewWidth = Width of the stage.
     // treasureLabel = Reference to label with the treasure description.
+    // quantity = Number of items to render.
     private boolean render_treasure(HeroineEnum.ItemEnum itemEnum, BaseActor chestActor, 
-      BaseActor treasureActor, int viewWidth, CustomLabel treasureLabel)
+      BaseActor treasureActor, BaseActor treasureGroup, int viewWidth, CustomLabel treasureLabel, 
+      int quantity)
     {
         
         // The function updates the image and placement for the treasure actor based on the passed item.
@@ -1497,66 +1732,87 @@ public class MazeMap
         float treasureHeight; // Height to which to resize treasure.
         String treasureKey; // Key to texture region for treasure in asset manager.
         boolean treasureImageInd; // Whether treasure image exists for passed actor.
-        float treasureWidth; // Width to which to resize treasure.    
+        float treasureWidth; // Width to which to resize treasure.
         
         // 1.  Set defaults.
         treasureImageInd = false;
         
-        // 2.  If image available, update treasure image and position.
+        // 2.  If available, update treasure image and position.
         
-        // Get treasure enumeration value.
-        imgTreasureEnum = itemEnum.getValue_ImgTreasureEnum();
-        
-        // If enumeration value points at an image, then...
-        if (imgTreasureEnum != null)
+        // If item represents gold, then...
+        if (itemEnum == HeroineEnum.ItemEnum.ITEM_GOLD)
         {
-            // Enumeration value points at an image.
-
+            
+            // Item represents gold.
+            
+            // Populate actor information for gold pile and treasure group.
+            render_gold(chestActor, treasureGroup, viewWidth, quantity);
+            
             // Flag treasure image as existing.
             treasureImageInd = true;
             
-            // Get key for texture region associated with treasure in asset manager.
-            treasureKey = imgTreasureEnum.getValue_AtlasKey();
-
-            // Update image for treasure actor.
-            treasureActor.setTextureRegion( gameHD.getAssetMgr().getTextureRegion(treasureKey) );
-            
-            // Determine width and height to resize treasure.
-            
-            // Magnify by scale factor.
-            treasureWidth = gameHD.getConfig().getScale() * treasureActor.getWidth();
-            treasureHeight = gameHD.getConfig().getScale() * treasureActor.getHeight();
-            
-            // If treasure width greater than chest, then... > Limit to chest width.
-            if (treasureWidth > chestActor.getWidth())
-                treasureWidth = chestActor.getWidth();
-
-            // If treasure height greater than chest, then... > Limit to chest height.
-            if (treasureHeight > chestActor.getHeight())
-                treasureHeight = chestActor.getHeight();
-
-            // Take the lower of the treasure width and height.
-            treasureWidth = Math.min(treasureWidth, treasureHeight);
-            treasureHeight = treasureWidth;
-
-            // Resize treasure actor based on scale.
-            treasureActor.setWidth( treasureWidth );
-            treasureActor.setHeight( treasureHeight );
-
-            // Set treasure origin to center to allow for proper rotation.
-            treasureActor.setOriginCenter();
-
-            // Position treasure actor at center of stage horizontally and chest vertically.
-            treasureActor.setPosition( (viewWidth - treasureWidth) / 2, chestActor.getOriginY() );
-
-        } // End ... If enumeration value points at an image.
-
+        } // End ... If item represents gold.
+        
         else
         {
-            // Enumeration value empty.
-            // Only display label.
-        }
+            
+            // Item NOT gold.
+            
+            // Get treasure enumeration value.
+            imgTreasureEnum = itemEnum.getValue_ImgTreasureEnum();
 
+            // If enumeration value points at an image, then...
+            if (imgTreasureEnum != null)
+            {
+                // Enumeration value points at an image.
+                
+                // Flag treasure image as existing.
+                treasureImageInd = true;
+                
+                // Get key for texture region associated with treasure in asset manager.
+                treasureKey = imgTreasureEnum.getValue_AtlasKey();
+
+                // Update image for treasure actor.
+                treasureActor.setTextureRegion( gameHD.getAssetMgr().getTextureRegion(treasureKey) );
+                
+                // Determine width and height to resize treasure.
+                
+                // Magnify by scale factor.
+                treasureWidth = gameHD.getConfig().getScale() * treasureActor.getWidth();
+                treasureHeight = gameHD.getConfig().getScale() * treasureActor.getHeight();
+
+                // If treasure width greater than chest, then... > Limit to chest width.
+                if (treasureWidth > chestActor.getWidth())
+                    treasureWidth = chestActor.getWidth();
+
+                // If treasure height greater than chest, then... > Limit to chest height.
+                if (treasureHeight > chestActor.getHeight())
+                    treasureHeight = chestActor.getHeight();
+
+                // Take the lower of the treasure width and height.
+                treasureWidth = Math.min(treasureWidth, treasureHeight);
+                treasureHeight = treasureWidth;
+
+                // Resize treasure actor based on scale.
+                treasureActor.setWidth( treasureWidth );
+                treasureActor.setHeight( treasureHeight );
+
+                // Set treasure origin to center to allow for proper rotation.
+                treasureActor.setOriginCenter();
+
+                // Position treasure actor at center of stage horizontally and chest vertically.
+                treasureActor.setPosition( (viewWidth - treasureWidth) / 2, chestActor.getOriginY() );
+
+            } // End ... If enumeration value points at an image.
+
+            else
+            {
+                // Enumeration value empty.
+                // Only display label.
+            }
+            
+        }
+        
         // 3.  Perform actions on treasure label.
         
         // Update the treasure description in the associated label and center horizontally.
@@ -1567,6 +1823,31 @@ public class MazeMap
         
         // Return whether treasure image exists.
         return treasureImageInd;
+        
+    }
+    
+    // treasureLabel = Reference to label with the treasure description.
+    private void render_treasure_label(CustomLabel treasureLabel)
+    {
+    
+        // The function updates the treasure description in the associated label and centers horizontally.
+
+        String otherItemsText; // Text to show when more items exist to take -> ++.
+        String treasureText; // Text to display for treasure.
+        
+        // Populate other items text.
+        otherItemsText = (chestOtherItemIndex + 1) < chestOtherItems.size() ? "++" : "";
+
+        // Store text to display for treasure.
+        treasureText = "FOUND " + 
+          chestOtherItems.get(chestOtherItemIndex).getValue_TreasureText() + 
+          otherItemsText + "!";
+
+        // Remove actions from label.
+        treasureLabel.removeActions();
+
+        // Fade in the next treasure label text.
+        treasureLabel.addAction_FadeOutIn_Center( 0.00f, 0.50f, 0.50f, treasureText );
         
     }
     

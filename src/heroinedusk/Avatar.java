@@ -227,9 +227,10 @@ public class Avatar
     // assetMgr = Reference to the asset manager.
     // hpLabel = Label showing player hit points.
     // mpLabel = Label showing player magic points.
+    // goldLabel = Label showing player gold.
     public void takeItem(HeroineEnum.ItemEnum itemEnum, BaseActor heroineWeapon, CustomLabel weaponLabel, 
       BaseActor heroineArmor, CustomLabel armorLabel, int itemCount, AssetMgr assetMgr, CustomLabel hpLabel,
-      CustomLabel mpLabel)
+      CustomLabel mpLabel, CustomLabel goldLabel)
     {
         
         // The process handles giving an item to the player.
@@ -249,6 +250,12 @@ public class Avatar
 
                 // Give gold to player.
                 gold += itemCount;
+                
+                // Update player gold label.
+                goldLabel.setLabelText( getGoldText() );
+                
+                // Exit selector.
+                break;
 
             case ITEM_TYPE_WEAPON:
 
@@ -414,6 +421,10 @@ public class Avatar
         return gold;
     }
 
+    public String getGoldText() {
+        return Integer.toString(gold) + " GOLD";
+    }
+    
     public void setGold(int gold) {
         this.gold = gold;
     }

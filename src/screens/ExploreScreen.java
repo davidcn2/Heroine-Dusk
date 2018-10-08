@@ -203,7 +203,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
-          heroineArmor, armorLabel, hpLabel, mpLabel);
+          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -1671,6 +1671,15 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Hide treasure label.
                 treasureLabel.applyVisible(false);
             }
+            
+            // If treasure actor (group) exists, then...
+            if (tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP)) != null)    
+            {
+                // Treasure actor (group) exists.
+                
+                // Hide treasure actor (group).
+                tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP)).setVisible(false);
+            }
                 
         } // End ... If information view selected.
         
@@ -2152,7 +2161,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
-          heroineArmor, armorLabel, hpLabel, mpLabel);
+          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {

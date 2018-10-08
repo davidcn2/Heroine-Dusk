@@ -2,6 +2,7 @@ package routines;
 
 // LibGDX imports.
 import com.badlogic.gdx.graphics.Color;
+import java.util.ArrayList;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -31,13 +32,14 @@ public class UtilityRoutines
     
     Methods include:
     
+    bitwiseList:  Returns a list of numbers that add up to the passed value, based on bitwise operations.
     toRGB:  Converts the passed combination of red, green, and blue values from RGB to LibGDX format.
     */
     
-    public UtilityRoutines()
-    {
-        
-    }
+    // Array of numbers to check in bitwise list.
+    private static final Integer[] BITWISE_LIST =  new Integer[]{ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024,
+      2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 
+      33554432, 67108864, 134217728, 268435456, 536870912, 1073741824};
     
     // r = Red portion of color (in RGB format).
     // g = Green portion of color (in RGB format).
@@ -59,6 +61,59 @@ public class UtilityRoutines
         // Return the LibGDX (combined) color value.
         return new Color(red, green, blue, 1f);
  
+    }
+    
+    // value = Value to reach.
+    public static ArrayList<Integer> bitwiseList(int value)
+    {
+        
+        // The function returns a list of numbers that add up to the passed value, based on bitwise operations.
+        
+        ArrayList<Integer> temp; // List of numbers that add up to the passed value.
+        
+        // Initialize array list.
+        temp = new ArrayList<>();
+        
+        // If value is 0, then
+        if (value == 0)
+        {
+            // Value is 0.
+            
+            // Add 0 to array list.
+            temp.add(value);
+        }
+        
+        else
+        {
+            // Value greater than 0.
+            
+            // If 1 a bitwise value, then...
+            if ((value & 1) == 1)
+                temp.add(1);
+            
+            // If value greater than 1, then...
+            if (value > 1)
+            {
+                
+                // Value greater than 1.
+                
+                // Loop through numbers to check.
+                for (int check : BITWISE_LIST)
+                {
+                    
+                    // If current number a bitwise value, then...
+                    if ((value & check) == check)
+                        temp.add(check);
+                    
+                }
+                
+            } // End ... Value greater than 1.
+            
+        } // End ... Value greater than 0.
+        
+        // Return the array list.
+        return temp;
+        
     }
     
 }
