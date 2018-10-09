@@ -106,6 +106,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel powerResultLabel; // Label showing the second line -- power result.
     private CustomLabel regionLabel; // Label showing the current region name.
     private CustomLabel spellsLabel; // Label showing "SPELLS" text.
+    private CustomLabel statusLabel; // General status label.
     private ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
     private CustomLabel treasureLabel; // Label showing treasure description.
     private Array<Actor> uiStageActors; // List of actors in ui stage used when waking screen.
@@ -159,23 +160,25 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         2.  Initialize arrays, array lists, and hash maps.
         3.  Initialize the maze map.
         4.  Configure and add the background Actor.
-        5.  Render current map location / tiles.
-        6.  Configure and add the label with the direction the player is facing.
-        7.  Configure and add the information button Actor.
-        8.  Configure and add the label with the "INFO" text.  Hidden at start.
-        9.  Configure and add the selector Actor for the information button.  Hidden at start.
-        10.  Configure and add the label with the "SPELLS" text.  Hidden at start.
-        11.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
-        12.  Configure and add the labels for the current player armor and weapon.  Hidden at start.
-        13.  Configure and add the labels for the player hit and magic points.  Hidden at start.
-        14.  Configure and add the label for the current player gold.  Hidden at start.
-        15.  Populate hash map with starting enabled statuses for action buttons.
-        16.  Populate hash map with starting ignore next exit event flags for action buttons.
-        17.  Configure and add the actors for the action buttons (excluding information).  Hidden at start.
-        18.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+        5.  Configure and add the label showing the general status.  Hidden at start.
+        6.  Configure and add the labels for the player hit and magic points.  Hidden at start.
+        7.  Render current map location / tiles.
+        8.  Configure and add the label with the direction the player is facing.
+        9.  Configure and add the information button Actor.
+        10.  Configure and add the label with the "INFO" text.  Hidden at start.
+        11.  Configure and add the selector Actor for the information button.  Hidden at start.
+        12.  Configure and add the label with the "SPELLS" text.  Hidden at start.
+        13.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
+        14.  Configure and add the labels for the current player armor and weapon.  Hidden at start.
+        15.  Configure and add the label for the current player gold.  Hidden at start.
+        16.  Populate hash map with starting enabled statuses for action buttons.
+        17.  Populate hash map with starting ignore next exit event flags for action buttons.
+        18.  Configure and add the actors for the action buttons (excluding information).  Hidden at start.
+        19.  Configure and add the labels for the two lines for responses to spells / powers / actions.
              Hidden at start.
-        19.  Configure and add the label showing the current region name.  Hidden at start.
-        20.  Configure and add the label showing the treasure description.  Hidden at start.
+        20.  Configure and add the label showing the current region name.  Hidden at start.
+        21.  Configure and add the label showing the treasure description.  Hidden at start.
+        
         */
         
         // 1.  Set defaults.
@@ -198,12 +201,24 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Note:  The application uses a starting background of tempest, which the foreground objects completely hide.
         info_render_background();
         
-        // 5.  Render current map location / tiles.
+        // 5.  Configure and add the label showing the general status.  Hidden at start.
+        statusLabel = new CustomLabel(game.skin, "NO STATUS HERE", "uiLabelStyle", 
+          1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
+          CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, 0f, 
+          (float)(gameHD.getConfig().getScale() * 12), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // 6.  Configure and add the labels for the player hit and magic points.  Hidden at start.
+        info_render_hpmp();
+        
+        // Hide the general status label.
+        statusLabel.applyVisible(false);
+        
+        // 7.  Render current map location / tiles.
         
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
-          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel);
+          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, false, false);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -213,7 +228,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         });
         
-        // 6.  Configure and add the label with the direction the player is facing.
+        // 8.  Configure and add the label with the direction the player is facing.
         
         // Initialize and add label with facing text.
         facingLabel = new CustomLabel(game.skin, gameHD.getAvatar().getFacing().toString(), "uiLabelStyle", 
@@ -224,7 +239,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( facingLabel.getLabel() );
         
-        // 7.  Configure and add the information button Actor.
+        // 9.  Configure and add the information button Actor.
         
         // Create and configure new BaseActor for the information button.
         
@@ -244,7 +259,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoButton );
         
-        // 8.  Configure and add the label with the "INFO" text.
+        // 10.  Configure and add the label with the "INFO" text.
         
         // Initialize and add label with the "INFO" text.
         infoLabel = new CustomLabel(game.skin, "INFO", "uiLabelStyle", 1.0f, 
@@ -258,7 +273,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoLabel.getLabel() );
         
-        // Configure and add the selector Actor for the selector for the information button.
+        // 11.  Configure and add the selector Actor for the selector for the information button.
         
         // Create and configure new BaseActor for the selector for the information button.
         
@@ -282,7 +297,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoButtonSelector );
         
-        // 10.  Configure and add the label with the "SPELLS" text.  Hidden at start.
+        // 12.  Configure and add the label with the "SPELLS" text.  Hidden at start.
         
         // Initialize and add label with the "SPELLS" text.
         spellsLabel = new CustomLabel(game.skin, "SPELLS", "uiLabelStyle", 1.0f, 
@@ -296,20 +311,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( spellsLabel.getLabel() );
         
-        // 11.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
+        // 13.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
         info_render_equipment();
         
-        // 12.  Configure and adds the labels for the player armor and weapon.  Hidden at start.
+        // 14.  Configure and adds the labels for the player armor and weapon.  Hidden at start.
         info_render_itemlist();
         
-        // 13.  Configure and add the labels for the player hit and magic points.  Hidden at start.
-        info_render_hpmp();
-        
-        // 14.  Configure and add the label for the current player gold.  Hidden at start.
+        // 15.  Configure and add the label for the current player gold.  Hidden at start.
         info_render_gold();
     
-        // 15.  Populate hash map with starting enabled statuses for action buttons.
-        // 16.  Populate hash map with starting ignore next exit event flags for action buttons.
+        // 16.  Populate hash map with starting enabled statuses for action buttons.
+        // 17.  Populate hash map with starting ignore next exit event flags for action buttons.
         
         // Loop through action button enumerations.
         for (HeroineEnum.ActionButtonEnum actionButtonEnum : HeroineEnum.ActionButtonEnum.values())
@@ -336,14 +348,14 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         }
         
-        // 17.  Configure and add the actors for the action buttons (excluding information).
+        // 18.  Configure and add the actors for the action buttons (excluding information).
         action_render();
         
-        // 18.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+        // 19.  Configure and add the labels for the two lines for responses to spells / powers / actions.
         //      Hidden at start.
         info_render_powerResponseLines();
         
-        // 19.  Configure and add the label showing the current region name.  Hidden at start.
+        // 20.  Configure and add the label showing the current region name.  Hidden at start.
         
         // Initialize and add label with the "SPELLS" text.
         regionLabel = new CustomLabel(game.skin, mazemap.getCurrentRegion().getRegionName(), "uiLabelStyle", 
@@ -354,7 +366,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         regionLabel.applyVisible(false);
         
-        // 20.  Configure and add the label showing the treasure description.  Hidden at start.
+        // 21.  Configure and add the label showing the treasure description.  Hidden at start.
         treasureLabel = new CustomLabel(game.skin, "NO TREASURE HERE", "uiLabelStyle", 
           0.8f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, 0f, 
@@ -1748,6 +1760,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         }
         
+        // Hide the general status label and remove associated actions.
+        statusLabel.removeActions();
+        statusLabel.applyVisible(false);
+        
     }
     
     private void info_render_background()
@@ -2063,7 +2079,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     }
     
     // regionExit = Reference to the exit to process.
-    private void processExit(RegionMap.RegionExit regionExit)
+    // turnInd = Whether movement involved turning.
+    private void processExit(RegionMap.RegionExit regionExit, boolean turnInd)
     {
         
         // The function encapsulates logic related to the player moving to an exit.
@@ -2088,7 +2105,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         regionLabel.addAction_Fade();
         
         // Render updated view.
-        renderCurrentView();
+        renderCurrentView(turnInd, false);
         
     }
     
@@ -2113,10 +2130,23 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
-    private void renderCurrentView()
+    // turnInd = Whether movement involved turning.
+    // redrawInd = Whether redraw occurring -- like when waking screen or loading a game.
+    private void renderCurrentView(boolean turnInd, boolean redrawInd)
     {
         
-        // The function renders the current exploration view.
+        /*
+        The function renders the current exploration view.
+        
+        Beyond rendering, logic includes:
+        
+        1.  Adding event-supported chest when in square in front of player.
+        2.  Handling chest in same square as player.
+        3.  Remove existing actors related to current map location / tiles.
+        4.  Hide any treasure text.
+        5.  Render current map location / tiles.
+        6.  Reset flag for minimap rendering, indicating regeneration necessary.
+        */
         
         ArrayList<BaseActor> removeList; // List of actors to remove.
         
@@ -2161,7 +2191,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
-          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel);
+          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, turnInd, redrawInd);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -2214,13 +2244,13 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Render updated view.
         // Note:  Causes a redrawing of the minimap.
-        renderCurrentView();
+        renderCurrentView( false, true );
         
         // Loop through actors required for ui stage.
         for (Actor actor : uiStageActors)
         {
             // Add actor to ui stage.
-            uiStage.addActor(actor);
+            uiStage.addActor( actor );
         }
         
         // Update labels.
@@ -2231,6 +2261,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           Integer.toString(gameHD.getAvatar().getMax_hp()) );
         mpLabel.setLabelText( "MP " + Integer.toString(gameHD.getAvatar().getMp()) + "/" + 
           Integer.toString(gameHD.getAvatar().getMax_mp()) );
+        statusLabel.setLabelText( "" );
+        treasureLabel.setLabelText( "" );
+        
+        // Hide status label and remove all associated actions.
+        statusLabel.removeActions();
+        statusLabel.applyVisible( false );
         
         // Determine asset manager key related to armor.
         armorKey = gameHD.getAvatar().getArmor().getValue_PlayerEnum().toString();
@@ -2260,10 +2296,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         boolean movementNewPosInd; // Whether movement occurred that involved a new position.
         RegionMap.RegionExit regionExit; // Exit occurring at location to which player moves.
         RegionMap.RegionShop regionShop; // Shop occurring at location to which player moves.
+        boolean turnInd; // Whether movement involved turning.
         
         // Set defaults.
         movementInd = false;
         movementNewPosInd = false;
+        turnInd = false;
         
         // 1.  Handle player movement -- when in explore mode.
         
@@ -2312,6 +2350,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
                 // Flag that player stayed in same location.
                 movementNewPosInd = false;
+                
+                // Flag that player turned.
+                turnInd = true;
             }
 
             // If the user pressed the right arrow key, then...
@@ -2330,6 +2371,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
                 // Flag that player stayed in same location.
                 movementNewPosInd = false;
+                
+                // Flag that player turned.
+                turnInd = true;
             }
             
             // If movement occurred, then...
@@ -2366,7 +2410,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Exit exists.
                         
                         // Process exit.
-                        processExit(regionExit);
+                        processExit(regionExit, turnInd);
                         
                     } // End ... Exit exists at current location.
                     
@@ -2396,7 +2440,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             // Neither an exit nor a shop exists at current location.
                             
                             // Render updated view.
-                            renderCurrentView();
+                            renderCurrentView(turnInd, false);
                             
                         } // End ... If NO exit or shop exists at current location.
                            
@@ -2410,7 +2454,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Stayed in same location (turns, ...).
                     
                     // Render updated view.
-                    renderCurrentView();
+                    renderCurrentView(turnInd, false);
                     
                 }
                 

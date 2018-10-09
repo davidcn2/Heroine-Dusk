@@ -1225,16 +1225,25 @@ public class MazeMap
     // mpLabel = Label showing player magic points.
     // goldLabel = Label showing player gold.
     // regionLabel = Label showing the current region name.
+    // statusLabel = General status label.
+    // turnInd = Whether movement involved turning.
+    // redrawInd = Whether redrawing screen -- like when waking screen or loading game.
     public ArrayList<BaseActor> mazemap_render(int x, int y, HeroineEnum.FacingEnum facing, int viewWidth,
       CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, 
       CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel,
-      CustomLabel regionLabel)
+      CustomLabel regionLabel, CustomLabel statusLabel, boolean turnInd, boolean redrawInd)
     {
         
         /*
         The function returns the tiles used to render the passed location.
         The function also populates the hash map used as a cross reference between the positions and 
         array indices.
+        
+        Beyond building the tile array list, logic includes:
+        
+        1.  Adding event-supported chest when in square in front of player.
+        2.  Handling chest in same square as player.
+        3.  Handling hay bale in same square as player.
         
         The visibility cone is shaped like this:
 
@@ -1560,42 +1569,87 @@ public class MazeMap
             
         } // End ... If adding actor for chest -- immediately in front of player.
         
-        // 7.  Handle chest that exists in current location (at feet of player).
+        // 7.  Handle objects that exist in current location (at feet of player).
         
-        // If chest exists in current location, then...
-        if ( tileNbr == HeroineEnum.ImgTileEnum.IMG_TILE_CHEST_EXTERIOR.getValue() ||
-          tileNbr == HeroineEnum.ImgTileEnum.IMG_TILE_CHEST_INTERIOR.getValue() )
+        // If player has already moved, is headed forward or backward, and a redraw is not occurring, then...
+        if ( gameHD.getAvatar().movedInd() && !turnInd && !redrawInd )
         {
             
-            // Chest exists in current location.
+            // Player has already moved, is headed forward or backward, and a redraw is not occurring.
             
-            // Disable chest events -- related to square in front of player (not current location).
-            chestActiveInd = false;
+            // Depending on tile in current location...
+            switch ( HeroineEnum.ImgTileEnum.valueOf(tileNbr) ) {
+                
+                case IMG_TILE_CHEST_EXTERIOR:
+                case IMG_TILE_CHEST_INTERIOR:
+
+                    // Chest exists in current location.
+
+                    // Disable chest events -- related to square in front of player (not current location).
+                    chestActiveInd = false;
+
+                    // Play coin sound.
+                    gameHD.getSounds().playSound( HeroineEnum.SoundEnum.SOUND_COIN );
+
+                    // Take chest contents.
+                    chestList = acquireChestContents( x, y, heroineWeapon, weaponLabel, heroineArmor, 
+                      armorLabel, hpLabel, mpLabel, goldLabel );
+
+                    // Display the first chest / item.
+                    treasureImageInd = render_treasure( chestList.get(0).getPrimaryItem(), null, 
+                      tempTreasure, tempTreasureGroup, viewWidth, treasureLabel, 
+                      chestList.get(0).getPrimaryItemCount() );
+
+                    // If image available, draw treasure.
+                    // Always show associated label.
+                    draw_treasure( treasureImageInd, null, tempTreasure, tempTreasureGroup, treasureLabel, 
+                      viewWidth, 0.00f, regionLabel );
+
+                    // Remove chests from array list and hash map associated with current location.
+                    gameHD.getAtlasItems().removeChests( chestList, map_id, x, y );
+
+                    // Transform tile with chest to show similar image to background -- removing chest.
+                    transformChestTile( x, y );
+
+                    // Exit selector.
+                    break;
+
+                case IMG_TILE_HAY_PILE:
+
+                    // Hay pile exists in current location.
+
+                    // Play coin sound.
+                    gameHD.getSounds().playSound( HeroineEnum.SoundEnum.SOUND_COIN );
+                    
+                    // Display the "rest" text.
+                    statusLabel.setLabelText_Center( "YOU REST FOR AWHILE." );
+
+                    // Show status label and remove associated actions.
+                    statusLabel.removeActions();
+                    statusLabel.applyVisible( true );
+                    
+                    // Set up fade effect for status label.
+                    statusLabel.addAction_Fade();
+                    
+                    // Cause the player to sleep -- restore hp and mp and set new respawn point.
+                    gameHD.getAvatar().avatar_sleep( hpLabel, mpLabel );
+                    
+                    // Exit selector.
+                    break;
+
+                default:
+
+                    // No special logic.
+
+                    // Hide the general status label.
+                    statusLabel.applyVisible(false);
+
+                    // Exit selector.
+                    break;
+
+            } // End ... Depending on tile in current location.
             
-            // Play coin sound.
-            gameHD.getSounds().playSound( HeroineEnum.SoundEnum.SOUND_COIN );
-            
-            // Take chest contents.
-            chestList = acquireChestContents( x, y, heroineWeapon, weaponLabel, heroineArmor, 
-              armorLabel, hpLabel, mpLabel, goldLabel );
-            
-            // Display the first chest / item.
-            treasureImageInd = render_treasure( chestList.get(0).getPrimaryItem(), null, 
-              tempTreasure, tempTreasureGroup, viewWidth, treasureLabel, 
-              chestList.get(0).getPrimaryItemCount() );
-            
-            // If image available, draw treasure.
-            // Always show associated label.
-            draw_treasure( treasureImageInd, null, tempTreasure, tempTreasureGroup, treasureLabel, 
-              viewWidth, 0.00f, regionLabel );
-            
-            // Remove chests from array list and hash map associated with current location.
-            gameHD.getAtlasItems().removeChests( chestList, map_id, x, y );
-            
-            // Transform tile with chest to show similar image to background -- removing chest.
-            transformChestTile( x, y );
-            
-        }
+        } // End ... If player has already moved.
         
         // 8.  Return the array list with the base actors for the tiles.
         return tiles;

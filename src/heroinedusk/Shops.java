@@ -315,7 +315,7 @@ public class Shops
             gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
             
             // Adjust player spellbook.
-            gameHD.getAvatar().avatar_sleep();
+            gameHD.getAvatar().avatar_sleep(null, null);
             
             // Adjust dialog message.
             gameHD.getDialog().setMessage("You have rested");

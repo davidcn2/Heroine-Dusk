@@ -23,7 +23,7 @@ public class Avatar
     */
     
     // Declare object variables.
-    private ArrayList<HeroineEnum.SpellEnum> spellList; // List of player spells.
+    private final ArrayList<HeroineEnum.SpellEnum> spellList; // List of player spells.
     
     // Declare regular variables.
     private HeroineEnum.ArmorEnum armor; // Current armor.
@@ -37,7 +37,7 @@ public class Avatar
     private boolean moved; // Whether player has moved yet.
     private HeroineEnum.FacingEnum facing; // Current direction player is facing.
     private int map_id; // Current map section in which player resides.
-    private MapLocation sleeploc; // Sleep location / respawn point.
+    private final MapLocation sleeploc; // Sleep location / respawn point.
     private HeroineEnum.SpellEnum spellbook; // Current spellbook of player.
       // Contains spells in range of 0 to value.
     private HeroineEnum.WeaponEnum weapon; // Current weapon.
@@ -135,6 +135,9 @@ public class Avatar
                 x = newX;
                 y = newY;
 
+                // Flag player as having moved.
+                moved = true;
+                
                 // Flag movement as occurring.
                 movementInd = true;
 
@@ -144,7 +147,7 @@ public class Avatar
             {
 
                 // Cannot walk to proposed position.
-
+                
                 // Play sound.
                 gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_BLOCKED);
 
@@ -176,7 +179,9 @@ public class Avatar
         
     }
     
-    public void avatar_sleep()
+    // hpLabel = Label showing player hit points.
+    // mpLabel = Label showing player magic points.
+    public void avatar_sleep(CustomLabel hpLabel, CustomLabel mpLabel)
     {
         
         // The function handles the player sleeping -- restores HP and MP and sets the respawn point.
@@ -184,7 +189,23 @@ public class Avatar
         // Restore HP and MP and set respawn point.
         hp = max_hp;
         mp = max_mp;
-        // To Do:  avatar.sleeploc = [mazemap.current_id, avatar.x, avatar.y];
+        
+        // If hit points label passed, then...
+        if (hpLabel != null)
+        {
+            
+            // Hit points label passed.
+            
+            // Update player hit points label.
+            hpLabel.setLabelText( getHpText() );
+
+            // Update player magic points label.
+            mpLabel.setLabelText( getMpText() );
+            
+        }
+        
+        // Set sleep location.
+        setSleepLoc( map_id, x, y );
         
     }
     
@@ -451,6 +472,10 @@ public class Avatar
     
     public String getHpText() {
         return "HP " + Integer.toString(hp) + "/" + Integer.toString(max_hp);
+    }
+    
+    public boolean movedInd() {
+        return moved;
     }
     
     public int getMax_mp() {
