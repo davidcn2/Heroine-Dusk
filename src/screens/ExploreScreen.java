@@ -203,7 +203,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
-          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel);
+          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -1661,7 +1661,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             // Hide any visible treasure.
             
             // If treasure actor exists, then...
-            if (tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE)) != null)    
+            if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE) != null)    
             {
                 // Treasure actor exists.
                 
@@ -1673,7 +1673,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             }
             
             // If treasure actor (group) exists, then...
-            if (tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP)) != null)    
+            if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP) != null)    
             {
                 // Treasure actor (group) exists.
                 
@@ -2161,7 +2161,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
-          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel);
+          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {

@@ -550,6 +550,40 @@ public class CustomLabel
         
     }
     
+    // labelText = Text to display in label.
+    // pos_y = Vertical position at which to place label.
+    public void addActionCustom_Center_AdjY(String labelText, float pos_y)
+    {
+        
+        // The function adds a custom action to the hash map that displays new text that centers horizontally
+        // and moves to the passed vertical position.
+        
+        Action action; // Action to add to hash map.
+        
+        // Create action to add to hash map.
+        action = new Action() {
+            @Override
+            public boolean act(float delta) {
+
+                // The function changes the texture of the actor.
+
+                // Update the label text and center horizontally.
+                setLabelText_Center( labelText );
+                
+                // Adjust vertical position of label.
+                setPosY( pos_y );
+                
+                // Return a value.
+                return true;
+
+            }
+        };
+
+        // Add custom action.
+        customActions.put( "CENTER NEW TEXT - ADJ Y", action );
+        
+    }
+    
     public void addAction_Fade()
     {
         
@@ -661,10 +695,11 @@ public class CustomLabel
     {
         
         // The function sets up a fade out / in effect for the label.
+        // The label appears centered across the screen horizontally.
         // Fade in over the course of "fadeIn" seconds after "delay" elapse.
         
         // Example for use:  To fade out and in over the course of 1.0 seconds each after 
-        //   2.0 elapse ... addAction_FadeIn(2.0f, 1.0f, 1.0f, "test");
+        //   2.0 elapse ... addAction_FadeOutIn_Center(2.0f, 1.0f, 1.0f, "test");
         
         // Add custom action to hash map.
         addActionCustom_Center(labelText);
@@ -682,6 +717,41 @@ public class CustomLabel
         
         // Set up fade effect for the label.
         customLabel.addAction(actionMapping.get("FadeOutInCenter"));
+        
+    }
+    
+    // delay = Time, in seconds, before fade occurs.
+    // fadeIn = Duration, in seconds, of fade in effect.
+    // fadeOut = Duration, in seconds, of fade out effect.
+    // labelText = Text to display in label.
+    // pos_y = Vertical position at which to place label.
+    public void addAction_FadeOutIn_Center_AdjY(float delay, float fadeOut, float fadeIn, String labelText,
+      float pos_y)
+    {
+        
+        // The function sets up a fade out / in effect for the label.
+        // The label appears centered across the screen horizontally and at the passed y-coordinate.
+        // Fade in over the course of "fadeIn" seconds after "delay" elapse.
+        
+        // Example for use:  To fade out and in over the course of 1.0 seconds each after 
+        //   2.0 elapse ... addAction_FadeOutIn_Center_AdjY(2.0f, 1.0f, 1.0f, "test", 40.0f);
+        
+        // Add custom action to hash map.
+        addActionCustom_Center_AdjY(labelText, pos_y);
+        
+        // Add fade action to hash map.
+        actionMapping.putIfAbsent("FadeOutInCenterAdjY", 
+          Actions.sequence(
+            Actions.delay(delay),
+            Actions.fadeOut(fadeOut),
+            Actions.alpha(0),
+            Actions.visible(true),
+            customActions.get("CENTER NEW TEXT - ADJ Y"),
+            Actions.fadeIn(fadeIn)
+          ));
+        
+        // Set up fade effect for the label.
+        customLabel.addAction(actionMapping.get("FadeOutInCenterAdjY"));
         
     }
     
