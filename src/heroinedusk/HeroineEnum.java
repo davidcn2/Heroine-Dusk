@@ -1062,7 +1062,8 @@ public class HeroineEnum
     public enum ImgOtherEnum 
     {
         
-        IMG_OTHER_CHEST (0, "chest.png", "other_chest")
+        IMG_OTHER_CHEST (0, "chest.png", "other_chest"),
+        IMG_OTHER_SKULL_PILE (1, "skull_pile.png", "skull_pile")
         ; // semicolon needed when fields / methods follow
         
         private final int imgOtherEnum; // Enumerations related to other images.
@@ -2374,7 +2375,8 @@ public class HeroineEnum
         
         TILE_MAP_KEY_CHEST (0), // Key related to chest "tile".
         TILE_MAP_KEY_TREASURE (1), // Key related to treasure "tile".
-        TILE_MAP_KEY_TREASURE_GROUP (2) // Key related to treasure group "tile".
+        TILE_MAP_KEY_TREASURE_GROUP (2), // Key related to treasure group "tile".
+        TILE_MAP_KEY_BONE_PILE (3) // Key related to bone pile "tile".
         ; // semicolon needed when fields / methods follow
 
         private final Integer tileMapKeyEnum; // Enumerations related to (special) tile map keys (associated with tileMap hash map in MazeMap class).

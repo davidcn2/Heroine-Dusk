@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -68,9 +69,11 @@ public class MazeMap
       // Example for use -- get(x).get(y):  Integer x = regionTiles.get(0).get(0);
     private HashMap<Integer, Integer> tileMap; // Cross reference with key = position (related to tile image 
       // offset) and value = array index (in array list with tile actors).  Also, includes special key values
-      // for chest and treasure.
+      // for chest, treasure, and skull pile.
     
     // Declare regular variables.
+    private boolean bonePileActiveInd; // Whehter bone pile in square in front of player enabled.
+      // Disabled in information view and after burning.
     private boolean chestActiveInd; // Whether chest in square in front of (NOT UNDER) player enabled.
     private int chestOtherItemIndex; // Array index of current additional chest item to show -- in 
       // chestOtherItems.
@@ -91,6 +94,7 @@ public class MazeMap
     private final int regionWidth; // Region width, in tiles.
     
     // Declare constants.
+    private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1);
     //private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{65, 56, 74, 74, 50, 63, 41, 90, 87, 29};
     private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{36, 27, 45, 45, 21, 34, 12, 61, 58, 0};
     //private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{93, 96, 95, 86, 80, 78, 92, 76, 94, 77};
@@ -353,6 +357,222 @@ public class MazeMap
         
         // Return the list of chests at the passed position.
         return chestList;
+        
+    }
+    
+    // bonePileActor = Reference to BaseActor for the bone pile tile.
+    // viewWidth = Width of the stage.
+    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
+    private void addEvent_BonePileActor(BaseActor bonePileActor, int viewWidth, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic)
+    {
+        
+        // The function adds events to the passed bone pile related tile (BaseActor).
+        // Events include touchDown, touchUp, mouseMoved, enter, and exit.
+        
+        InputListener tileEvent; // Events to add to passed button (BaseActor).
+        
+        // Craft event logic to add to passed button (BaseActor).
+        tileEvent = new InputListener()
+            {
+                
+                boolean ignoreNextExitEvent; // Whether to ignore next exit event (used with touchUp / exit).
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user touches the screen or presses a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS. 
+                    // Notes:  Occurs when user press down mouse on button.
+                    // Notes:  Event (touchDown) necessary to reach touchUp.
+                    
+                    // Return a value.
+                    return true;
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public void touchUp(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user lifts a finger or released a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
+                    // Notes:  Occurs when user releases mouse on button.
+                        
+                    // If bone pile active, then...
+                    if (bonePileActiveInd)
+                    {
+                        
+                        // Bone pile active.
+                    
+                        // Flag to ignore next exit event.
+                        ignoreNextExitEvent = true;
+
+                        System.out.println("Click on bone pile occurred");
+                        
+                    }
+                    
+                } // End ... touchUp event.
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                @Override
+                public boolean mouseMoved (InputEvent event, float x, float y)
+                {
+                
+                    // The function occurs when the mouse cursor or a finger touch is moved over the actor and
+                    // a button is not down.  The event only occurs on the desktop.
+                    
+                    // If bone pile active, then...
+                    if (bonePileActiveInd)
+                    {
+                        
+                        // Bone pile active.
+                    
+                        // Set position of burn button center on current mouse position.
+                        mapActionButtonMagic.get(
+                          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setX(bonePileActor.getX() + 
+                          x - mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).getWidth() 
+                          / 2 );
+                        mapActionButtonMagic.get(
+                          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setY(bonePileActor.getY() + y - 
+                          mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).getHeight() 
+                          / 2 );
+
+                        // If player has no magic left, then...
+                        if (gameHD.getAvatar().getMp() == 0)
+                        {
+
+                            // Player has no magic left.
+
+                            // Apply a dark shade to the button to signify not currently enabled.
+                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( 
+                              COLOR_MED_GRAY );
+
+                        }
+
+                        else
+                        {
+
+                            // Player has magic left.
+
+                            // Removing shading from button to signify enabled.
+                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor(
+                              Color.WHITE );
+
+                        }
+
+                        // Set burn button to visible.
+                        mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(true);
+                    
+                    } // End ... If bone pile active.
+                        
+                    // Do not handle event.
+                    return false;
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // fromActor = Reference to actor losing focus.
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
+                {
+                    
+                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
+                    
+                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                    // (pointer will be -1).
+                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
+                        
+                    // If bone pile active, then...
+                    if (bonePileActiveInd)
+                    {
+                        
+                        // Bone pile active.
+                    
+                        // Apply a dark shade to the bone pile.
+                        bonePileActor.setColor(Color.LIGHT_GRAY);
+                        
+                    }
+                    
+                } // End ... enter event.
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // toActor = Reference to actor gaining focus.
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
+                {
+                    
+                    // The function occurs when the mouse cursor or a finger touch is moved out of the actor.
+                    
+                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                    // (pointer will be -1).
+                    // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
+                    
+                    // If bone pile active, then...
+                    if (bonePileActiveInd)
+                    {
+                        
+                        // Bone pile active.
+                    
+                        // If ignoring next exit event, then...
+                        if (ignoreNextExitEvent)
+
+                            // Ignoring next exit event.
+                            
+                            // Flag to process next exit event.
+                            ignoreNextExitEvent = false;
+
+                        // Otherwise, ...
+                        else
+                        {
+                            
+                            // Process exit event.
+                            
+                            // If fade not occurring, then...
+                            if (bonePileActor.getActionMapCount() == 0)
+                            {
+                                
+                                // Fade not occurring yet.
+
+                                // Return bone pile to normal color.
+                                bonePileActor.setColor(Color.WHITE);
+                                
+                            }
+                            
+                            // Set burn button to not visible.
+                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
+                        
+                        } // Processing exit event.
+                            
+                    } // End ... If bone pile active.
+                        
+                } // End ... exit event.
+                
+            }; // End ... InputListener.
+        
+        // Add event to tile actor.
+        bonePileActor.addListener(tileEvent);
         
     }
     
@@ -1228,10 +1448,14 @@ public class MazeMap
     // statusLabel = General status label.
     // turnInd = Whether movement involved turning.
     // redrawInd = Whether redrawing screen -- like when waking screen or loading game.
+    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
+    // mapActionButtonEnabled = Hash map containing enabled status of spell action buttons.
     public ArrayList<BaseActor> mazemap_render(int x, int y, HeroineEnum.FacingEnum facing, int viewWidth,
       CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, 
       CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel,
-      CustomLabel regionLabel, CustomLabel statusLabel, boolean turnInd, boolean redrawInd)
+      CustomLabel regionLabel, CustomLabel statusLabel, boolean turnInd, boolean redrawInd,
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic, 
+      Map<String, Boolean> mapActionButtonEnabled)
     {
         
         /*
@@ -1244,6 +1468,7 @@ public class MazeMap
         1.  Adding event-supported chest when in square in front of player.
         2.  Handling chest in same square as player.
         3.  Handling hay bale in same square as player.
+        4.  Adding event-supported skull pile in square in front of player.
         
         The visibility cone is shaped like this:
 
@@ -1263,6 +1488,7 @@ public class MazeMap
         */
         
         String actorName; // Name of current actor in loop.
+        boolean bonePileInd; // Whether bone pile exists immediately in front of player.
         boolean chestInd; // Whether chest exists immediately in front of player.
         ArrayList<Chest> chestList; // List of chests at the passed position.
         boolean chestNearbyInd; // Whether chest exists either in current location or immediately in front 
@@ -1270,6 +1496,7 @@ public class MazeMap
         int counter; // Used to increment through array list of BaseActor objects associated with tiles.
         Integer key; // Key to use when adding value to hash map.
         ArrayList<BaseActor> removeList; // List of actors to remove.
+        BaseActor tempBonePile; // Holder for the (bone pile) actor.
         BaseActor tempChest; // Holder for the (chest) actor.
         BaseActor tempTreasure; // Holder for the (treasure) actor.  For non-group functionality.
         BaseActor tempTreasureGroup; // Holder for the (treasure) actor.  For group functionality.
@@ -1280,7 +1507,10 @@ public class MazeMap
         
         // 1.  Set defaults.
         chestInd = false;
+        bonePileInd = false;
         chestNearbyInd = false;
+        chestActiveInd = false;
+        bonePileActiveInd = false;
         virtualString = "";
         goldPile = null;
         tempTreasure = null;
@@ -1450,7 +1680,7 @@ public class MazeMap
             
         }
         
-        // 5.  Check whether chest exists immediately in front of player.
+        // 5.  Check whether chest or bone pile exists immediately in front of player.
         
         // Loop through tiles.
         for (BaseActor tile : tiles)
@@ -1479,7 +1709,24 @@ public class MazeMap
 
                 }
                 
-            }
+                // Otherwise, if tile associated with bone pile, then...
+                else if (tile.getVirtualString().substring(0, 9).equalsIgnoreCase("Bone Pile"))
+                {
+                    
+                    // Tile associated with bone pile.
+                    
+                    // Flag bone pile.
+                    bonePileInd = true;
+                    
+                    // Copy virtual string.
+                    virtualString = tile.getVirtualString();
+                    
+                    // Exit loop.
+                    break;
+                    
+                }
+                
+            } // End ... If tile metadata five characters or more.
             
         } // End ... Loop through tiles.
         
@@ -1569,7 +1816,61 @@ public class MazeMap
             
         } // End ... If adding actor for chest -- immediately in front of player.
         
-        // 7.  Handle objects that exist in current location (at feet of player).
+        // 7.  If necessary, add actor for bone pile.
+        //     If no bone pile exists, disable burn button.
+        
+        // If bone pile exists immediately in front of player, then...
+        if ( bonePileInd )
+        {
+            
+            // Bone pile exists immediately in front of player.
+            
+            System.out.println("Bone pile exists immediately in front of player.");
+            
+            // Create actor for the bone pile, setting position in the next step.
+            tempBonePile = new BaseActor( "Bone Pile", 
+              gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_SKULL_PILE.getValue_Key()), 
+              0f, 0f );
+            
+            // Set position of actor -- centered horizontally and up about 1/4 from the bottom.
+            tempBonePile.setPosition( (float)((viewWidth - tempBonePile.getWidth()) / 2), 
+              28f * gameHD.getConfig().getScale() );
+            
+            // Set origin of actor to center of associated image.
+            tempBonePile.setOriginCenter();
+            
+            // Set virtual string of actor.
+            tempBonePile.setVirtualString( virtualString );
+            
+            // Add events to actor.
+            addEvent_BonePileActor( tempBonePile, viewWidth, mapActionButtonMagic );
+            
+            // Add bone pile actor to the list.
+            tiles.add( tempBonePile );
+            
+            // Add entry to cross reference hash map.
+            tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE.getValue(), counter );
+            
+            // Enable burn button.
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN.toString(), true);
+            
+            // Incement hash map counter.
+            counter++;
+            
+        } // End ... If bone pile exists immediately in front of player.
+        
+        else
+        {
+            
+            // Bone pile DOES NOT exist immediately in front of player.
+            
+            // Disable burn button.
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN.toString(), false);
+            
+        }
+            
+        
+        // 8.  Handle objects that exist in current location (at feet of player).
         
         // If player has already moved, is headed forward or backward, and a redraw is not occurring, then...
         if ( gameHD.getAvatar().movedInd() && !turnInd && !redrawInd )
@@ -1651,7 +1952,7 @@ public class MazeMap
             
         } // End ... If player has already moved.
         
-        // 8.  Return the array list with the base actors for the tiles.
+        // 9.  Return the array list with the base actors for the tiles.
         return tiles;
         
     }
@@ -1711,35 +2012,78 @@ public class MazeMap
                     
                     // Looking at position immediately in front of player.
                     
-                    // If tile represents a chest in an exterior environment, then...
-                    if (tileNbr == HeroineEnum.ImgTileEnum.IMG_TILE_CHEST_EXTERIOR.getValue())
-                    {
-                        // Tile represents a chest in an exterior environment.
+                    // Depending on what exists in tile in front of player, ...
+                    switch (HeroineEnum.ImgTileEnum.valueOf(tileNbr)) {
                         
-                        // Switch out the chest for the floor.
-                        tileNbr = HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_FLOOR.getValue();
-                        
-                        // Store metadata about the chest.
-                        virtualString = "Chest|" + Integer.toString(map_id) + "," + Integer.toString(pos_x) + 
-                          "," + Integer.toString(pos_y);
+                        case IMG_TILE_CHEST_EXTERIOR:
+                            
+                            // Tile represents a chest in an exterior environment.
+                            
+                            // Switch out the chest for the floor.
+                            tileNbr = HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_FLOOR.getValue();
+                            
+                            // Store metadata about the chest.
+                            virtualString = "Chest|" + Integer.toString(map_id) + "," + 
+                              Integer.toString(pos_x) + "," + Integer.toString(pos_y);
+                            
+                            // Enable chest events -- disable later if chest exists both immediately in 
+                            // front of player and at feet.
+                            chestActiveInd = true;
+                            
+                            // Exit selector.
+                            break;
+                     
+                        case IMG_TILE_CHEST_INTERIOR:
+                            
+                            // Tile represents a chest in an interior environment.
+                            
+                            // Switch out the chest for the ceiling.
+                            tileNbr = HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_CEILING.getValue();
+
+                            // Store metadata about the chest.
+                            virtualString = "Chest|" + Integer.toString(map_id) + "," + 
+                              Integer.toString(pos_x) + "," + Integer.toString(pos_y);
+                            
+                            // Enable chest events -- disable later if chest exists both immediately in 
+                            // front of player and at feet.
+                            chestActiveInd = true;
+                            
+                            // Exit selector.
+                            break;
+                            
+                        case IMG_TILE_SKULL_PILE:
+                            
+                            // Store metadata about the skull pile.
+                            virtualString = "Bone Pile|" + Integer.toString(map_id) + "," + 
+                              Integer.toString(pos_x) + "," + Integer.toString(pos_y);
+                            
+                            // Burning will replace tile with dungeon ceiling.
+                            
+                            // For now, display the dungeon ceiling with an added tile with the skull pile.
+                            // Make the tile replacement temporary until the burning occurs.
+                            tileNbr = HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_CEILING.getValue();
+                            
+                            // Enable bone pile events -- disable later if displaying information view.
+                            bonePileActiveInd = true;
+                            
+                            // Exit selector.
+                            break;
+                            
+                        case IMG_TILE_LOCKED_DOOR:
+                            
+                            // Store metadata about the skull pile.
+                            virtualString = "Locked Door|" + Integer.toString(map_id) + "," + 
+                              Integer.toString(pos_x) + "," + Integer.toString(pos_y);
+                            
+                            // Exit selector.
+                            break;
+                            
+                        default:
+                            
+                            // Exit selector.
+                            break;
+                            
                     }
-                    
-                    // Otherwise, if tile presents a chest in an interior environment, then...
-                    else if (tileNbr == HeroineEnum.ImgTileEnum.IMG_TILE_CHEST_INTERIOR.getValue())
-                    {
-                        // Tile represents a chest in an interior environment.
-                        
-                        // Switch out the chest for the ceiling.
-                        tileNbr = HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_CEILING.getValue();
-                        
-                        // Store metadata about the chest.
-                        virtualString = "Chest|" + Integer.toString(map_id) + "," + Integer.toString(pos_x) + 
-                          "," + Integer.toString(pos_y);
-                    }
-                    
-                    // Enable chest events -- disable later if chest exists both immediately in front of
-                    // player and at feet.
-                    chestActiveInd = true;
                     
                 } // End ... If looking at position immediately in front of player.
                 
@@ -1988,6 +2332,14 @@ public class MazeMap
         // Return the array list with the base actors for the icons.
         return icons;
 
+    }
+    
+    // tileMapKeyEnum = Enumerated value for tile type to remove -- chest, treasure, bone pile, ...
+    public void removeTileMap_Value(HeroineEnum.TileMapKeyEnum tileMapKeyEnum) 
+    {
+        // The function removes the value from the tile map hash map related to the passed key.
+        // The key is limited to one of the values in the enumerated list -- chest, treasure, ...
+        tileMap.remove(tileMapKeyEnum.getValue()); 
     }
     
     // chestActor = Reference to BaseActor for the chest tile.
@@ -2332,6 +2684,10 @@ public class MazeMap
     
     // Getters and setters below...
     
+    public void setBonePileActiveInd(boolean bonePileActiveInd) {
+        this.bonePileActiveInd = bonePileActiveInd;
+    }
+    
     public RegionMap getCurrentRegion() {
         return currentRegion;
     }
@@ -2342,6 +2698,164 @@ public class MazeMap
         // Returns the enumerated value for the tile at the passed location.
         // Reverses y and x to ease working with tiles.
         return HeroineEnum.ImgTileEnum.valueOf(regionTiles.get(posY).get(posX));
+    }
+    
+    // avatar = Reference to player information.
+    public HeroineEnum.ImgTileEnum getImgTileEnum_CurrentLoc(Avatar avatar) {
+        // Returns the enumerated value for the tile at the current player location.
+        // Reverses y and x to ease working with tiles.
+        return HeroineEnum.ImgTileEnum.valueOf(regionTiles.get(avatar.getY()).get(avatar.getX()));
+    }
+    
+    // avatar = Reference to player information.
+    // imgTileEnum = Enumerated value to which to set tile.
+    public void setImgTileEnum_CurrentLoc(Avatar avatar, HeroineEnum.ImgTileEnum imgTileEnum) {
+        
+        // Sets the enumerated value for the tile at the current player location.
+        // Reverses y and x to ease working with tiles.
+        
+        // Alter tile.
+        currentRegion.setRegionTileNbr( avatar.getY(), avatar.getX(), imgTileEnum.getValue() );
+        
+    }
+    
+    // avatar = Reference to player information.
+    public HeroineEnum.ImgTileEnum getImgTileEnum_ForwardLoc(Avatar avatar) {
+        
+        // Returns the enumerated value for the tile in front of the current player location.
+        // Reverses y and x to ease working with tiles.
+        
+        HeroineEnum.ImgTileEnum imgTileEnum; // Tile in front of the current player location.
+        
+        // Depending on direction player facing, ...
+        switch (avatar.getFacing()) {
+            
+            case NORTH:
+                
+                // Facing north.
+                
+                // Set value of tile to return.
+                imgTileEnum = 
+                  HeroineEnum.ImgTileEnum.valueOf( regionTiles.get(avatar.getY() - 1).get(avatar.getX()) );
+                
+                // Exit selector.
+                break;
+                
+            case SOUTH:
+                
+                // Facing south.
+                
+                // Set value of tile to return.
+                imgTileEnum = 
+                  HeroineEnum.ImgTileEnum.valueOf( regionTiles.get(avatar.getY() + 1).get(avatar.getX()) );
+                
+                // Exit selector.
+                break;
+                
+            case EAST:
+                
+                // Facing east.
+                
+                // Set value of tile to return.
+                imgTileEnum = 
+                  HeroineEnum.ImgTileEnum.valueOf( regionTiles.get(avatar.getY()).get(avatar.getX() + 1) );
+                
+                // Exit selector.
+                break;
+                
+            case WEST:
+                
+                // Facing west.
+                
+                // Set value of tile to return.
+                imgTileEnum = 
+                  HeroineEnum.ImgTileEnum.valueOf( regionTiles.get(avatar.getY()).get(avatar.getX() - 1) );
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Facing invalid direction.
+            
+                // Set value to return to null.
+                imgTileEnum = null;
+                
+                // Display warning.
+                System.out.println("Warning:  Player facing invalid direction while checking tile at forward location.");
+                
+                // Exit selector.
+                break;
+                
+        }
+        
+        // Return value.
+        return imgTileEnum;
+    
+    }
+    
+    // avatar = Reference to player information.
+    // imgTileEnum = Enumerated value to which to set tile.
+    public void setImgTileEnum_ForwardLoc(Avatar avatar, HeroineEnum.ImgTileEnum imgTileEnum) {
+        
+        // Sets the enumerated value for the tile in front of the current player location to the passed value.
+        // Reverses y and x to ease working with tiles.
+        
+        // Depending on direction player facing, ...
+        switch (avatar.getFacing()) {
+            
+            case NORTH:
+                
+                // Facing north.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbr( avatar.getY() - 1, avatar.getX(), imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case SOUTH:
+                
+                // Facing south.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbr( avatar.getY() + 1, avatar.getX(), imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case EAST:
+                
+                // Facing east.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbr( avatar.getY(), avatar.getX() + 1, imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case WEST:
+                
+                // Facing west.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbr( avatar.getY(), avatar.getX() - 1, imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Facing invalid direction.
+                
+                // Display warning.
+                System.out.println("Warning:  Player facing invalid direction while checking tile at forward location.");
+                
+                // Exit selector.
+                break;
+                
+        }
+    
     }
     
     public int getMap_id() {

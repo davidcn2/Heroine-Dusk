@@ -121,10 +121,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private float minimapOriginalX; // Original position (x-coordinate) of the minimap on the stage before drag operation.
     private float minimapOriginalY; // Original position (y-coordinate) of the minimap on the stage before drag operation.
     private boolean minimapRenderInd; // Whether minimap rendered for current location yet.
-    private HeroineEnum.ItemEnum treasure_id; // Treasure (item) found by player in current location.
     
     // Declare constants.
-    private final Color colorMedGray = new Color(0.50f, 0.50f, 0.50f, 1);
+    private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1);
     
     // hdg = Reference to Heroine Dusk (main) game.
     // windowWidth = Width to use for stages.
@@ -218,7 +217,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
-          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, false, false);
+          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, false, false,
+          mapActionButtonMagic, mapActionButtonEnabled);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -445,11 +445,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     
                     // If ignoring next exit event, then...
                     if (mapIgnoreNextExitEvent_ActionButtons.get(buttonActor.getActorName()))
-                        
+                    {
                         // Ignoring next exit event.
                         
                         // Flag to process next exit event.
                         mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), false);
+                    }
                     
                     // Otherwise, ...
                     else
@@ -473,7 +474,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             // Action button disabled.
                             
                             // Return button to disabled color.
-                            buttonActor.setColor(colorMedGray);
+                            buttonActor.setColor(COLOR_MED_GRAY);
                             
                         }
                     
@@ -785,8 +786,16 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
                     
-                    // Hide the minimap.
-                    minimapGroup.setVisible(false);
+                    // If minimap group initialized, then...
+                    if (minimapGroup != null)
+                    {
+                        
+                        // Minimap group initialized.
+                        
+                        // Hide the minimap.
+                        minimapGroup.setVisible(false);
+                        
+                    }
                     
                     // If player in combat, then...
                     if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
@@ -806,8 +815,76 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         // Player NOT in combat.
                         
-                        // Render "(NO TARGET)" message.
-                        info_render_no_target();
+                        // System.out.println("Tile: " + mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()));
+                        
+                        // If tile in front of player skull pile, then...
+                        if (mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()) == 
+                          HeroineEnum.ImgTileEnum.IMG_TILE_SKULL_PILE)
+                        {
+                            
+                            // Burn the skull pile in the tile in front of the player.
+                            
+                            // Play fire sound.
+                            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_FIRE);
+                            
+                            // Set up an action to fade out the skull pile.
+                            tiles.get(
+                              mazemap.getTileMap_Value(
+                              HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE)).addAction_FadeOut(
+                              0.25f, 0.75f);
+                            
+                            // Disable skull pile events.
+                            mazemap.setBonePileActiveInd(false);
+                            
+                            // Remove skull piles from array list and hash map associated with current location.
+                            gameHD.getAtlasItems().removeBonePileFirst(
+                              gameHD.getAvatar().getMapLocation_ForwardLoc());
+                            
+                            // Remove tile showing skull pile.
+                            mazemap.removeTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE);
+                            
+                            // Change tile in front of player to dungeon floor.
+                            mazemap.setImgTileEnum_ForwardLoc(gameHD.getAvatar(), 
+                              HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_CEILING);
+                            
+                            // Move burn button to original location (in spell list / area).
+                
+                            // Pos X = -18 * scale factor.  -- Relative to right of screen.
+                            // Pos Y = +62 * scale factor.  -- Relative to bottom of screen.
+                            mapActionButtonMagic.get( 
+                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setRelativePosition(null, 
+                              CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
+                              uiStage.getHeight(), -18f * gameHD.getConfig().getScale(), 
+                              62f * gameHD.getConfig().getScale() );
+                            
+                            // Decrement player magic points.
+                            gameHD.getAvatar().decrement_mp();
+                            
+                            // Display action-related text.
+                            info_update_powerResponseLines("BURN!", "CLEARED PATH!");
+                            
+                            // Set the burn button to not visible.
+                            mapActionButtonMagic.get(
+                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
+                            
+                            // Apply a dark shade to the burn button to signify not currently enabled.
+                            mapActionButtonMagic.get(
+                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( COLOR_MED_GRAY );
+                            
+                            // Disable burn button.
+                            mapActionButtonEnabled.put(buttonActor.getActorName(), false);
+                            
+                            // TO DO:  Add avatar save.
+                            
+                        }
+                        
+                        else
+                        {
+                            // Trying to burn something other than a skull pile.
+                            
+                            // Render "(NO TARGET)" message.
+                            info_render_no_target();
+                        }
                         
                     }
                     
@@ -1340,10 +1417,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         if (gameHD.getAvatar().getHp_AtMax() || gameHD.getAvatar().getMp() == 0)
         {
             
-            // Player at maximum hit points.
+            // Player at maximum hit points or has no magic left.
             
             // Apply a dark shade to the button to signify not currently enabled.
-            temp.setColor( colorMedGray );
+            temp.setColor( COLOR_MED_GRAY );
             
         }
         
@@ -1378,7 +1455,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           62f * gameHD.getConfig().getScale(), CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE_REGION );
         
         // Apply a dark shade to the button to signify not currently enabled.
-        temp.setColor( colorMedGray );
+        temp.setColor( COLOR_MED_GRAY );
         
         // Add basic events (enter, exit) to button.
         addEventBasics( temp );
@@ -1411,7 +1488,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           42f * gameHD.getConfig().getScale(), CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE_REGION );
         
         // Apply a dark shade to the button to signify not currently enabled.
-        temp.setColor( colorMedGray );
+        temp.setColor( COLOR_MED_GRAY );
         
         // Add basic events (enter, exit) to button.
         addEventBasics( temp );
@@ -1444,7 +1521,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           42f * gameHD.getConfig().getScale(), CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE_REGION );
         
         // Apply a dark shade to the button to signify not currently enabled.
-        temp.setColor( colorMedGray );
+        temp.setColor( COLOR_MED_GRAY );
         
         // Add basic events (enter, exit) to button.
         addEventBasics( temp );
@@ -1477,7 +1554,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           22f * gameHD.getConfig().getScale(), CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE_REGION );
         
         // Apply a dark shade to the button to signify not currently enabled.
-        temp.setColor( colorMedGray );
+        temp.setColor( COLOR_MED_GRAY );
         
         // Add basic events (enter, exit) to button.
         addEventBasics( temp );
@@ -1510,7 +1587,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
           22f * gameHD.getConfig().getScale(), CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE_REGION );
         
         // Apply a dark shade to the button to signify not currently enabled.
-        temp.setColor( colorMedGray );
+        temp.setColor( COLOR_MED_GRAY );
         
         // Add basic events (enter, exit) to button.
         addEventBasics( temp );
@@ -1670,7 +1747,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
             }
             
-            // Hide any visible treasure.
+            // Hide any visible secondary items.
             
             // If treasure actor exists, then...
             if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE) != null)    
@@ -1691,6 +1768,26 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
                 // Hide treasure actor (group).
                 tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP)).setVisible(false);
+            }
+            
+            // If bone pile actor exists, then...
+            if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE) != null)    
+            {
+                // Bone pile actor exists.
+                
+                // Move burn button to original location (in spell list / area).
+                
+                // Pos X = -18 * scale factor.  -- Relative to right of screen.
+                // Pos Y = +62 * scale factor.  -- Relative to bottom of screen.
+                mapActionButtonMagic.get( 
+                  HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setRelativePosition(null, 
+                  CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
+                  uiStage.getHeight(), -18f * gameHD.getConfig().getScale(), 
+                  62f * gameHD.getConfig().getScale() );
+                
+                // Disable bone pile actor events.
+                mazemap.setBonePileActiveInd(false);
+                
             }
                 
         } // End ... If information view selected.
@@ -1757,6 +1854,16 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
             // Hide minimap group.
             minimapGroup.setVisible(false);
+            
+            // If bone pile actor exists, then...
+            if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE) != null)    
+            {
+                // Bone pile actor exists.
+                
+                // Enable bone pile actor events.
+                mazemap.setBonePileActiveInd(true);
+                
+            }
             
         }
         
@@ -2031,7 +2138,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Update power action labels.
         powerActionLabel.setLabelText("(NO TARGET)");
         
-        // Display power action  labels.
+        // Display power action labels.
         powerActionLabel.applyVisible(true);
         
         // Set up fade effect for power action label.
@@ -2075,6 +2182,28 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( powerResultLabel.getLabel() );
+        
+    }
+    
+    // powerAction = Text to show for the first line -- power action.
+    // powerResult = Text to show for the second line -- power result.
+    private void info_update_powerResponseLines(String powerAction, String powerResult)
+    {
+        
+        // The function updates the power action and result labels to display the passed messages.
+        // The function fades the messages after displaying them.
+        
+        // Update power action and result labels.
+        powerActionLabel.setLabelText(powerAction);
+        powerResultLabel.setLabelText(powerResult);
+        
+        // Display power action and result labels.
+        powerActionLabel.applyVisible(true);
+        powerResultLabel.applyVisible(true);
+        
+        // Set up fade effect for power action and result labels.
+        powerActionLabel.addAction_Fade();
+        powerResultLabel.addAction_Fade();
         
     }
     
@@ -2191,7 +2320,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store array list with base actors for tiles to display.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
-          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, turnInd, redrawInd);
+          heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, turnInd, redrawInd,
+          mapActionButtonMagic, mapActionButtonEnabled);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {

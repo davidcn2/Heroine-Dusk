@@ -68,8 +68,9 @@ public class AtlasItems
     private ArrayList<LockedDoor> lockedDoorList; // List of locked doors.
     private Map<String, Object> mapJSON; // Hash map containing key / value pairs covering all atlas item 
       // data -- used with JSON.
-    private HashMap<String, ArrayList<Object>> mapRegionItems; // Hash map containing item lists based on locations.
-      // Key:  region,x,y,type.  Example:  4,1,14,BONE_PILE.
+    private HashMap<String, ArrayList<Object>> mapRegionItems; // Hash map containing item lists based on 
+      // locations.
+      // Key:  region,x,y,type.  Type matches one of the ItemCategoryEnum values.  Example:  4,1,14,ITEM_CTGY_BONE_PILE.
       // Value:  ArrayList of objects matching the item type in the key.
     public ArrayList<SpecificEnemy> specificEnemyList; // List of enemies at specific locations.
     
@@ -208,6 +209,8 @@ public class AtlasItems
         // Burning a bone pile will remove the object from its map location.
         
         // Declare regular variables.
+        private boolean activeInd; // Whether bone pile active (used in place of removal simplify array list).
+        private int bonePileIndex; // Index in array -- bonePileList.
         private final int pos_x; // X-coordinate of the tile with the bone pile (the array index).
         private final int pos_y; // Y-coordinate of the tile with the bone pile (the array index).
         private final int regionNbr; // Region number.  Base 0.
@@ -221,10 +224,27 @@ public class AtlasItems
             // The constructor stores the bone pile information.
             
             // Store the passed bone pile information in the class-level variables.
+            this.activeInd = true;
             this.pos_x = pos_x;
             this.pos_y = pos_y;
             this.regionNbr = regionNbr;
             
+        }
+
+        public boolean isActiveInd() {
+            return activeInd;
+        }
+
+        public void setActiveInd(boolean activeInd) {
+            this.activeInd = activeInd;
+        }
+        
+        public int getBonePileIndex() {
+            return bonePileIndex;
+        }
+        
+        public void setBonePileIndex(int index) {
+            this.bonePileIndex = index;
         }
         
         public int getPos_x() {
@@ -248,6 +268,7 @@ public class AtlasItems
         // A chest contains one to many items.
         
         // Declare regular variables.
+        private boolean activeInd; // Whether bone pile active (used in place of removal simplify array list).
         private final int addlItemCount; // Number of additional items in chest.
         private final ArrayList<HeroineEnum.ItemEnum> addlItemList; // List of additional items in chest.
         private int chestIndex; // Index in array -- chestList.
@@ -270,6 +291,7 @@ public class AtlasItems
             // The constructor stores the chest information.
             
             // Store the passed chest information in the class-level variables.
+            this.activeInd = true;
             this.pos_x = pos_x;
             this.pos_y = pos_y;
             this.regionNbr = regionNbr;
@@ -293,6 +315,7 @@ public class AtlasItems
             // The constructor stores the chest information.
             
             // Store the passed chest information in the class-level variables.
+            this.activeInd = true;
             this.pos_x = pos_x;
             this.pos_y = pos_y;
             this.regionNbr = regionNbr;
@@ -301,6 +324,14 @@ public class AtlasItems
             this.addlItemList = new ArrayList<>(otherItems);
             this.addlItemCount = otherItems.size();
             
+        }
+        
+        public boolean isActiveInd() {
+            return activeInd;
+        }
+
+        public void setActiveInd(boolean activeInd) {
+            this.activeInd = activeInd;
         }
         
         public int getAddlItemCount() {
@@ -1385,6 +1416,9 @@ public class AtlasItems
             
         }
         
+        // Reset index counter.
+        counterIndex = 0;
+        
         // Loop through bone pile events.
         for (BonePile bonePile : bonePileList)
         {
@@ -1413,11 +1447,17 @@ public class AtlasItems
                 
             }
             
+            // Store index.
+            bonePile.setBonePileIndex(counterIndex);
+            
             // Add item to array list.
             temp.add(bonePile);
             
             // Add item to hash map.
             mapRegionItems.put(key, temp);
+            
+            // Increment counter.
+            counterIndex++;
             
         }
         
@@ -1683,6 +1723,84 @@ public class AtlasItems
         return chestList;
     }
     
+    // index = Array index of bone pile to remove (in the array list, bonePileList).
+    // map_id = Map / region number in which to remove the bone pile.
+    public void removeBonePile(int index, int map_id) {
+        
+        /*
+        The function encapsulates logic for removing the passed bone pile (based on index) from the 
+        specified region, except for the hash map.
+        
+        Notes:
+        1.  The hash map, mapRegionItems, stores a list of objects, by type, at each location.
+        2.  Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
+        3.  *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
+        4.  The "value" in the hash map contains an array list of the specified item category.
+        5.  For example, the "value" would contain one to many bone piles if category = ITEM_CTGY_BONE_PILE.
+        7.  The function does NOT remove the bone pile from the hash map, as one to many bone piles exist 
+            for each entry.
+        */
+        
+        // Set the bone pile inactive to simulate removing from the array list.
+        bonePileList.get(index).setActiveInd(false);
+        //bonePileList.remove(index);
+        
+        // Reduce bone pile count.
+        bonePileCount--;
+        
+        // For the passed map / region, reduce number of bone piles stored in array list with quantities.
+        itemCountList.get(map_id).itemCount_BonePile--;
+        
+        // Reduce the total item count for the current region.
+        itemTotalList.set(map_id, itemTotalList.get(map_id) - 1);
+        
+    }
+    
+    // map_id = Map / region number in which to remove the chest.
+    // posX = X-coordinate associated with the chest(s).
+    // posY = Y-coordinate associated with the chest(s).
+    public void removeBonePileEntry(int map_id, int posX, int posY)
+    {
+        
+        // The function removes the chest based on the passed information from the hash map, mapRegionItems.
+        
+        // Remove bone pile from hash map.
+        mapRegionItems.remove(getMapRegionItemKey(map_id, posX, posY, 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_BONE_PILE));
+        
+    }
+    
+    // mapLocation = Location information associated with the bone pile to remove.  Includes map_id, x, and y.
+    public void removeBonePileFirst(MapLocation mapLocation)
+    {
+        
+        /*
+        The function encapsulates logic for removing the passed chests from the 
+        specified region, including for the hash map.
+        */
+        
+        BonePile bonePile; // First bone pile at passed location.
+        ArrayList<Object> objBonePileList; // List of bone piles at passed location.
+        String key; // Key to use in get call to hash map with atlas items.
+        
+        // Specify key to use in get call to hash map with atlas items.
+        key = getMapRegionItemKey(mapLocation.getMap_id(), mapLocation.getX(), mapLocation.getY(), 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_BONE_PILE);
+        
+        // Get list of bone piles at passed location.
+        objBonePileList = (ArrayList<Object>)mapRegionItems.get(key);
+        
+        // Get reference to first bone pile at passed location.
+        bonePile = (BonePile)objBonePileList.get(0);
+        
+        // Remove bone pile from array list.
+        removeBonePile(bonePile.getBonePileIndex(), mapLocation.getMap_id());
+        
+        // Remove entry from mapRegionItems hash map.
+        removeBonePileEntry(mapLocation.getMap_id(), mapLocation.getX(), mapLocation.getY());
+        
+    }
+    
     // index = Array index of chest to remove (in the array list, chestList).
     // map_id = Map / region number in which to remove the chest.
     public void removeChest(int index, int map_id) {
@@ -1702,8 +1820,9 @@ public class AtlasItems
             for each entry.
         */
         
-        // Remove the chest from the array list.
-        chestList.remove(index);
+        // Set the chest inactive to simulate removing from the array list.
+        chestList.get(index).setActiveInd(false);
+        //chestList.remove(index);
         
         // Reduce chest count.
         chestCount--;
@@ -1780,7 +1899,7 @@ public class AtlasItems
         
         // Remove chest from hash map.
         mapRegionItems.remove(Integer.toString(map_id) + "," + Integer.toString(posX) + "," + 
-          Integer.toString(posY) + ",CHEST");
+          Integer.toString(posY) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_CHEST);
         
     }
     
@@ -1818,6 +1937,16 @@ public class AtlasItems
 
     public Map<String, Object> getMapJSON() {
         return mapJSON;
+    }
+    
+    // map_id = Map / region number of item.
+    // posX = X-coordinate associated with the item.
+    // posY = Y-coordinate associated with the item.
+    // itemCategoryEnum = Enumerated value for the item -- a value from the ItemCategoryEnum list.
+    public String getMapRegionItemKey(int map_id, int posX, int posY, 
+      HeroineEnum.ItemCategoryEnum itemCategoryEnum) {
+        return Integer.toString(map_id) + "," + Integer.toString(posX) + "," + Integer.toString(posY) + "," + 
+          itemCategoryEnum;
     }
     
     public HashMap<String, ArrayList<Object>> getMapRegionItems() {

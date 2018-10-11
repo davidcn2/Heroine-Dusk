@@ -1,9 +1,11 @@
 package heroinedusk;
 
-// Java imports.
-import core.AssetMgr;
+// Local project imports.
 import core.BaseActor;
 import gui.CustomLabel;
+
+// Java imports.
+import core.AssetMgr;
 import java.util.ArrayList;
 
 public class Avatar 
@@ -37,6 +39,9 @@ public class Avatar
     private boolean moved; // Whether player has moved yet.
     private HeroineEnum.FacingEnum facing; // Current direction player is facing.
     private int map_id; // Current map section in which player resides.
+    private MapLocation mapLocation; // Current map location of player -- includes region, x, and y.
+    private MapLocation mapLocationForward; // Map location of square in front of player.
+      // Only updated during calls to getMapLocation_ForwardLoc().
     private final MapLocation sleeploc; // Sleep location / respawn point.
     private HeroineEnum.SpellEnum spellbook; // Current spellbook of player.
       // Contains spells in range of 0 to value.
@@ -69,10 +74,12 @@ public class Avatar
         bonus_def = 0;
         spellbook = HeroineEnum.SpellEnum.NO_SPELL;
         sleeploc = new MapLocation(0, 1, 1);
+        mapLocation = new MapLocation(map_id, x, y);
+        mapLocationForward = new MapLocation(-1, -1, -1);
         
         // temp
-        //setSpellbook(HeroineEnum.SpellEnum.SPELL_HEAL);
-        //setSpellbook(HeroineEnum.SpellEnum.SPELL_BURN);
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_HEAL);
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_BURN);
         //setSpellbook(HeroineEnum.SpellEnum.SPELL_UNLOCK);
         //setSpellbook(HeroineEnum.SpellEnum.SPELL_LIGHT);
         //setSpellbook(HeroineEnum.SpellEnum.SPELL_FREEZE);
@@ -134,7 +141,8 @@ public class Avatar
                 // Adjust player position.
                 x = newX;
                 y = newY;
-
+                mapLocation.setMapLocation(map_id, x, y);
+                
                 // Flag player as having moved.
                 moved = true;
                 
@@ -474,6 +482,77 @@ public class Avatar
         return "HP " + Integer.toString(hp) + "/" + Integer.toString(max_hp);
     }
     
+    public MapLocation getMapLocation_CurrentLoc() {
+        return mapLocation;
+    }
+    
+    public MapLocation getMapLocation_ForwardLoc() {
+        
+        // The function returns information about the current location in front of the player (map_id, x, y).
+        
+        // Depending on direction player facing, ...
+        switch (facing) {
+            
+            case NORTH:
+                
+                // Facing north.
+                
+                // Set value of map location to return.
+                mapLocationForward.setMapLocation(map_id, x, y - 1);
+                
+                // Exit selector.
+                break;
+                
+            case SOUTH:
+                
+                // Facing south.
+                
+                // Set value of map location to return.
+                mapLocationForward.setMapLocation(map_id, x, y + 1);
+                
+                // Exit selector.
+                break;
+                
+            case EAST:
+                
+                // Facing east.
+                
+                // Set value of map location to return.
+                mapLocationForward.setMapLocation(map_id, x + 1, y);
+                
+                // Exit selector.
+                break;
+                
+            case WEST:
+                
+                // Facing west.
+                
+                // Set value of map location to return.
+                mapLocationForward.setMapLocation(map_id, x - 1, y);
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Facing invalid direction.
+            
+                // Set value to return to -1 for all properties.
+                mapLocationForward.setMapLocation(-1, -1, -1);
+                
+                // Display warning.
+                System.out.println("Warning:  Player facing invalid direction while checking tile at forward location.");
+                
+                // Exit selector.
+                break;
+                
+        }
+        
+        // Return location in front of player.
+        return mapLocationForward;
+        
+    }
+    
     public boolean movedInd() {
         return moved;
     }
@@ -520,6 +599,7 @@ public class Avatar
 
     public void setMap_id(int map_id) {
         this.map_id = map_id;
+        this.mapLocation.setMapLocation(map_id, x, y);
     }
 
     public void setMoved(boolean moved) {
@@ -569,6 +649,7 @@ public class Avatar
 
     public void setX(int x) {
         this.x = x;
+        this.mapLocation.setMapLocation(map_id, x, y);
     }
 
     public int getY() {
@@ -577,6 +658,7 @@ public class Avatar
 
     public void setY(int y) {
         this.y = y;
+        this.mapLocation.setMapLocation(map_id, x, y);
     }
     
 }
