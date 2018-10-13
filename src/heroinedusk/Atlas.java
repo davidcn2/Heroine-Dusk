@@ -315,7 +315,7 @@ public class Atlas
             
             // Store name of current region in loop.
             regionName = (String)temp.get("regionName");
-            
+            System.out.println("Loading information for region, " + regionName);
             // Store number of tile rows in current region in loop -- same as region height.
             regionHeight = (int)temp.get("regionHeight");
             

@@ -9,8 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 
 // Java imports.
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,60 +56,67 @@ public class JSON_Processor
     */
     
     // atlas = Contains atlas information.
-    // filename = Filename to use when reading atlas, including full path.
-    private void loadAtlas(Atlas atlas, String filename) throws IOException
+    // classPath = Path to json file within class structure / package.  Example:  /json/Atlas.json.
+    private void loadAtlas(Atlas atlas, String classPath) throws IOException
     {
         
         // The function encapsulates the reading of the atlas JSON file from the specified location.
         
-        byte[] jsonData; // Byte array containing JSON data from file.
+        InputStream in; // Input stream of bytes related to passed path.
         Map<String, Object> mapJSON; // Hash map containing key / value pairs covering all atlas data -- 
         // used with JSON.
         ObjectMapper mapper; // ObjectMapper provides functionality for reading and writing the JSON.
         
-        // Read json file data to byte array.
-        jsonData = Files.readAllBytes(Paths.get(filename));
+        // Find resource with passed name / path.
+        in = getClass().getResourceAsStream(classPath);
         
         // Initialize Jackson's serialization mapper.
         mapper = new ObjectMapper();
         
         // Convert JSON file data (loaded into byte array) to hash map.
-        mapJSON = mapper.readValue(jsonData, HashMap.class);
+        mapJSON = mapper.readValue(in, HashMap.class);
         
         // Load hash map using atlas functionality.
         atlas.readHashMap(mapJSON);
         
+        // Close input stream.
+        in.close();
+        
     }
-    
+
     // atlasItems = Contains atlas items information.
-    // filename = Filename to use when reading atlas, including full path.
+    // classPath = Path to json file within class structure / package.  Example:  /json/AtlasItems.json.
     // regionCount = Number of regions.
-    private void loadAtlasItems(AtlasItems atlasItems, String filename, int regionCount) throws IOException
+    private void loadAtlasItems(AtlasItems atlasItems, String classPath, int regionCount) throws IOException
     {
         
         // The function encapsulates the reading of the atlas items JSON file from the specified location.
         
-        byte[] jsonData; // Byte array containing JSON data from file.
+        InputStream in; // Input stream of bytes related to passed path.
         Map<String, Object> mapJSON; // Hash map containing key / value pairs covering atlas items data -- 
         // used with JSON.
         ObjectMapper mapper; // ObjectMapper provides functionality for reading and writing the JSON.
         
-        // Read json file data to byte array.
-        jsonData = Files.readAllBytes(Paths.get(filename));
+        // Find resource with passed name / path.
+        in = getClass().getResourceAsStream(classPath);
         
         // Initialize Jackson's serialization mapper.
         mapper = new ObjectMapper();
         
         // Convert JSON file data (loaded into byte array) to hash map.
-        mapJSON = mapper.readValue(jsonData, HashMap.class);
+        mapJSON = mapper.readValue(in, HashMap.class);
         
         // Load hash map using atlas items functionality.
         atlasItems.readHashMap(mapJSON, regionCount);
         
+        // Close input stream.
+        in.close();
+        
     }
-    
+
     // filename = Filename to use when reading atlas, including full path.
-    public final Atlas readAtlas(String filename)
+    // classPath = Path to json file within class structure / package.  Example:  /json/Atlas.json.
+    public final Atlas readAtlas(String classPath)
     {
         
         // The function encapsulates the reading of the atlas JSON file from the specified location, 
@@ -124,7 +130,7 @@ public class JSON_Processor
         // Try reading the atlas information to a byte array.
         try {
             
-            loadAtlas(atlas, filename);
+            loadAtlas(atlas, classPath);
             
         }
         
@@ -140,10 +146,10 @@ public class JSON_Processor
         return atlas;
         
     }
-    
-    // filename = Filename to use when reading atlas items, including full path.
+
+    // classPath = Path to json file within class structure / package.  Example:  /json/AtlasItems.json.
     // regionCount = Number of regions.
-    public final AtlasItems readAtlasItems(String filename, int regionCount)
+    public final AtlasItems readAtlasItems(String classPath, int regionCount)
     {
         
         // The function encapsulates the reading of the atlas items JSON file from the specified location, 
@@ -157,7 +163,7 @@ public class JSON_Processor
         // Try reading the atlas item information to a byte array.
         try {
             
-            loadAtlasItems(atlasItems, filename, regionCount);
+            loadAtlasItems(atlasItems, classPath, regionCount);
             
         }
         
@@ -173,7 +179,7 @@ public class JSON_Processor
         return atlasItems;
         
     }
-    
+
     // atlas = Contains atlas information.
     // filename = Filename to use when saving atlas, including full path.
     public final void saveAtlas(Atlas atlas, String filename)

@@ -19,7 +19,6 @@ import heroinedusk.HeroineEnum;
 import heroinedusk.JSON_Processor;
 
 // Java imports.
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -113,9 +112,6 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         7.  Loads atlas information, including regions and items.
         */
         
-        String jsonDir; // Directory containing JSON files.
-        String jsonFullPath; // Full path to JSON file.
-        String parentDir; // Top-level directory containing packages.
         JSON_Processor json; // Handles JSON functionality.
         
         // 1.  Set defaults.
@@ -219,29 +215,17 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 7.  Load atlas information, including regions and items.
         
-        // Store path of top-level directory containing packages.
-        parentDir = (new File("/")).getAbsolutePath();
-        
-        // Store path of directory containing JSON files.
-        jsonDir = parentDir + "src\\json\\";
-        
         // Store JSON directory in game class.
-        gameHD.setJsonDir(jsonDir);
-        
-        // Store full path to JSON file with atlas information.
-        jsonFullPath = (jsonDir + "Atlas.json").replaceAll("\\\\", "/").replaceAll(" ","%20");
+        gameHD.setJsonDir("/json");
         
         // Initialize the JSON processor.
         json = new JSON_Processor();
         
         // Read the atlas from a file.
-        gameHD.setAtlas(json.readAtlas(jsonFullPath));
-        
-        // Store full path to JSON file with atlas item information.
-        jsonFullPath = (jsonDir + "AtlasItems.json").replaceAll("\\\\", "/").replaceAll(" ","%20");
+        gameHD.setAtlas(json.readAtlas("/json/Atlas.json"));
         
         // Read the atlas items from a file.
-        gameHD.setAtlasItems(json.readAtlasItems(jsonFullPath, gameHD.getAtlas().getMapCount()));
+        gameHD.setAtlasItems(json.readAtlasItems("/json/AtlasItems.json", gameHD.getAtlas().getMapCount()));
         
     }
     
