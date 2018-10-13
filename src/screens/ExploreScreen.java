@@ -23,6 +23,7 @@ import heroinedusk.RegionMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -780,6 +781,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
                     // Notes:  Occurs when user releases mouse on button.
                     
+                    String mpText; // Text to display for magic points.
+                    
                     // Flag to ignore next exit event.
                     mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), true);
                     
@@ -797,11 +800,51 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                     }
                     
-                    // If player in combat, then...
-                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
+                    // If player lacks sufficient magic points, then...
+                    if (gameHD.getAvatar().getMp() == 0)
                     {
                         
-                        // Player in combat.
+                        // Player lacks sufficient magic points.
+                        
+                        // If square in front of player NOT a skull pile and NOT in combat mode, then...
+                        if (mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()) != 
+                          HeroineEnum.ImgTileEnum.IMG_TILE_SKULL_PILE && 
+                          gameHD.getGameState() != HeroineEnum.GameState.STATE_COMBAT)
+                        {
+                            
+                            // Square in front of player NOT a skull pile and NOT in combat mode.
+                            
+                            // Render "(NO TARGET)" message.
+                            info_render_no_target(null);
+                            
+                        }
+                        
+                        else
+                        {
+                            
+                            // Square in front of player is a skull pile and NOT in combat mode.
+                            
+                            // Update power action labels.
+                            powerActionLabel.setLabelText("INSUFFICIENT MP!");
+                            
+                            // Display power action  labels.
+                            powerActionLabel.applyVisible(true);
+
+                            // Set up fade effect for power action label.
+                            powerActionLabel.addAction_Fade();
+
+                            // Play error sound.
+                            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+                            
+                        }
+                        
+                    } // End ... If player lacks sufficient magic points.
+                    
+                    // Otherwise, if player in combat, then...
+                    else if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
+                    {
+                        
+                        // Player in combat and has sufficient magic points.
                         
                         System.out.println("Burn!");
                         
@@ -813,11 +856,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     else
                     {
                         
-                        // Player NOT in combat.
+                        // Player NOT in combat and has sufficient magic points.
                         
                         // System.out.println("Tile: " + mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()));
                         
-                        // If tile in front of player skull pile, then...
+                        // If tile in front of player is a skull pile, then...
                         if (mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()) == 
                           HeroineEnum.ImgTileEnum.IMG_TILE_SKULL_PILE)
                         {
@@ -836,7 +879,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             // Disable skull pile events.
                             mazemap.setBonePileActiveInd(false);
                             
-                            // Remove skull piles from array list and hash map associated with current location.
+                            // Set skull piles in array list inactive and remove from hash map entry associated 
+                            // with current location.
                             gameHD.getAtlasItems().removeBonePileFirst(
                               gameHD.getAvatar().getMapLocation_ForwardLoc());
                             
@@ -860,6 +904,13 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             // Decrement player magic points.
                             gameHD.getAvatar().decrement_mp();
                             
+                            // Store text to display for magic points.
+                            mpText = "MP " + Integer.toString(gameHD.getAvatar().getMp()) + "/" +
+                              Integer.toString(gameHD.getAvatar().getMax_mp());
+
+                            // Update magic points label.
+                            mpLabel.setLabelText(mpText);
+                            
                             // Display action-related text.
                             info_update_powerResponseLines("BURN!", "CLEARED PATH!");
                             
@@ -876,17 +927,19 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             
                             // TO DO:  Add avatar save.
                             
-                        }
+                        } // End ... If tile in front of player is a skull pile.
                         
                         else
                         {
-                            // Trying to burn something other than a skull pile.
+                            
+                            // Tile in front of player not a burnable object.
                             
                             // Render "(NO TARGET)" message.
-                            info_render_no_target();
+                            info_render_no_target(null);
+                            
                         }
                         
-                    }
+                    } // End ... If NOT in combat.
                     
                 } // End ... touchUp.
                 
@@ -973,7 +1026,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Player NOT in combat.
                         
                         // Render "(NO TARGET)" message.
-                        info_render_no_target();
+                        info_render_no_target(null);
                         
                     }
                     
@@ -1085,7 +1138,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Play error sound.
                         gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
                         
-                    }  
+                    }
                         
                     else
                     {
@@ -1237,7 +1290,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Player NOT in combat.
                         
                         // Render "(NO TARGET)" message.
-                        info_render_no_target();
+                        info_render_no_target(null);
                         
                     }
                     
@@ -1298,19 +1351,165 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
                     // Notes:  Occurs when user releases mouse on button.
                     
+                    String mpText; // Text to display for magic points.
+                    
                     // Flag to ignore next exit event.
                     mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), true);
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
                     
-                    // Hide the minimap.
-                    minimapGroup.setVisible(false);
+                    // If minimap group initialized, then...
+                    if (minimapGroup != null)
+                    {
+                        
+                        // Minimap group initialized.
+                        
+                        // Hide the minimap.
+                        minimapGroup.setVisible(false);
+                        
+                    }
                     
-                    System.out.println("Unlock!");
+                    // If player lacks sufficient magic points, then...
+                    if (gameHD.getAvatar().getMp() == 0)
+                    {
+                        
+                        // Player lacks sufficient magic points.
+                        
+                        // If square in front of player NOT a locked door and NOT in combat mode, then...
+                        if (mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()) != 
+                          HeroineEnum.ImgTileEnum.IMG_TILE_LOCKED_DOOR && 
+                          gameHD.getGameState() != HeroineEnum.GameState.STATE_COMBAT)
+                        {
+                            
+                            // Square in front of player NOT a locked door and NOT in combat mode.
+                            
+                            // Render "(NO TARGET)" message.
+                            info_render_no_target(HeroineEnum.SoundEnum.SOUND_BLOCKED);
+                            
+                        }
+                        
+                        else
+                        {
+                            
+                            // Square in front of player is a locked door and NOT in combat mode.
+                            
+                            // Update power action labels.
+                            powerActionLabel.setLabelText("INSUFFICIENT MP!");
+                            
+                            // Display power action  labels.
+                            powerActionLabel.applyVisible(true);
+
+                            // Set up fade effect for power action label.
+                            powerActionLabel.addAction_Fade();
+
+                            // Play error sound.
+                            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+                            
+                        }
+                        
+                    } // End ... If player lacks sufficient magic points.
                     
-                    // Play unlock sound.
-                    gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_UNLOCK);
+                    // Otherwise, if player in combat, then...
+                    else if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
+                    {
+                        
+                        // Player in combat and has sufficient magic points.
+                        
+                        System.out.println("Unlock!");
+                        
+                        // Play unlock sound.
+                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_UNLOCK);
+                        
+                    }
+                    
+                    else
+                    {
+                        
+                        // Player NOT in combat and has sufficient magic points.
+                        
+                        // System.out.println("Tile: " + mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()));
+                        
+                        // If tile in front of player is a locked door, then...
+                        if (mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()) == 
+                          HeroineEnum.ImgTileEnum.IMG_TILE_LOCKED_DOOR)
+                        {
+                            
+                            // Unlock the door in the tile in front of the player.
+                            
+                            // Play unlock sound.
+                            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_UNLOCK);
+                            
+                            // Set up an action to fade out the lock.
+                            tiles.get(
+                              mazemap.getTileMap_Value(
+                              HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_LOCK)).addAction_FadeOut(
+                              0.25f, 0.75f);
+                            
+                            // Disable lock events.
+                            mazemap.setLockedDoorActiveInd(false);
+                            
+                            // Set locked door in array list inactive and remove from hash map entry associated 
+                            // with current location.
+                            gameHD.getAtlasItems().removeLockedDoorFirst(
+                              gameHD.getAvatar().getMapLocation_ForwardLoc());
+                            
+                            // Remove tile showing locked door.
+                            mazemap.removeTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_LOCK);
+                            
+                            // Change tile in front of player to regular (unlocked) door.
+                            mazemap.setImgTileEnum_ForwardLoc(gameHD.getAvatar(), 
+                              HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_DOOR);
+                            
+                            // Move unlock button to original location (in spell list / area).
+                            
+                            // Pos X = -38 * scale factor.  -- Relative to right of screen.
+                            // Pos Y = +42 * scale factor.  -- Relative to bottom of screen.
+                            mapActionButtonMagic.get( 
+                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setRelativePosition(null, 
+                              CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
+                              uiStage.getHeight(), -38f * gameHD.getConfig().getScale(), 
+                              42f * gameHD.getConfig().getScale() );
+                            
+                            // Decrement player magic points.
+                            gameHD.getAvatar().decrement_mp();
+                            
+                            // Store text to display for magic points.
+                            mpText = "MP " + Integer.toString(gameHD.getAvatar().getMp()) + "/" +
+                              Integer.toString(gameHD.getAvatar().getMax_mp());
+
+                            // Update magic points label.
+                            mpLabel.setLabelText(mpText);
+                            
+                            // Display action-related text.
+                            info_update_powerResponseLines("UNLOCK!", "DOOR OPENED!");
+                            
+                            // Set the unlock button to not visible.
+                            mapActionButtonMagic.get(
+                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(false);
+                            
+                            // Apply a dark shade to the unlock button to signify not currently enabled.
+                            mapActionButtonMagic.get(
+                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( COLOR_MED_GRAY );
+                            
+                            // Disable unlock button.
+                            mapActionButtonEnabled.put(buttonActor.getActorName(), false);
+                            
+                            // TO DO:  Add avatar save.
+                            
+                        } // End ... If tile in front of player is a locked door.
+                        
+                        else
+                        {
+                            
+                            // Tile in front of player not a locked door.
+                            
+                            // Render "(NO TARGET)" message.
+                            info_render_no_target(HeroineEnum.SoundEnum.SOUND_BLOCKED);
+                            
+                        }
+                        
+                    } // End ... If NOT in combat.
                     
                 } // End ... touchUp.
                 
@@ -1660,6 +1859,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // The function handles displaying the information view or switching back to the standard display.
         
+        // Declare object variables.
+        Set<Map.Entry<HeroineEnum.SpellEnum, Boolean>> entrySetSpellList; // Set view of the spellbook mappings in the hash map.
+        
+        // Declare regular variables.
+        HeroineEnum.SpellEnum entryKey; // Hash map key related to current entry when looping through set.
+        
         // Clear text from and hide power action and result labels.
         info_clear_messages();
         
@@ -1707,12 +1912,18 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
             // Display the (available) action buttons.
             
-            // Loop through player spell(s).
-            gameHD.getAvatar().getSpellList().forEach((spellEnum) -> {
+            // Store a set view of the spellbook mappings for the hash map.
+            entrySetSpellList = gameHD.getAvatar().getSpellList().entrySet();
+            
+            // Loop through entries for player spells.
+            for (Map.Entry entrySpell : entrySetSpellList)
+            {
+                // Store the key for the current entry.
+                entryKey = (HeroineEnum.SpellEnum)entrySpell.getKey();
                 
                 // Display current player spell in loop.
-                mapActionButtonMagic.get(spellEnum.getValue_ActionButtonEnum()).setVisible(true);
-            });
+                mapActionButtonMagic.get(entryKey.getValue_ActionButtonEnum()).setVisible(true);
+            }
             
             /*
             mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL).setVisible(true);
@@ -1836,12 +2047,18 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
             // Hide the (available) action buttons.
             
-            // Loop through player spell(s).
-            gameHD.getAvatar().getSpellList().forEach((spellEnum) -> {
+            // Store a set view of the spellbook mappings for the hash map.
+            entrySetSpellList = gameHD.getAvatar().getSpellList().entrySet();
+            
+            // Loop through entries for player spells.
+            for (Map.Entry entrySpell : entrySetSpellList)
+            {
+                // Store the key for the current entry.
+                entryKey = (HeroineEnum.SpellEnum)entrySpell.getKey();
                 
-                // Hide current player spell in loop.
-                mapActionButtonMagic.get(spellEnum.getValue_ActionButtonEnum()).setVisible(false);
-            });
+                // Display current player spell in loop.
+                mapActionButtonMagic.get(entryKey.getValue_ActionButtonEnum()).setVisible(false);
+            }
             
             /*
             mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL).setVisible(false);
@@ -2129,12 +2346,15 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
-    private void info_render_no_target()
+    // soundEnum = Sound to play.
+    private void info_render_no_target(HeroineEnum.SoundEnum soundEnum)
     {
         
         // The function updates the power action and result labels to display the "(NO TARGET)" message.
         // Associated with attempting to execute an action at an invalid time.
-                        
+        
+        HeroineEnum.SoundEnum sound; // Sound to play.
+        
         // Update power action labels.
         powerActionLabel.setLabelText("(NO TARGET)");
         
@@ -2144,8 +2364,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Set up fade effect for power action label.
         powerActionLabel.addAction_Fade();
 
+        // If null passed for sound to play, then...
+        if (soundEnum == null)
+            // Null passed for sound to play.
+            // Default to error sound.
+            sound = HeroineEnum.SoundEnum.SOUND_ERROR;
+        else
+            // Use sound passed in parameter.
+            sound = soundEnum;
+        
         // Play error sound.
-        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+        gameHD.getSounds().playSound(sound);
         
     }
     
@@ -2519,7 +2748,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                   gameHD.getAvatar().getY() + ")");
                 System.out.println("Facing: " + gameHD.getAvatar().getFacing());
                 */
-
+                
                 // Flag player as moved.
                 gameHD.getAvatar().setMoved(true);
                 

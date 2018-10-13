@@ -52,11 +52,6 @@
         "POS_X" : 4,
         "POS_Y" : 2,
         "REGION_NBR" : 10
-      },
-	  "BONE_PILE_09" : {
-	    "POS_X" : 1,
-        "POS_Y" : 1,
-        "REGION_NBR" : 2
       }
     },
     "BONE_PILE_CNT" : 8,

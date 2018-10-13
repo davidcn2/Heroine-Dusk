@@ -81,6 +81,7 @@ public class MazeMap
       // tile texture region in stage -- adjusted by scale factor.  Excludes render offset.
     private final float dest_y[]; // Array holding Y-coordinate (relative to the bottom left corner) to display
       // tile texture region in stage -- adjusted by scale factor.  Excludes render offset.
+    private boolean lockedDoorActiveInd; // Whether locked door in square in front of (NOT UNDER) player enabled.
     private final int map_id; // Current region / map location (number).
     private final float minimapIconSize; // Size of an icon in minimap (width and height match).
     private final float minimapOffsetX; // X-coordinate of lower left corner of minimap.
@@ -140,8 +141,10 @@ public class MazeMap
         
         // 1.  Set defauls and initialize array lists and hash maps.
         
-        // Disable events for chest in square in front of player (position 9).
+        // Disable events for objects in square in front of player (position 9).
+        bonePileActiveInd = false;
         chestActiveInd = false;
+        lockedDoorActiveInd = false;
         
         // Initialize array lists.
         regionTiles = new ArrayList<>();
@@ -420,8 +423,6 @@ public class MazeMap
                     
                         // Flag to ignore next exit event.
                         ignoreNextExitEvent = true;
-
-                        System.out.println("Click on bone pile occurred");
                         
                     }
                     
@@ -470,7 +471,7 @@ public class MazeMap
 
                             // Player has magic left.
 
-                            // Removing shading from button to signify enabled.
+                            // Remove shading from button to signify enabled.
                             mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor(
                               Color.WHITE );
 
@@ -507,7 +508,7 @@ public class MazeMap
                         
                         // Bone pile active.
                     
-                        // Apply a dark shade to the bone pile.
+                        // Apply a light shade to the bone pile.
                         bonePileActor.setColor(Color.LIGHT_GRAY);
                         
                     }
@@ -699,7 +700,8 @@ public class MazeMap
                         
                         // 5.  Remove chests from array list and hash map in atlas items.
 
-                        // Remove chests from array list and hash map associated with current location.
+                        // Set chests in array list inactive and remove entry hash map associated with current
+                        // location.
                         gameHD.getAtlasItems().removeChests(chestList, map_id, posX, posY);
 
                         // 6.  Transform tile associated with chest.
@@ -732,7 +734,7 @@ public class MazeMap
                         
                         // Chest active.
                         
-                        // Apply a dark shade to the chest.
+                        // Apply a light shade to the chest.
                         chestActor.setColor(Color.LIGHT_GRAY);
                         
                     }
@@ -789,6 +791,220 @@ public class MazeMap
         
         // Add event to tile actor.
         chestActor.addListener(tileEvent);
+        
+    }
+    
+    // lockActor = Reference to BaseActor for the lock tile.
+    // viewWidth = Width of the stage.
+    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
+    private void addEvent_LockActor(BaseActor lockActor, int viewWidth, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic)
+    {
+        
+        // The function adds events to the passed lock related tile (BaseActor).
+        // Events include touchDown, touchUp, mouseMoved, enter, and exit.
+        
+        InputListener tileEvent; // Events to add to passed button (BaseActor).
+        
+        // Craft event logic to add to passed button (BaseActor).
+        tileEvent = new InputListener()
+            {
+                
+                boolean ignoreNextExitEvent; // Whether to ignore next exit event (used with touchUp / exit).
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user touches the screen or presses a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS. 
+                    // Notes:  Occurs when user press down mouse on button.
+                    // Notes:  Event (touchDown) necessary to reach touchUp.
+                    
+                    // Return a value.
+                    return true;
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public void touchUp(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user lifts a finger or released a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
+                    // Notes:  Occurs when user releases mouse on button.
+                        
+                    // If locked door active, then...
+                    if (lockedDoorActiveInd)
+                    {
+                        
+                        // Locked door active.
+                    
+                        // Flag to ignore next exit event.
+                        ignoreNextExitEvent = true;
+                        
+                    }
+                    
+                } // End ... touchUp event.
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                @Override
+                public boolean mouseMoved (InputEvent event, float x, float y)
+                {
+                
+                    // The function occurs when the mouse cursor or a finger touch is moved over the actor and
+                    // a button is not down.  The event only occurs on the desktop.
+                    
+                    // If locked door active, then...
+                    if (lockedDoorActiveInd)
+                    {
+                        
+                        // Locked door active.
+                    
+                        // Set position of burn button center on current mouse position.
+                        mapActionButtonMagic.get(
+                          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setX(lockActor.getX() + 
+                          x - mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).getWidth() 
+                          / 2 );
+                        mapActionButtonMagic.get(
+                          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setY(lockActor.getY() + y - 
+                          mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).getHeight() 
+                          / 2 );
+
+                        // If player has no magic left, then...
+                        if (gameHD.getAvatar().getMp() == 0)
+                        {
+
+                            // Player has no magic left.
+
+                            // Apply a dark shade to the button to signify not currently enabled.
+                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( 
+                              COLOR_MED_GRAY );
+
+                        }
+
+                        else
+                        {
+
+                            // Player has magic left.
+
+                            // Remove shading from button to signify enabled.
+                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor(
+                              Color.WHITE );
+
+                        }
+
+                        // Set unlock button to visible.
+                        mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(true);
+                    
+                    } // End ... If locked door active.
+                        
+                    // Do not handle event.
+                    return false;
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // fromActor = Reference to actor losing focus.
+                @Override
+                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
+                {
+                    
+                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
+                    
+                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                    // (pointer will be -1).
+                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
+                        
+                    // If locked door active, then...
+                    if (lockedDoorActiveInd)
+                    {
+                        
+                        // Locked door active.
+                    
+                        // Apply a light shade to the lock.
+                        lockActor.setColor(Color.LIGHT_GRAY);
+                        
+                    }
+                    
+                } // End ... enter event.
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // toActor = Reference to actor gaining focus.
+                @Override
+                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
+                {
+                    
+                    // The function occurs when the mouse cursor or a finger touch is moved out of the actor.
+                    
+                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                    // (pointer will be -1).
+                    // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
+                    
+                    // If locked door active, then...
+                    if (lockedDoorActiveInd)
+                    {
+                        
+                        // Locked door active.
+                    
+                        // If ignoring next exit event, then...
+                        if (ignoreNextExitEvent)
+
+                            // Ignoring next exit event.
+                            
+                            // Flag to process next exit event.
+                            ignoreNextExitEvent = false;
+
+                        // Otherwise, ...
+                        else
+                        {
+                            
+                            // Process exit event.
+                            
+                            // If fade not occurring, then...
+                            if (lockActor.getActionMapCount() == 0)
+                            {
+                                
+                                // Fade not occurring yet.
+
+                                // Return lock to normal color.
+                                lockActor.setColor(Color.WHITE);
+                                
+                            }
+                            
+                            // Set unlock button to not visible.
+                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(false);
+                        
+                        } // Processing exit event.
+                            
+                    } // End ... If locked door active.
+                        
+                } // End ... exit event.
+                
+            }; // End ... InputListener.
+        
+        // Add event to tile actor.
+        lockActor.addListener(tileEvent);
         
     }
     
@@ -875,17 +1091,9 @@ public class MazeMap
                         if (goldPile != null)
                         {
                             // Gold pile exists.
-
-                            // Remove actors in gold pile from treasure group.
-                            goldPile.forEach((actor) -> {
-
-                                // Remove current actor in loop from group.
-                                treasureGroup.removeActor(actor);
-
-                            });
-
-                            // Clear out gold pile.
-                            goldPile = null;
+                            
+                            // Clear gold pile, including associated actors.
+                            clearGoldPile(treasureGroup);
                             
                             // Store whether switching from gold to non-gold.
                             switchFromGold = chestOtherItems.get(chestOtherItemIndex) != 
@@ -970,13 +1178,13 @@ public class MazeMap
                                 treasureImageInd = true;
                                 
                                 // Determine width and height to resize treasure.
-
+                                
                                 // Magnify by scale factor.
                                 treasureWidth = gameHD.getConfig().getScale() * 
                                   gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionWidth();
                                 treasureHeight = gameHD.getConfig().getScale() * 
                                   gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionHeight();
-
+                                
                                 // If chest actor "passed" (not null), then...
                                 if (chestActor != null)
                                 {
@@ -1008,7 +1216,7 @@ public class MazeMap
                                     
                                     // Fade out gold pile.
                                     treasureGroup.addAction_FadeOut( 0.00f, 0.50f );
-                                
+                                    
                                     // Update image for treasure actor.
                                     treasureActor.setTextureRegion( 
                                       gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()) );
@@ -1025,7 +1233,7 @@ public class MazeMap
                                     {
 
                                         // Chest actor "passed" (not null).
-                                    
+                                        
                                         // Position treasure actor at center of stage horizontally and chest 
                                         // vertically.
                                         treasureActor.setPosition( (viewWidth - treasureWidth) / 2, 
@@ -1167,13 +1375,34 @@ public class MazeMap
                         
                         // At last item to display.
                         
-                        // Set up an action to fade out the treasure actor and label.
-                        treasureActor.addAction_FadeOut(0f, 1f);
+                        // If gold pile exists, then...
+                        if (goldPile != null)
+                        {
+                            // Gold pile exists.
+                            
+                            // Fade out the gold pile, including all associated actors.
+                            fadeGoldPile( treasureGroup );
+                            
+                            // Set gold pile as not existing any longer.
+                            goldPile = null;
+                            
+                        }
+                        
+                        // Otherwise, If texture for treasure actor initialized, then...
+                        else if (treasureActor.getRegion().getTexture() != null)
+                        {
+                            // Texture for treasure actor initialized.
+                            
+                            // Fade out the treasure actor.
+                            treasureActor.addAction_FadeOut( 0f, 1f );
+                        }
+                        
+                        // Set up an action to fade out the treasure label.
                         treasureLabel.addAction_FadeOut(0f, 1f);
                         
-                    }
+                    } // End ... If no additional items remain to display.
                     
-                }
+                } // End ... touchUp.
                 
                 /*
                 
@@ -1246,6 +1475,25 @@ public class MazeMap
         treasureActor.addListener(treasureEvent);
         treasureGroup.addListener(treasureEvent);
         treasureLabel.getLabel().addListener(treasureEvent);
+        
+    }
+    
+    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    private void clearGoldPile(BaseActor treasureGroup)
+    {
+        
+        // The function clears the gold pile, including associated actors.
+        
+        // Remove actors in gold pile from treasure group.
+        goldPile.forEach((actor) -> {
+
+            // Remove current actor in loop from group.
+            treasureGroup.removeActor(actor);
+
+        });
+
+        // Clear out gold pile.
+        goldPile = null;
         
     }
     
@@ -1420,6 +1668,25 @@ public class MazeMap
         
     }
     
+    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    private void fadeGoldPile(BaseActor treasureGroup)
+    {
+        
+        // The function fades out the gold pile, including associated actors.
+        
+        // Remove actors in gold pile from treasure group.
+        goldPile.forEach((actor) -> {
+
+            // Fade out the gold actor.
+            actor.addAction_FadeOut( 0f, 1f );
+            
+        });
+        
+        // Fade out the treasure group.
+        treasureGroup.addAction_FadeOut( 0f, 1f );
+        
+    }
+    
     // pos_x = X-coordinate to use in bounds check.
     // pos_y = Y-coordinate to use in bounds check.
     private boolean mazemap_bounds_check(int pos_x, int pos_y)
@@ -1469,6 +1736,7 @@ public class MazeMap
         2.  Handling chest in same square as player.
         3.  Handling hay bale in same square as player.
         4.  Adding event-supported skull pile in square in front of player.
+        5.  Adding event-supported locked door in square in front of player.
         
         The visibility cone is shaped like this:
 
@@ -1495,19 +1763,23 @@ public class MazeMap
           // of player.
         int counter; // Used to increment through array list of BaseActor objects associated with tiles.
         Integer key; // Key to use when adding value to hash map.
+        boolean lockedDoorInd; // Whether locked door exists immediately in front of player.
         ArrayList<BaseActor> removeList; // List of actors to remove.
         BaseActor tempBonePile; // Holder for the (bone pile) actor.
         BaseActor tempChest; // Holder for the (chest) actor.
+        BaseActor tempLock; // Holder for the (lock) actor.
         BaseActor tempTreasure; // Holder for the (treasure) actor.  For non-group functionality.
         BaseActor tempTreasureGroup; // Holder for the (treasure) actor.  For group functionality.
         int tileNbr; // Tile number at current (exact) location.
         ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
         boolean treasureImageInd; // Whether treasure image exists for primary item in first chest.
-        String virtualString; // Virtual field (string) for the actor with the chest(s).
+        String virtualString; // Virtual field (string) for the actor with the chest(s), bone pile(s), ...
+        String virtualStringObjType; // Object type parsed from virtual field (string).
         
         // 1.  Set defaults.
         chestInd = false;
         bonePileInd = false;
+        lockedDoorInd = false;
         chestNearbyInd = false;
         chestActiveInd = false;
         bonePileActiveInd = false;
@@ -1692,39 +1964,61 @@ public class MazeMap
                 
                 // Tile metadata five characters or more.
                 
-                // If tile associated with chest, then...
-                if (tile.getVirtualString().substring(0, 5).equalsIgnoreCase("Chest"))
-                {
-
-                    // Tile associated with chest.
-
-                    // Flag chest.
-                    chestInd = true;
-
-                    // Copy virtual string.
-                    virtualString = tile.getVirtualString();
-                    
-                    // Exit loop.
-                    break;
-
-                }
+                // Store object type -- extracting information from virtual string associated with tile.
+                virtualStringObjType = 
+                  tile.getVirtualString().substring(0, tile.getVirtualString().indexOf("|"));
                 
-                // Otherwise, if tile associated with bone pile, then...
-                else if (tile.getVirtualString().substring(0, 9).equalsIgnoreCase("Bone Pile"))
-                {
+                // Depending on object type...
+                switch (virtualStringObjType) {
                     
-                    // Tile associated with bone pile.
+                    case "Chest":
+                        
+                        // Tile associated with chest.
+
+                        // Flag chest.
+                        chestInd = true;
+
+                        // Copy virtual string.
+                        virtualString = tile.getVirtualString();
+
+                        // Exit loop.
+                        break;
+                        
+                    case "Bone Pile":
+                        
+                        // Tile associated with bone pile.
                     
-                    // Flag bone pile.
-                    bonePileInd = true;
+                        // Flag bone pile.
+                        bonePileInd = true;
+
+                        // Copy virtual string.
+                        virtualString = tile.getVirtualString();
+
+                        // Exit loop.
+                        break;
+                        
+                    case "Locked Door":
+                        
+                        // Tile associated with locked door.
+                        
+                        // Flag locked door.
+                        lockedDoorInd = true;
+                        
+                        // Copy virtual string.
+                        virtualString = tile.getVirtualString();
+                        
+                        // Exit loop.
+                        break;
+                        
+                    default:
+                        
+                        // Display warning message.
+                        System.out.println("Warning:  Found an unknown object!");
+                        
+                        // Exit loop.
+                        break;
                     
-                    // Copy virtual string.
-                    virtualString = tile.getVirtualString();
-                    
-                    // Exit loop.
-                    break;
-                    
-                }
+                } // End ... Depending on object type.
                 
             } // End ... If tile metadata five characters or more.
             
@@ -1842,8 +2136,16 @@ public class MazeMap
             // Set virtual string of actor.
             tempBonePile.setVirtualString( virtualString );
             
-            // Add events to actor.
-            addEvent_BonePileActor( tempBonePile, viewWidth, mapActionButtonMagic );
+            // If player knows burn spell and has sufficient magic points for casting, then...
+            if (gameHD.getAvatar().getSpellCastInd(HeroineEnum.SpellEnum.SPELL_BURN))
+            {
+                
+                // Player knows burn spell and has sufficient magic points for casting.
+            
+                // Add events to actor.
+                addEvent_BonePileActor( tempBonePile, viewWidth, mapActionButtonMagic );
+                
+            }
             
             // Add bone pile actor to the list.
             tiles.add( tempBonePile );
@@ -1868,9 +2170,69 @@ public class MazeMap
             mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN.toString(), false);
             
         }
-            
         
-        // 8.  Handle objects that exist in current location (at feet of player).
+        // 8.  If necessary, add actor for lock.
+        //     If no locked door exists, disable unlock button.
+        
+        // If locked door exists immediately in front of player, then...
+        if ( lockedDoorInd )
+        {
+            
+            // Locked door exists immediately in front of player.
+            
+            System.out.println("Locked door exists immediately in front of player.");
+            
+            // Create actor for the lock, setting position in the next step.
+            tempLock = new BaseActor( "Lock", 
+              gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_LOCK.getValue_Key()), 
+              0f, 0f );
+            
+            // Set position of actor -- centered horizontally and up about 1/4 from the bottom.
+            tempLock.setPosition( 74f * gameHD.getConfig().getScale(), 
+              41f * gameHD.getConfig().getScale() );
+            
+            // Set origin of actor to center of associated image.
+            tempLock.setOriginCenter();
+            
+            // Set virtual string of actor.
+            tempLock.setVirtualString( virtualString );
+            
+            // If player knows unlock spell and has sufficient magic points for casting, then...
+            if (gameHD.getAvatar().getSpellCastInd(HeroineEnum.SpellEnum.SPELL_UNLOCK))
+            {
+                
+                // Player knows unlock spell and has sufficient magic points for casting.
+                
+                // Add events to actor.
+                addEvent_LockActor( tempLock, viewWidth, mapActionButtonMagic );
+                
+            }
+            
+            // Add lock actor to the list.
+            tiles.add( tempLock );
+            
+            // Add entry to cross reference hash map.
+            tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_LOCK.getValue(), counter );
+            
+            // Enable unlock button.
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK.toString(), true);
+            
+            // Incement hash map counter.
+            counter++;
+            
+        } // End ... If locked door exists immediately in front of player.
+        
+        else
+        {
+            
+            // Locked door DOES NOT exist immediately in front of player.
+            
+            // Disable unlock button.
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK.toString(), false);
+            
+        }
+        
+        // 9.  Handle objects that exist in current location (at feet of player).
         
         // If player has already moved, is headed forward or backward, and a redraw is not occurring, then...
         if ( gameHD.getAvatar().movedInd() && !turnInd && !redrawInd )
@@ -1906,7 +2268,8 @@ public class MazeMap
                     draw_treasure( treasureImageInd, null, tempTreasure, tempTreasureGroup, treasureLabel, 
                       viewWidth, 0.00f, regionLabel );
 
-                    // Remove chests from array list and hash map associated with current location.
+                    // Set chests in array list inactive and remove entry from hash map associated with 
+                    // current location.
                     gameHD.getAtlasItems().removeChests( chestList, map_id, x, y );
 
                     // Transform tile with chest to show similar image to background -- removing chest.
@@ -1952,7 +2315,7 @@ public class MazeMap
             
         } // End ... If player has already moved.
         
-        // 9.  Return the array list with the base actors for the tiles.
+        // 10.  Return the array list with the base actors for the tiles.
         return tiles;
         
     }
@@ -2074,6 +2437,16 @@ public class MazeMap
                             // Store metadata about the skull pile.
                             virtualString = "Locked Door|" + Integer.toString(map_id) + "," + 
                               Integer.toString(pos_x) + "," + Integer.toString(pos_y);
+                            
+                            // Unlocking will replace locked with regular (unlocked) door.
+                            
+                            // For now, display the regular door with an added tile with the lock.
+                            // Make the tile replacement with the regular door temporary until the
+                            // unlocking occurs.
+                            tileNbr = HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_DOOR.getValue();
+                            
+                            // Enable locked door events -- disable later if displaying information view.
+                            lockedDoorActiveInd = true;
                             
                             // Exit selector.
                             break;
@@ -2856,6 +3229,10 @@ public class MazeMap
                 
         }
     
+    }
+    
+    public void setLockedDoorActiveInd(boolean lockedDoorActiveInd) {
+        this.lockedDoorActiveInd = lockedDoorActiveInd;
     }
     
     public int getMap_id() {

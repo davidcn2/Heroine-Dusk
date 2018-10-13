@@ -6,7 +6,7 @@ import gui.CustomLabel;
 
 // Java imports.
 import core.AssetMgr;
-import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Avatar 
 {
@@ -25,7 +25,8 @@ public class Avatar
     */
     
     // Declare object variables.
-    private final ArrayList<HeroineEnum.SpellEnum> spellList; // List of player spells.
+    //private final ArrayList<HeroineEnum.SpellEnum> spellList; // List of player spells.
+    private final HashMap<HeroineEnum.SpellEnum, Boolean> spellList; // List of player spells.
     
     // Declare regular variables.
     private HeroineEnum.ArmorEnum armor; // Current armor.
@@ -54,8 +55,8 @@ public class Avatar
         
         // The constructor initializes array lists and sets the starting values for the player.
         
-        // Initialize array lists.
-        spellList = new ArrayList<>();
+        // Initialize hash maps.
+        spellList = new HashMap<>();
         
         // Set starting values for the player.
         x = 1;
@@ -80,7 +81,7 @@ public class Avatar
         // temp
         setSpellbook(HeroineEnum.SpellEnum.SPELL_HEAL);
         setSpellbook(HeroineEnum.SpellEnum.SPELL_BURN);
-        //setSpellbook(HeroineEnum.SpellEnum.SPELL_UNLOCK);
+        setSpellbook(HeroineEnum.SpellEnum.SPELL_UNLOCK);
         //setSpellbook(HeroineEnum.SpellEnum.SPELL_LIGHT);
         //setSpellbook(HeroineEnum.SpellEnum.SPELL_FREEZE);
         //setSpellbook(HeroineEnum.SpellEnum.SPELL_REFLECT);
@@ -623,10 +624,62 @@ public class Avatar
 
     public void setSpellbook(HeroineEnum.SpellEnum spellbook) {
         this.spellbook = spellbook;
-        this.spellList.add(spellbook);
+        this.spellList.put(spellbook, true);
     }
 
-    public ArrayList<HeroineEnum.SpellEnum> getSpellList() {
+    // spellEnum = Spell to check whether player knows and has magic points sufficient to cast.
+    public boolean getSpellCastInd(HeroineEnum.SpellEnum spellEnum) {
+        
+        // The function returns whether the player knows the passed spell and has sufficient magic points 
+        // for casting.
+        
+        boolean spellCastInd; // Whether player knows the passed spell.
+        
+        // Set default return value.
+        spellCastInd = false;
+        
+        // If player has one or more magic points, then...
+        if (mp >= 1)
+        {
+            
+            // Player has one or more magic points.
+            
+            // Determine whether player knows spell.
+            spellCastInd = getSpellInd(spellEnum);
+            
+        }
+        
+        // Return whether the player knows the spell and has sufficient magic points for casting.
+        return spellCastInd;
+        
+    }
+    
+    // spellEnum = Spell to check whether player knows.
+    public boolean getSpellInd(HeroineEnum.SpellEnum spellEnum) {
+        
+        // The function returns whether the player knows the passed spell.
+        
+        boolean knowSpellInd; // Whether player knows the passed spell.
+        
+        // Set default return value.
+        knowSpellInd = false;
+        
+        // If entry exists in hash map for spell, then...
+        if (spellList.get(spellEnum) != null)
+            
+            // If entry indicates that player knows spell (value = true), then...
+            if (spellList.get(spellEnum))
+                // Entry indicates that player knows spell.
+                
+                // Flag as player knowing spell.
+                knowSpellInd = true;
+        
+        // Return whether the player knows the spell.
+        return knowSpellInd;
+        
+    }
+    
+    public HashMap<HeroineEnum.SpellEnum, Boolean> getSpellList() {
         return spellList;
     }
     

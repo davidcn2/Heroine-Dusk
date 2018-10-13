@@ -455,6 +455,8 @@ public class AtlasItems
         // The inner class stores information about a locked door.
         
         // Declare regular variables.
+        private boolean activeInd; // Whether locked door active (used in place of removal simplify array list).
+        private int lockedDoorIndex; // Index in array -- lockedDoorList.
         private final int pos_x; // X-coordinate of the tile with the locked door (the array index).
         private final int pos_y; // Y-coordinate of the tile with the locked door (the array index).
         private final int regionNbr; // Region number.  Base 0.
@@ -468,10 +470,27 @@ public class AtlasItems
             // The constructor stores the locked door information.
             
             // Store the passed locked door information in the class-level variables.
+            this.activeInd = true;
             this.pos_x = pos_x;
             this.pos_y = pos_y;
             this.regionNbr = regionNbr;
             
+        }
+        
+        public boolean isActiveInd() {
+            return activeInd;
+        }
+
+        public void setActiveInd(boolean activeInd) {
+            this.activeInd = activeInd;
+        }
+        
+        public int getLockedDoorIndex() {
+            return lockedDoorIndex;
+        }
+        
+        public void setLockedDoorIndex(int index) {
+            this.lockedDoorIndex = index;
         }
         
         public int getPos_x() {
@@ -1542,6 +1561,9 @@ public class AtlasItems
             
         }
         
+        // Reset index counter.
+        counterIndex = 0;
+        
         // Loop through locked doors.
         for (LockedDoor lockedDoor : lockedDoorList)
         {
@@ -1570,11 +1592,17 @@ public class AtlasItems
                 
             }
             
+            // Store index.
+            lockedDoor.setLockedDoorIndex(counterIndex);
+            
             // Add item to array list.
             temp.add(lockedDoor);
             
             // Add item to hash map.
             mapRegionItems.put(key, temp);
+            
+            // Increment counter.
+            counterIndex++;
             
         }
         
@@ -1613,6 +1641,270 @@ public class AtlasItems
             mapRegionItems.put(key, temp);
             
         }
+        
+    }
+    
+    // index = Array index of bone pile to "remove" -- set inactive -- (in the array list, bonePileList).
+    // map_id = Map / region number in which to remove the bone pile.
+    public void removeBonePile(int index, int map_id) {
+        
+        /*
+        The function encapsulates logic for setting a bone pile (based on map / region and index) as 
+        inactive in the array list.  The function also reduces the bone pile counts in the related lists.
+        
+        Notes:
+        1.  The hash map, mapRegionItems, stores a list of objects, by type, at each location.
+        2.  Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
+        3.  *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
+        4.  The "value" in the hash map contains an array list of the specified item category.
+        5.  For example, the "value" would contain one to many bone piles if category = ITEM_CTGY_BONE_PILE.
+        7.  The function does NOT remove the bone pile from the hash map.
+        */
+        
+        // Set the bone pile inactive to simulate removing from the array list.
+        bonePileList.get(index).setActiveInd(false);
+        //bonePileList.remove(index);
+        
+        // Reduce bone pile count.
+        bonePileCount--;
+        
+        // For the passed map / region, reduce number of bone piles stored in array list with quantities.
+        itemCountList.get(map_id).itemCount_BonePile--;
+        
+        // Reduce the total item count for the current region.
+        itemTotalList.set(map_id, itemTotalList.get(map_id) - 1);
+        
+    }
+    
+    // map_id = Map / region number in which to remove the bone pile.
+    // posX = X-coordinate associated with the bone pile.
+    // posY = Y-coordinate associated with the bone pile.
+    public void removeBonePileEntry(int map_id, int posX, int posY)
+    {
+        
+        // The function removes the bone pile based on the passed information from the hash map, mapRegionItems.
+        
+        // Remove bone pile from hash map.
+        mapRegionItems.remove(getMapRegionItemKey(map_id, posX, posY, 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_BONE_PILE));
+        
+    }
+    
+    // mapLocation = Location information associated with the bone pile to remove.  Includes map_id, x, and y.
+    public void removeBonePileFirst(MapLocation mapLocation)
+    {
+        
+        /*
+        The function encapsulates logic for removing the first bone pile from the passed map location.
+        The function actually assumes that only one bone pile exists at a given map location.
+        
+        Actions include setting the array-related value inactive and removing the entry from the
+        hash map.
+        */
+        
+        BonePile bonePile; // First bone pile at passed location.
+        ArrayList<Object> objBonePileList; // List of bone piles at passed location.
+        String key; // Key to use in get call to hash map with atlas items.
+        
+        // Specify key to use in get call to hash map with atlas items.
+        key = getMapRegionItemKey(mapLocation.getMap_id(), mapLocation.getX(), mapLocation.getY(), 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_BONE_PILE);
+        
+        // Get list of bone piles at passed location.
+        objBonePileList = (ArrayList<Object>)mapRegionItems.get(key);
+        
+        // Get reference to first bone pile at passed location.
+        bonePile = (BonePile)objBonePileList.get(0);
+        
+        // Set bone pile in array list as inactive.
+        removeBonePile(bonePile.getBonePileIndex(), mapLocation.getMap_id());
+            
+        // Remove entry from mapRegionItems hash map.
+        removeBonePileEntry(mapLocation.getMap_id(), mapLocation.getX(), mapLocation.getY());
+        
+    }
+    
+    // index = Array index of chest to "remove" -- set inactive -- (in the array list, chestList).
+    // map_id = Map / region number in which to remove the chest.
+    public void removeChest(int index, int map_id) {
+        
+        /*
+        The function encapsulates logic for setting a chest (based on map / region and index) as 
+        inactive in the array list.  The function also reduces the chest counts in the related lists.
+        
+        Notes:
+        1.  A list of chests for a specific location can be retrieved with getChestList( map_id, posX, posY );
+        2.  The hash map, mapRegionItems, stores a list of objects, by type, at each location.
+        3.  Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
+        4.  *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
+        5.  The "value" in the hash map contains an array list of the specified item category.
+        6.  For example, the "value" would contain one to many chests if category = ITEM_CTGY_CHEST.
+        7.  The function does NOT remove the chest from the hash map, as one to many chests exist 
+            for each entry.
+        */
+        
+        // Set the chest inactive to simulate removing from the array list.
+        chestList.get(index).setActiveInd(false);
+        //chestList.remove(index);
+        
+        // Reduce chest count.
+        chestCount--;
+        
+        // For the passed map / region, reduce number of chests stored in array list with quantities.
+        itemCountList.get(map_id).itemCount_Chest--;
+        
+        // Reduce the total item count for the current region.
+        itemTotalList.set(map_id, itemTotalList.get(map_id) - 1);
+        
+    }
+    
+    // tempChests = List of chests to remove.
+    // map_id = Map / region number in which to remove the chests.
+    // posX = X-coordinate associated with the chest(s).
+    // posY = Y-coordinate associated with the chest(s).
+    public void removeChests(ArrayList<Chest> tempChests, int map_id, int posX, int posY)
+    {
+        
+        /*
+        The function encapsulates logic for removing the passed chests from the 
+        specified region, including for the hash map.
+        The function actually sets the chests in the array list as inactive and removes
+        the entry in the hash map.
+        */
+        
+        ArrayList<Integer> removeList; // List of indices to remove (for chests).
+        
+        // Initialize array list.
+        removeList = new ArrayList<>();
+        
+        /*
+        System.out.println("\nBefore...");
+        System.out.println("Chest list size: " + chestList.size());
+        System.out.println("Chest count: " + chestCount);
+        System.out.println("Item count: " + itemCountList.get(map_id).itemCount_Chest);
+        System.out.println("Item total: " + itemTotalList.get(map_id));
+        */
+        
+        // Loop through chests.
+        tempChests.forEach((chest) -> {
+            
+            // Add chest to removal list.
+            removeList.add(chest.getChestIndex());
+        
+        });
+        
+        // Loop through and set chests as inactive in array list.
+        removeList.forEach((index) -> {
+
+            // Remove chest from array list.
+            removeChest((int)index, map_id);
+
+        });
+        
+        // Remove entry from mapRegionItems hash map.
+        removeChestEntry(map_id, posX, posY);
+        
+        /*
+        System.out.println("\nAfter...");
+        System.out.println("Chest list size: " + chestList.size());
+        System.out.println("Chest count: " + chestCount);
+        System.out.println("Item count: " + itemCountList.get(map_id).itemCount_Chest);
+        System.out.println("Item total: " + itemTotalList.get(map_id));
+        */
+        
+    }
+    
+    // map_id = Map / region number in which to remove the chest.
+    // posX = X-coordinate associated with the chest(s).
+    // posY = Y-coordinate associated with the chest(s).
+    public void removeChestEntry(int map_id, int posX, int posY)
+    {
+        
+        // The function removes the chest based on the passed information from the hash map, mapRegionItems.
+        
+        // Remove chest from hash map.
+        mapRegionItems.remove(Integer.toString(map_id) + "," + Integer.toString(posX) + "," + 
+          Integer.toString(posY) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_CHEST);
+        
+    }
+    
+    // index = Array index of locked door to "remove" -- set inactive -- (in the array list, lockedDoorList).
+    // map_id = Map / region number in which to remove the locked door.
+    public void removeLockedDoor(int index, int map_id) {
+        
+        /*
+        The function encapsulates logic for setting a locked door (based on map / region and index) as 
+        inactive in the array list.  The function also reduces the locked door counts in the related lists.
+        
+        Notes:
+        1.  The hash map, mapRegionItems, stores a list of objects, by type, at each location.
+        2.  Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
+        3.  *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
+        4.  The "value" in the hash map contains an array list of the specified item category.
+        5.  For example, the "value" would contain one to many locked doors if category = ITEM_CTGY_LOCKED_DOOR.
+        7.  The function does NOT remove the locked door from the hash map.
+        */
+        
+        // Set the locked door inactive to simulate removing from the array list.
+        lockedDoorList.get(index).setActiveInd(false);
+        //lockedDoorList.remove(index);
+        
+        // Reduce locked door count.
+        lockedDoorCount--;
+        
+        // For the passed map / region, reduce number of locked doors stored in array list with quantities.
+        itemCountList.get(map_id).itemCount_LockedDoor--;
+        
+        // Reduce the total item count for the current region.
+        itemTotalList.set(map_id, itemTotalList.get(map_id) - 1);
+        
+    }
+    
+    // map_id = Map / region number in which to remove the locked door.
+    // posX = X-coordinate associated with the locked door.
+    // posY = Y-coordinate associated with the locked door.
+    public void removeLockedDoorEntry(int map_id, int posX, int posY)
+    {
+        
+        // The function removes the locked door based on the passed information from the hash map, mapRegionItems.
+        
+        // Remove locked door from hash map.
+        mapRegionItems.remove(getMapRegionItemKey(map_id, posX, posY, 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_LOCKED_DOOR));
+        
+    }
+    
+    // mapLocation = Location information associated with the locked door to remove.  Includes map_id, x, and y.
+    public void removeLockedDoorFirst(MapLocation mapLocation)
+    {
+        
+        /*
+        The function encapsulates logic for removing the first locked door from the passed map location.
+        The function actually assumes that only one locked door exists at a given map location.
+        
+        Actions include setting the array-related value inactive and removing the entry from the
+        hash map.
+        */
+        
+        LockedDoor lockedDoor; // First locked door at passed location.
+        ArrayList<Object> objLockedDoorList; // List of locked doors at passed location.
+        String key; // Key to use in get call to hash map with atlas items.
+        
+        // Specify key to use in get call to hash map with atlas items.
+        key = getMapRegionItemKey(mapLocation.getMap_id(), mapLocation.getX(), mapLocation.getY(), 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_LOCKED_DOOR);
+        
+        // Get list of locked doors at passed location.
+        objLockedDoorList = (ArrayList<Object>)mapRegionItems.get(key);
+        
+        // Get reference to first locked door at passed location.
+        lockedDoor = (LockedDoor)objLockedDoorList.get(0);
+        
+        // Set bone pile in array list as inactive.
+        removeLockedDoor(lockedDoor.getLockedDoorIndex(), mapLocation.getMap_id());
+        
+        // Remove entry from mapRegionItems hash map.
+        removeLockedDoorEntry(mapLocation.getMap_id(), mapLocation.getX(), mapLocation.getY());
         
     }
     
@@ -1721,186 +2013,6 @@ public class AtlasItems
     
     public ArrayList<Chest> getChestList() {
         return chestList;
-    }
-    
-    // index = Array index of bone pile to remove (in the array list, bonePileList).
-    // map_id = Map / region number in which to remove the bone pile.
-    public void removeBonePile(int index, int map_id) {
-        
-        /*
-        The function encapsulates logic for removing the passed bone pile (based on index) from the 
-        specified region, except for the hash map.
-        
-        Notes:
-        1.  The hash map, mapRegionItems, stores a list of objects, by type, at each location.
-        2.  Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
-        3.  *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
-        4.  The "value" in the hash map contains an array list of the specified item category.
-        5.  For example, the "value" would contain one to many bone piles if category = ITEM_CTGY_BONE_PILE.
-        7.  The function does NOT remove the bone pile from the hash map, as one to many bone piles exist 
-            for each entry.
-        */
-        
-        // Set the bone pile inactive to simulate removing from the array list.
-        bonePileList.get(index).setActiveInd(false);
-        //bonePileList.remove(index);
-        
-        // Reduce bone pile count.
-        bonePileCount--;
-        
-        // For the passed map / region, reduce number of bone piles stored in array list with quantities.
-        itemCountList.get(map_id).itemCount_BonePile--;
-        
-        // Reduce the total item count for the current region.
-        itemTotalList.set(map_id, itemTotalList.get(map_id) - 1);
-        
-    }
-    
-    // map_id = Map / region number in which to remove the chest.
-    // posX = X-coordinate associated with the chest(s).
-    // posY = Y-coordinate associated with the chest(s).
-    public void removeBonePileEntry(int map_id, int posX, int posY)
-    {
-        
-        // The function removes the chest based on the passed information from the hash map, mapRegionItems.
-        
-        // Remove bone pile from hash map.
-        mapRegionItems.remove(getMapRegionItemKey(map_id, posX, posY, 
-          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_BONE_PILE));
-        
-    }
-    
-    // mapLocation = Location information associated with the bone pile to remove.  Includes map_id, x, and y.
-    public void removeBonePileFirst(MapLocation mapLocation)
-    {
-        
-        /*
-        The function encapsulates logic for removing the passed chests from the 
-        specified region, including for the hash map.
-        */
-        
-        BonePile bonePile; // First bone pile at passed location.
-        ArrayList<Object> objBonePileList; // List of bone piles at passed location.
-        String key; // Key to use in get call to hash map with atlas items.
-        
-        // Specify key to use in get call to hash map with atlas items.
-        key = getMapRegionItemKey(mapLocation.getMap_id(), mapLocation.getX(), mapLocation.getY(), 
-          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_BONE_PILE);
-        
-        // Get list of bone piles at passed location.
-        objBonePileList = (ArrayList<Object>)mapRegionItems.get(key);
-        
-        // Get reference to first bone pile at passed location.
-        bonePile = (BonePile)objBonePileList.get(0);
-        
-        // Remove bone pile from array list.
-        removeBonePile(bonePile.getBonePileIndex(), mapLocation.getMap_id());
-        
-        // Remove entry from mapRegionItems hash map.
-        removeBonePileEntry(mapLocation.getMap_id(), mapLocation.getX(), mapLocation.getY());
-        
-    }
-    
-    // index = Array index of chest to remove (in the array list, chestList).
-    // map_id = Map / region number in which to remove the chest.
-    public void removeChest(int index, int map_id) {
-        
-        /*
-        The function encapsulates logic for removing the passed chest (based on index) from the 
-        specified region, except for the hash map.
-        
-        Notes:
-        1.  A list of chests for a specific location can be retrieved with getChestList( map_id, posX, posY );
-        2.  The hash map, mapRegionItems, stores a list of objects, by type, at each location.
-        3.  Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
-        4.  *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
-        5.  The "value" in the hash map contains an array list of the specified item category.
-        6.  For example, the "value" would contain one to many chests if category = ITEM_CTGY_CHEST.
-        7.  The function does NOT remove the chest from the hash map, as one to many chests exist 
-            for each entry.
-        */
-        
-        // Set the chest inactive to simulate removing from the array list.
-        chestList.get(index).setActiveInd(false);
-        //chestList.remove(index);
-        
-        // Reduce chest count.
-        chestCount--;
-        
-        // For the passed map / region, reduce number of chests stored in array list with quantities.
-        itemCountList.get(map_id).itemCount_Chest--;
-        
-        // Reduce the total item count for the current region.
-        itemTotalList.set(map_id, itemTotalList.get(map_id) - 1);
-        
-    }
-    
-    // tempChests = List of chests to remove.
-    // map_id = Map / region number in which to remove the chests.
-    // posX = X-coordinate associated with the chest(s).
-    // posY = Y-coordinate associated with the chest(s).
-    public void removeChests(ArrayList<Chest> tempChests, int map_id, int posX, int posY)
-    {
-        
-        /*
-        The function encapsulates logic for removing the passed chests from the 
-        specified region, including for the hash map.
-        */
-        
-        ArrayList<Integer> removeList; // List of indices to remove (for chests).
-        
-        // Initialize array list.
-        removeList = new ArrayList<>();
-        
-        /*
-        System.out.println("\nBefore...");
-        System.out.println("Chest list size: " + chestList.size());
-        System.out.println("Chest count: " + chestCount);
-        System.out.println("Item count: " + itemCountList.get(map_id).itemCount_Chest);
-        System.out.println("Item total: " + itemTotalList.get(map_id));
-        */
-        
-        // Loop through chests.
-        tempChests.forEach((chest) -> {
-            
-            // Add chest to removal list.
-            removeList.add(chest.getChestIndex());
-        
-        });
-        
-        // Loop through and remove chests in array list.
-        removeList.forEach((index) -> {
-
-            // Remove chest from array list.
-            removeChest((int)index, map_id);
-
-        });
-        
-        // Remove entry from mapRegionItems hash map.
-        removeChestEntry(map_id, posX, posY);
-        
-        /*
-        System.out.println("\nAfter...");
-        System.out.println("Chest list size: " + chestList.size());
-        System.out.println("Chest count: " + chestCount);
-        System.out.println("Item count: " + itemCountList.get(map_id).itemCount_Chest);
-        System.out.println("Item total: " + itemTotalList.get(map_id));
-        */
-        
-    }
-    
-    // map_id = Map / region number in which to remove the chest.
-    // posX = X-coordinate associated with the chest(s).
-    // posY = Y-coordinate associated with the chest(s).
-    public void removeChestEntry(int map_id, int posX, int posY)
-    {
-        
-        // The function removes the chest based on the passed information from the hash map, mapRegionItems.
-        
-        // Remove chest from hash map.
-        mapRegionItems.remove(Integer.toString(map_id) + "," + Integer.toString(posX) + "," + 
-          Integer.toString(posY) + "," + HeroineEnum.ItemCategoryEnum.ITEM_CTGY_CHEST);
-        
     }
     
     // whichHayBale = Index number of hay bale to return.  Base 0.
