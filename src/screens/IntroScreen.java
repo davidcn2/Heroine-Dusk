@@ -21,6 +21,7 @@ import heroinedusk.JSON_Processor;
 // Java imports.
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -372,7 +373,8 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         4.  Configures and adds the label next to the start button.
         5.  Populate hash maps related to sounds and music.
         6.  Split tile regions for use with explore screen.
-        7.  Hides the progress bar.
+        7.  Load pixel maps.
+        8.  Hides the progress bar.
         */
         
         int counter; // Used to count through regions in current tile -- for splitting.
@@ -474,7 +476,10 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
               
         } // End ... Loop through tile image enumerated values.
         
-        // 7.  Hide the progress bar.
+        // 7.  Load pixel maps.
+        gameHD.getAssetMgr().loadPixelMaps();
+        
+        // 8.  Hide the progress bar.
         progressBar.hideBar();
         
     }
@@ -489,10 +494,11 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         
         1.  Displays progress bar in center of screen -- update when loading assets.
         2.  Stores values in load lists.
-        3.  Queues images.
-        4.  Queues atlases.
-        5.  Queues sounds.
-        6.  Queues music (ogg format).
+        3.  Queues images to load into textures.
+        4.  Queues atlases to load into textures.
+        5.  Queue images to load into pixmaps.
+        6.  Queues sounds.
+        7.  Queues music (ogg format).
         */
         
         // Declare object variables.
@@ -502,17 +508,22 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         ArrayList<String> imageMapList; // List of image paths and keys (path, key, path, key, ...) for later 
           // addition to hash map.
         ArrayList<String> imagePathList; // List of paths to images to load.
+        HashMap<String, String> pixelMapPathXRef; // List of paths to images for which to get pixel maps.
+          // Key = Enumerated value.  Value = Path to image file.
         
         // Declare regular variables.
         String atlasPath; // Path to atlas to load.
         String imagePath; // Path to image to load.
         
-        // Initialize array list.
+        // Initialize array lists.
         atlasKeyList = new ArrayList<>();
         atlasMapList = new ArrayList<>();
         atlasPathList = new ArrayList<>();
         imageMapList = new ArrayList<>();
         imagePathList = new ArrayList<>();
+        
+        // Initialize hash maps.
+        pixelMapPathXRef = new HashMap<>();
         
         // 1.  Display progress bar in center of screen -- update when loading assets.
         uiStage.addActor(progressBar.displayBarCenterHorz(viewWidthMain, 175));
@@ -601,6 +612,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 imageMapList.add(imagePath);
                 imageMapList.add(imgEnum.getValue_Key());
                 imagePathList.add(imagePath);
+                pixelMapPathXRef.put(imgEnum.getValue_Key(), imagePath);
                 }
             
             // Loop through treasure image enumerations.
@@ -701,6 +713,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 imageMapList.add(imagePath);
                 imageMapList.add(imgEnum.getValue_Key());
                 imagePathList.add(imagePath);
+                pixelMapPathXRef.put(imgEnum.getValue_Key(), imagePath);
                 }
             
             // Loop through treasure image enumerations.
@@ -719,15 +732,18 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 
             } // End ... If using a prescaled size.
         
-        // 3.  Queue images.
+        // 3.  Queue images to load into textures.
         gameHD.getAssetMgr().queueImages(imagePathList);
         gameHD.getAssetMgr().mapImages(imageMapList);
         
-        // 4.  Queue atlases.
+        // 4.  Queue atlases to load into textures.
         gameHD.getAssetMgr().queueAtlases(atlasPathList);
         gameHD.getAssetMgr().mapAtlases(atlasMapList);
         
-        // 5.  Queue sounds.
+        // 5.  Queue images to load into pixmaps.
+        gameHD.getAssetMgr().queuePixmaps(pixelMapPathXRef);
+        
+        // 6.  Queue sounds.
         
         // Loop through sounds (via enumerations).
         for (HeroineEnum.SoundEnum sound : HeroineEnum.SoundEnum.values()) {
@@ -737,7 +753,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
             
         }
         
-        // 6.  Queue music (ogg format).
+        // 7.  Queue music (ogg format).
         
         // Loop through music (via enumerations).
         for (HeroineEnum.MusicEnum music : HeroineEnum.MusicEnum.values()) {

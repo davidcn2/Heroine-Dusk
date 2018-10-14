@@ -1,10 +1,12 @@
 package core;
 
 // LibGDX imports.
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.TextureLoader.TextureParameter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -21,6 +23,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -86,6 +89,10 @@ public class AssetMgr
     @SuppressWarnings("FieldMayBeFinal")
     private Map<String, String> assetMapping_Textures; // Cross reference between asset names and keys -- 
       // for textures in asset manager.
+    private HashMap<String, String> pixelMapXRef; // List of paths to images for which to get pixel maps.
+      // Key = Enumerated value.  Value = Path to image file.
+    private Map<String, Pixmap> texturePixmaps; // Contains pixel maps for images.
+    private Map<String, Integer> texturePixmapHeights; // Contains pixel map heights for images.
     private final Map<String, Rectangle2D.Float> textureRegionRects; // Contains rects related to texture regions in atlases.  Keys same as in atlas files.
     private final Map<String, TextureRegion> textureRegions; // Contains texture regions related to atlases (same keys as in the atlas files).
     
@@ -106,6 +113,9 @@ public class AssetMgr
         // Initialize the hash maps.
         assetMapping_Atlases = new HashMap<>();
         assetMapping_Textures = new HashMap<>();
+        pixelMapXRef = new HashMap<>();
+        texturePixmaps = new HashMap<>();
+        texturePixmapHeights = new HashMap<>();
         textureRegions = new HashMap<>();
         textureRegionRects = new HashMap<>();
         
@@ -121,59 +131,27 @@ public class AssetMgr
         
     }
     
-    // key = Key value in asset manager for Atlas to return.
-    public TextureAtlas getAtlas(String key)
+    public void loadPixelMaps()
     {
         
-        // The function returns the Atlas from the asset manager with the passed key.
+        // The function loads the pixel maps based on the queued resouces in the hash map, pixelMapXRef.
         
-        // Return Atlas.
-        return manager.get(key, TextureAtlas.class);
+        Set<Map.Entry<String, String>> entrySetPixelMapXRef; // Set view of the mappings in the hash map.
+        Pixmap temp; // Pixel map to add to hash map.
         
-    }
-    
-    // xref_Key = Key value to use in cross reference when getting Atlas from asset manager.
-    public TextureAtlas getAtlas_xRef(String xref_Key)
-    {
+        // Store a set view of the mappings for the hash map.
+        entrySetPixelMapXRef = pixelMapXRef.entrySet();
         
-        // The function returns the Atlas from the asset manager based on the name in the
-        // cross reference (class-specific hash map) tied to the key passed.
+        // Loop through files for which to store pixel maps.
+        entrySetPixelMapXRef.forEach((entryPixelMap) -> {
+            
+            // Load current pixel map in loop, adding to hash map.
+            texturePixmaps.put(entryPixelMap.getKey(), new Pixmap(Gdx.files.internal(entryPixelMap.getValue())));
         
-        String xref_Value; // Value in cross reference -- matches to key in asset manager.
-        
-        // Determine cross reference value based on passed key.
-        xref_Value = assetMapping_Atlases.get(xref_Key);
-        
-        // Return Atlas.
-        return manager.get(xref_Value, TextureAtlas.class);
-        
-    }
-    
-    // key = Key value in asset manager for Texture to return.
-    public Texture getImage(String key)
-    {
-        
-        // The function returns the Texture from the asset manager with the passed key.
-        
-        // Return Texture.
-        return manager.get(key, Texture.class);
-        
-    }
-    
-    // xref_Key = Key value to use in cross reference when getting Texture from asset manager.
-    public Texture getImage_xRef(String xref_Key)
-    {
-        
-        // The function returns the Texture from the asset manager based on the name in the
-        // cross reference (class-specific hash map) tied to the key passed.
-        
-        String xref_Value; // Value in cross reference -- matches to key in asset manager.
-        
-        // Determine cross reference value based on passed key.
-        xref_Value = assetMapping_Textures.get(xref_Key);
-        
-        // Return Texture.
-        return manager.get(xref_Value, Texture.class);
+            // Store pixel map height.
+            texturePixmapHeights.put(entryPixelMap.getKey(), texturePixmaps.get(entryPixelMap.getKey()).getHeight());
+            
+        });
         
     }
     
@@ -514,6 +492,19 @@ public class AssetMgr
         
     }
     
+    // pixelMapXRef = List of images to for which to (later) load pixel maps.
+    //   Key = Enumerated value.
+    //   Value = Path to image (e.g. assets\prescaled\_0960x720\other\chest.png).
+    public void queuePixmaps(HashMap pixelMapXRef)
+    {
+        
+        // The function adds the passed images to the pixel map hash map for future loading.
+        
+        // Store paths for images for which to later get pixel map data.
+        this.pixelMapXRef.putAll(pixelMapXRef);
+        
+    }
+    
     // elements = List of sounds to load.  Must include full path and extension.  Example:  "assets\beep.wav", "assets\click.wav".
     public void queueSounds(String ... elements)
     {
@@ -530,6 +521,62 @@ public class AssetMgr
     }
     
     // Getters and setters below...
+    
+    // key = Key value in asset manager for Atlas to return.
+    public TextureAtlas getAtlas(String key)
+    {
+        
+        // The function returns the Atlas from the asset manager with the passed key.
+        
+        // Return Atlas.
+        return manager.get(key, TextureAtlas.class);
+        
+    }
+    
+    // xref_Key = Key value to use in cross reference when getting Atlas from asset manager.
+    public TextureAtlas getAtlas_xRef(String xref_Key)
+    {
+        
+        // The function returns the Atlas from the asset manager based on the name in the
+        // cross reference (class-specific hash map) tied to the key passed.
+        
+        String xref_Value; // Value in cross reference -- matches to key in asset manager.
+        
+        // Determine cross reference value based on passed key.
+        xref_Value = assetMapping_Atlases.get(xref_Key);
+        
+        // Return Atlas.
+        return manager.get(xref_Value, TextureAtlas.class);
+        
+    }
+    
+    // key = Key value in asset manager for Texture to return.
+    public Texture getImage(String key)
+    {
+        
+        // The function returns the Texture from the asset manager with the passed key.
+        
+        // Return Texture.
+        return manager.get(key, Texture.class);
+        
+    }
+    
+    // xref_Key = Key value to use in cross reference when getting Texture from asset manager.
+    public Texture getImage_xRef(String xref_Key)
+    {
+        
+        // The function returns the Texture from the asset manager based on the name in the
+        // cross reference (class-specific hash map) tied to the key passed.
+        
+        String xref_Value; // Value in cross reference -- matches to key in asset manager.
+        
+        // Determine cross reference value based on passed key.
+        xref_Value = assetMapping_Textures.get(xref_Key);
+        
+        // Return Texture.
+        return manager.get(xref_Value, Texture.class);
+        
+    }
     
     // regionKey = Key (as relates to hash map) for Rectangle2D to return.
     public Rectangle2D.Float getTextureRegionRect(String regionKey)
@@ -557,6 +604,36 @@ public class AssetMgr
         
         // The function returns the requested music in Ogg format.
         return manager.get(musicEnum.getValue_File_ogg(), Music.class);
+        
+    }
+    
+    // key = Key in hash map, texturePixmaps, for pixel map to return.
+    public Pixmap getPixmap(String key)
+    {
+        // Return pixel map.
+        return texturePixmaps.get(key);
+    }
+    
+    // key = Key in hash map, texturePixmaps, for pixel map to return.
+    // x = X-coordinate within pixel map to check.
+    // y = Y-coordinate within pixel map to check, considering 0 as the bottom.
+    public boolean getPixmapTransparentInd(String key, float x, float y) {
+        
+        // The function returns whether the specified location within the pixel map is transparent.
+        
+        int pixel; // 32-bit RGBA8888 value of the pixel at the specified location.
+        int posX; // X-cooridnate within pixel map to check, converted from float to nearest integer.
+        int posY; // Y-coordinate within pixel map to check, converted from float to nearest integer.
+        
+        // Convert location parameters from float to nearest integer.
+        posX = Math.round(x);
+        posY = Math.round(y);
+        
+        // Get the 32-bit RGBA8888 value of the pixel at the specified location.
+        pixel = texturePixmaps.get(key).getPixel(posX, texturePixmapHeights.get(key) - posY - 1);
+        
+        // Return whether specified location and image combination is a transparent pixel.
+        return (pixel & 0x000000ff) == 0;
         
     }
     

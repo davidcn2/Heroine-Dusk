@@ -6,9 +6,10 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+
+// Local project imports.
 import core.BaseActor;
 import gui.CustomLabel;
-import heroinedusk.AtlasItems.Chest;
 
 // Java imports.
 import java.util.ArrayList;
@@ -292,7 +293,7 @@ public class MazeMap
     // hpLabel = Label showing player hit points.
     // mpLabel = Label showing player magic points.
     // goldLabel = Label showing player gold.
-    private ArrayList<Chest> acquireChestContents(int posX, int posY, BaseActor heroineWeapon, CustomLabel weaponLabel, 
+    private ArrayList<AtlasItems.Chest> acquireChestContents(int posX, int posY, BaseActor heroineWeapon, CustomLabel weaponLabel, 
       BaseActor heroineArmor, CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel,
       CustomLabel goldLabel)
     {
@@ -300,7 +301,7 @@ public class MazeMap
         // The function gives the contents of the chest(s) at the passed location to the player.
         
         int chestCount; // Number of chests.
-        ArrayList<Chest> chestList; // List of chests at the passed position.
+        ArrayList<AtlasItems.Chest> chestList; // List of chests at the passed position.
         
         // Get list of chests at the passed position.
         chestList = gameHD.getAtlasItems().getChestList( map_id, posX, posY );
@@ -435,58 +436,26 @@ public class MazeMap
                 public boolean mouseMoved (InputEvent event, float x, float y)
                 {
                 
-                    // The function occurs when the mouse cursor or a finger touch is moved over the actor and
-                    // a button is not down.  The event only occurs on the desktop.
+                    /*
+                    The function occurs when the mouse cursor or a finger touch is moved over the actor and
+                    a button is not down.  The event only occurs on the desktop.
                     
-                    // If bone pile active, then...
-                    if (bonePileActiveInd)
-                    {
-                        
-                        // Bone pile active.
+                    1.  When active and rolling over transparent pixel in image, return actor to normal 
+                        color and set action button to not visible.
+                         
+                    2.  When active and rolling over a non-transparent pixel in image, show action button
+                        centered on current mouse position.  If player has magic points remaining, set action
+                        button to normal color.  Otherwise, if player has no magic points, set action button to
+                        dark shade.
+                    */
                     
-                        // Set position of burn button center on current mouse position.
-                        mapActionButtonMagic.get(
-                          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setX(bonePileActor.getX() + 
-                          x - mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).getWidth() 
-                          / 2 );
-                        mapActionButtonMagic.get(
-                          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setY(bonePileActor.getY() + y - 
-                          mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).getHeight() 
-                          / 2 );
-
-                        // If player has no magic left, then...
-                        if (gameHD.getAvatar().getMp() == 0)
-                        {
-
-                            // Player has no magic left.
-
-                            // Apply a dark shade to the button to signify not currently enabled.
-                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( 
-                              COLOR_MED_GRAY );
-
-                        }
-
-                        else
-                        {
-
-                            // Player has magic left.
-
-                            // Remove shading from button to signify enabled.
-                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor(
-                              Color.WHITE );
-
-                        }
-
-                        // Set burn button to visible.
-                        mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(true);
-                    
-                    } // End ... If bone pile active.
-                        
-                    // Do not handle event.
-                    return false;
+                    // Call function to handle mouse move event logic.
+                    return eventMouseMoveMagic(bonePileActiveInd, HeroineEnum.ImgOtherEnum.IMG_OTHER_SKULL_PILE, x, y, 
+                      bonePileActor, mapActionButtonMagic, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN);
                     
                 }
                 
+                /*
                 // event = Event for actor input: touch, mouse, keyboard, and scroll.
                 // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
                 // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
@@ -514,6 +483,7 @@ public class MazeMap
                     }
                     
                 } // End ... enter event.
+                */
                 
                 // event = Event for actor input: touch, mouse, keyboard, and scroll.
                 // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
@@ -524,49 +494,22 @@ public class MazeMap
                 public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
                 {
                     
-                    // The function occurs when the mouse cursor or a finger touch is moved out of the actor.
+                    /*
+                    The function occurs when the mouse cursor or a finger touch is moved out of the actor.
                     
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
+                    Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                            (pointer will be -1).
+                    Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
                     
-                    // If bone pile active, then...
-                    if (bonePileActiveInd)
-                    {
-                        
-                        // Bone pile active.
+                    1.  When active and ignoring current exit, flag to process next event.
+                    2.  When active and processing current exit, return item to no color if no active actions 
+                        (fade).
+                    3.  When active and processing current exit, set action button to not visible.
+                    */
                     
-                        // If ignoring next exit event, then...
-                        if (ignoreNextExitEvent)
-
-                            // Ignoring next exit event.
-                            
-                            // Flag to process next exit event.
-                            ignoreNextExitEvent = false;
-
-                        // Otherwise, ...
-                        else
-                        {
-                            
-                            // Process exit event.
-                            
-                            // If fade not occurring, then...
-                            if (bonePileActor.getActionMapCount() == 0)
-                            {
-                                
-                                // Fade not occurring yet.
-
-                                // Return bone pile to normal color.
-                                bonePileActor.setColor(Color.WHITE);
-                                
-                            }
-                            
-                            // Set burn button to not visible.
-                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
-                        
-                        } // Processing exit event.
-                            
-                    } // End ... If bone pile active.
+                    // Call function to handle exit event logic.
+                    ignoreNextExitEvent = eventExitMagic(ignoreNextExitEvent, bonePileActiveInd, 
+                      bonePileActor, mapActionButtonMagic);
                         
                 } // End ... exit event.
                 
@@ -597,7 +540,7 @@ public class MazeMap
     {
         
         // The function adds events to the passed chest-related tile (BaseActor).
-        // Events include touchDown, touchUp, enter, and exit.
+        // Events include touchDown, touchUp, mouseMoved, and exit.
         
         InputListener tileEvent; // Events to add to passed button (BaseActor).
         
@@ -641,7 +584,7 @@ public class MazeMap
                     // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
                     // Notes:  Occurs when user releases mouse on button.
                     
-                    ArrayList<Chest> chestList; // List of chests at the tile.
+                    ArrayList<AtlasItems.Chest> chestList; // List of chests at the tile.
                     int index1; // Position of first comma in virtual text.
                     int index2; // Position of second comma in virtual text.
                     int posX; // X-coordinate associated with the tile.
@@ -657,57 +600,67 @@ public class MazeMap
                         // Flag to ignore next exit event.
                         ignoreNextExitEvent = true;
                         
-                        // 1.  Perform preliminary actions.
-                    
-                        // Play coin sound.
-                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
+                        // If clicking on a non-transparent pixel in the image, then...
+                        if ( !gameHD.getAssetMgr().getPixmapTransparentInd(
+                          HeroineEnum.ImgOtherEnum.IMG_OTHER_CHEST.getValue_Key(), x, y) )
+                        {
+                           
+                            // Clicking on a non-transparent pixel in the image.
+                            
+                            // 1.  Perform preliminary actions.
 
-                        // 2.  Perform actions on chest actor.
+                            // Play coin sound.
+                            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
 
-                        // Set up an action to fade out the chest.
-                        chestActor.addAction_FadeOut(0.25f, 0.75f);
+                            // 2.  Perform actions on chest actor.
 
-                        System.out.println("Chest metadata: " + chestActor.getVirtualString());
+                            // Set up an action to fade out the chest.
+                            chestActor.addAction_FadeOut(0.25f, 0.75f);
 
-                        // Get position of first comma in virtual text.
-                        index1 = chestActor.getVirtualString().indexOf(",");
+                            System.out.println("Chest metadata: " + chestActor.getVirtualString());
 
-                        // Get position of second comma in virtual text.
-                        index2 = chestActor.getVirtualString().indexOf(",", index1 + 1);
+                            // Get position of first comma in virtual text.
+                            index1 = chestActor.getVirtualString().indexOf(",");
 
-                        // Get x and y coordinates associated with the tile.
-                        posX = Integer.valueOf( chestActor.getVirtualString().substring(index1 + 1, index2) );
-                        posY = Integer.valueOf( chestActor.getVirtualString().substring(index2 + 1, 
-                          chestActor.getVirtualString().length()) );
+                            // Get position of second comma in virtual text.
+                            index2 = chestActor.getVirtualString().indexOf(",", index1 + 1);
 
-                        // 3.  Give chest contents to the player.
+                            // Get x and y coordinates associated with the tile.
+                            posX = Integer.valueOf( chestActor.getVirtualString().substring(index1 + 1, 
+                              index2) );
+                            posY = Integer.valueOf( chestActor.getVirtualString().substring(index2 + 1, 
+                              chestActor.getVirtualString().length()) );
 
-                        // Take chest contents.
-                        chestList = acquireChestContents(posX, posY, heroineWeapon, weaponLabel, heroineArmor, 
-                          armorLabel, hpLabel, mpLabel, goldLabel);
+                            // 3.  Give chest contents to the player.
+
+                            // Take chest contents.
+                            chestList = acquireChestContents(posX, posY, heroineWeapon, weaponLabel, 
+                              heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel);
+
+                            // 4.  Perform actions on treasure actor and label.
+
+                            // Display the first chest / item.
+                            treasureImageInd = render_treasure( chestList.get(0).getPrimaryItem(), chestActor, 
+                              treasureActor, treasureGroup, viewWidth, treasureLabel, 
+                              chestList.get(0).getPrimaryItemCount() );
+
+                            // If image available, draw treasure.
+                            // Always show associated label.
+                            draw_treasure(treasureImageInd, chestActor, treasureActor, treasureGroup, 
+                              treasureLabel, viewWidth, 1.00f, regionLabel );
+
+                            // 5.  Remove chests from array list and hash map in atlas items.
+
+                            // Set chests in array list inactive and remove entry hash map associated with
+                            // current location.
+                            gameHD.getAtlasItems().removeChests(chestList, map_id, posX, posY);
+
+                            // 6.  Transform tile associated with chest.
+
+                            // Transform tile with chest to show similar image to background -- removing chest.
+                            transformChestTile(posX, posY);
                         
-                        // 4.  Perform actions on treasure actor and label.
-
-                        // Display the first chest / item.
-                        treasureImageInd = render_treasure( chestList.get(0).getPrimaryItem(), chestActor, 
-                          treasureActor, treasureGroup, viewWidth, treasureLabel, 
-                          chestList.get(0).getPrimaryItemCount() );
-
-                        // If image available, draw treasure.
-                        // Always show associated label.
-                        draw_treasure(treasureImageInd, chestActor, treasureActor, treasureGroup, 
-                          treasureLabel, viewWidth, 1.00f, regionLabel );
-                        
-                        // 5.  Remove chests from array list and hash map in atlas items.
-
-                        // Set chests in array list inactive and remove entry hash map associated with current
-                        // location.
-                        gameHD.getAtlasItems().removeChests(chestList, map_id, posX, posY);
-
-                        // 6.  Transform tile associated with chest.
-
-                        // Transform tile with chest to show similar image to background -- removing chest.
-                        transformChestTile(posX, posY);
+                        } // End ... If clicking on a non-transparent pixel in the image.
                         
                     } // End ... If chest active.
                     
@@ -716,30 +669,54 @@ public class MazeMap
                 // event = Event for actor input: touch, mouse, keyboard, and scroll.
                 // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
                 // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // pointer = Pointer for the event.
-                // fromActor = Reference to actor losing focus.
                 @Override
-                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
+                public boolean mouseMoved (InputEvent event, float x, float y)
                 {
-                    
-                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
-                    
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
+                
+                    // The function occurs when the mouse cursor or a finger touch is moved over the actor and
+                    // a button is not down.  The event only occurs on the desktop.
                     
                     // If chest active, then...
-                    if (chestActiveInd)
+                    if ( chestActiveInd )
                     {
                         
                         // Chest active.
                         
-                        // Apply a light shade to the chest.
-                        chestActor.setColor(Color.LIGHT_GRAY);
+                        // If fade not occurring, then...
+                        if (chestActor.getActionMapCount() == 0)
+                        {
+                            // Fade not occurring yet.
+                
+                            // If rolling over a transparent pixel in image, then...
+                            if ( gameHD.getAssetMgr().getPixmapTransparentInd(
+                              HeroineEnum.ImgOtherEnum.IMG_OTHER_CHEST.getValue_Key(), x, y) )
+                            {
+
+                                // Rolling over a transparent pixel in image.
+
+                                // Return chest to normal color.
+                                chestActor.setColor(Color.WHITE);
+
+                            }
+
+                            else
+                            {
+
+                                // Rolling over a non-transparent pixel in image.
+
+                                // Apply a light shade to the chest.
+                                chestActor.setColor(Color.LIGHT_GRAY);
+
+                            }
                         
-                    }
+                        } // End ... If fade not occurring.
+                        
+                    } // End ... If chest active.
                     
-                } // End ... enter event.
+                    // Return a value.
+                    return true;
+                    
+                } // End ... mouseMoved event.
                 
                 // event = Event for actor input: touch, mouse, keyboard, and scroll.
                 // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
@@ -757,18 +734,19 @@ public class MazeMap
                     // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
                     
                     // If chest active, then...
-                    if (chestActiveInd)
+                    if ( chestActiveInd )
                     {
                         
                         // Chest active.
                     
                         // If ignoring next exit event, then...
-                        if (ignoreNextExitEvent)
-
+                        if ( ignoreNextExitEvent )
+                        {
                             // Ignoring next exit event.
-
+                            
                             // Flag to process next exit event.
                             ignoreNextExitEvent = false;
+                        }
 
                         // Otherwise, ...
                         else
@@ -777,11 +755,12 @@ public class MazeMap
 
                             // If fade not occurring, then...
                             if (chestActor.getActionMapCount() == 0)
-
+                            {
                                 // Fade not occurring yet.
-
+                                
                                 // Return chest to normal color.
                                 chestActor.setColor(Color.WHITE);
+                            }
                         
                     } // End ... If chest active.
                         
@@ -866,58 +845,26 @@ public class MazeMap
                 public boolean mouseMoved (InputEvent event, float x, float y)
                 {
                 
-                    // The function occurs when the mouse cursor or a finger touch is moved over the actor and
-                    // a button is not down.  The event only occurs on the desktop.
+                    /*
+                    The function occurs when the mouse cursor or a finger touch is moved over the actor and
+                    a button is not down.  The event only occurs on the desktop.
                     
-                    // If locked door active, then...
-                    if (lockedDoorActiveInd)
-                    {
-                        
-                        // Locked door active.
+                    1.  When active and rolling over transparent pixel in image, return actor to normal 
+                        color and set action button to not visible.
+                         
+                    2.  When active and rolling over a non-transparent pixel in image, show action button
+                        centered on current mouse position.  If player has magic points remaining, set action
+                        button to normal color.  Otherwise, if player has no magic points, set action button to
+                        dark shade.
+                    */
                     
-                        // Set position of burn button center on current mouse position.
-                        mapActionButtonMagic.get(
-                          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setX(lockActor.getX() + 
-                          x - mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).getWidth() 
-                          / 2 );
-                        mapActionButtonMagic.get(
-                          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setY(lockActor.getY() + y - 
-                          mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).getHeight() 
-                          / 2 );
-
-                        // If player has no magic left, then...
-                        if (gameHD.getAvatar().getMp() == 0)
-                        {
-
-                            // Player has no magic left.
-
-                            // Apply a dark shade to the button to signify not currently enabled.
-                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( 
-                              COLOR_MED_GRAY );
-
-                        }
-
-                        else
-                        {
-
-                            // Player has magic left.
-
-                            // Remove shading from button to signify enabled.
-                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor(
-                              Color.WHITE );
-
-                        }
-
-                        // Set unlock button to visible.
-                        mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(true);
-                    
-                    } // End ... If locked door active.
-                        
-                    // Do not handle event.
-                    return false;
+                    // Call function to handle mouse move logic.
+                    return eventMouseMoveMagic(lockedDoorActiveInd, HeroineEnum.ImgOtherEnum.IMG_OTHER_LOCK, 
+                      x, y, lockActor, mapActionButtonMagic, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK);
                     
                 }
                 
+                /*
                 // event = Event for actor input: touch, mouse, keyboard, and scroll.
                 // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
                 // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
@@ -945,6 +892,7 @@ public class MazeMap
                     }
                     
                 } // End ... enter event.
+                */
                 
                 // event = Event for actor input: touch, mouse, keyboard, and scroll.
                 // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
@@ -955,49 +903,22 @@ public class MazeMap
                 public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
                 {
                     
-                    // The function occurs when the mouse cursor or a finger touch is moved out of the actor.
+                    /*
+                    The function occurs when the mouse cursor or a finger touch is moved out of the actor.
                     
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
+                    Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
+                            (pointer will be -1).
+                    Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
                     
-                    // If locked door active, then...
-                    if (lockedDoorActiveInd)
-                    {
-                        
-                        // Locked door active.
+                    1.  When active and ignoring current exit, flag to process next event.
+                    2.  When active and processing current exit, return item to no color if no active actions 
+                        (fade).
+                    3.  When active and processing current exit, set action button to not visible.
+                    */
                     
-                        // If ignoring next exit event, then...
-                        if (ignoreNextExitEvent)
-
-                            // Ignoring next exit event.
-                            
-                            // Flag to process next exit event.
-                            ignoreNextExitEvent = false;
-
-                        // Otherwise, ...
-                        else
-                        {
-                            
-                            // Process exit event.
-                            
-                            // If fade not occurring, then...
-                            if (lockActor.getActionMapCount() == 0)
-                            {
-                                
-                                // Fade not occurring yet.
-
-                                // Return lock to normal color.
-                                lockActor.setColor(Color.WHITE);
-                                
-                            }
-                            
-                            // Set unlock button to not visible.
-                            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(false);
-                        
-                        } // Processing exit event.
-                            
-                    } // End ... If locked door active.
+                    // Call function to handle exit event logic.
+                    ignoreNextExitEvent = eventExitMagic(ignoreNextExitEvent, lockedDoorActiveInd, 
+                      lockActor, mapActionButtonMagic);
                         
                 } // End ... exit event.
                 
@@ -1668,6 +1589,164 @@ public class MazeMap
         
     }
     
+    // ignoreNextExitEvent = Whether to ignore next exit event (used with touchUp / exit).
+    // activeInd = Active indicator related to item (bone pile, lock, ...).
+    // actor = Reference to BaseActor related to the item.
+    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
+    private boolean eventExitMagic(boolean ignoreNextExitEvent, boolean activeInd, BaseActor actor,
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic)
+    {
+        
+        /*
+        The function encapsulates exit event logic related to items with associated action buttons.
+        
+        1.  When active and ignoring current exit, flag to process next event.
+        2.  When active and processing current exit, return item to no color if no active actions (fade).
+        3.  When active and processing current exit, set action button to not visible.
+        */
+        
+        boolean ignore; // Return value -- whether to ignore next exit event (used with touchUp / exit).
+        
+        // Set defaults.
+        ignore = ignoreNextExitEvent;
+        
+        // If item (bone pile, lock, ...) active, then...
+        if (activeInd)
+        {
+
+            // Item (bone pile, lock, ...) active.
+            
+            // If ignoring next exit event, then...
+            if (ignoreNextExitEvent)
+
+                // Ignoring next exit event.
+
+                // Flag to process next exit event.
+                ignore = false;
+
+            // Otherwise, ...
+            else
+            {
+
+                // Process exit event.
+
+                // If fade not occurring, then...
+                if (actor.getActionMapCount() == 0)
+                {
+
+                    // Fade not occurring yet.
+
+                    // Return item to normal color.
+                    actor.setColor(Color.WHITE);
+
+                }
+
+                // Set action button to not visible.
+                mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
+
+            } // Processing exit event.
+
+        } // End ... If item (bone pile, lock, ...) active.
+        
+        // Return whether to ignore next exit event (used with touchUp / exit).
+        return ignore;
+        
+    }
+    
+    // activeInd = Active indicator related to item (bone pile, lock, ...).
+    // imgOtherEnum = Enumerated value for item image.
+    // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+    // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+    // actor = Reference to BaseActor related to the item.
+    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
+    // actionButtonEnum = Enumerated value for the action button related to the item.
+    private boolean eventMouseMoveMagic(boolean activeInd, HeroineEnum.ImgOtherEnum imgOtherEnum, float x,
+      float y, BaseActor actor, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic,
+      HeroineEnum.ActionButtonEnum actionButtonEnum)
+    {
+        
+        /*
+        The function encapsulates mouse move event logic related to items with associated action buttons.
+        
+        1.  When active and rolling over transparent pixel in image, return actor to normal color and 
+            set action button to not visible.
+        2.  When active and rolling over a non-transparent pixel in image, show action button centered
+            on current mouse position.  If player has magic points remaining, set action button to
+            normal color.  Otherwise, if player has no magic points, set action button to dark shade.
+        */
+        
+        // If item (bone pile, lock, ...) active, then...
+        if (activeInd)
+        {
+
+            // Item (bone pile, lock, ...) active.
+
+            // If rolling over a transparent pixel in the image, then...
+            if ( gameHD.getAssetMgr().getPixmapTransparentInd( imgOtherEnum.getValue_Key(), x, y) )
+            {
+
+                // Rolling over a transparent pixel in the image.
+
+                // If fade not occurring, then...
+                if (actor.getActionMapCount() == 0)
+                {
+
+                    // Fade not occurring yet.
+
+                    // Return actor to normal color.
+                    actor.setColor(Color.WHITE);
+
+                }
+
+                // Set related magic / action button to not visible.
+                mapActionButtonMagic.get(actionButtonEnum).setVisible(false);
+                
+            }
+
+            else
+            {
+
+                // Rolling over a non-transparent pixel in the image.
+
+                // Set position of related magic / action button center on current mouse position.
+                mapActionButtonMagic.get(actionButtonEnum).setX( actor.getX() + x - 
+                  mapActionButtonMagic.get(actionButtonEnum).getWidth() / 2 );
+                mapActionButtonMagic.get(actionButtonEnum).setY(actor.getY() + y - 
+                  mapActionButtonMagic.get(actionButtonEnum).getHeight() / 2 );
+                
+                // If player has no magic left, then...
+                if (gameHD.getAvatar().getMp() == 0)
+                {
+
+                    // Player has no magic left.
+
+                    // Apply a dark shade to the button to signify not currently enabled.
+                    mapActionButtonMagic.get(actionButtonEnum).setColor( COLOR_MED_GRAY );
+
+                }
+
+                else
+                {
+
+                    // Player has magic left.
+
+                    // Remove shading from button to signify enabled.
+                    mapActionButtonMagic.get(actionButtonEnum).setColor( Color.WHITE );
+
+                }
+                
+                // Set button to visible.
+                mapActionButtonMagic.get(actionButtonEnum).setVisible( true );
+                
+            } // End ... If rolling over a non-transparent pixel in the image.
+
+        } // End ... If item (bone pile, lock, ...) active.
+
+        // Tell calling function to not handle event.
+        return false;
+        
+    }
+    
     // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
     private void fadeGoldPile(BaseActor treasureGroup)
     {
@@ -1758,7 +1837,7 @@ public class MazeMap
         String actorName; // Name of current actor in loop.
         boolean bonePileInd; // Whether bone pile exists immediately in front of player.
         boolean chestInd; // Whether chest exists immediately in front of player.
-        ArrayList<Chest> chestList; // List of chests at the passed position.
+        ArrayList<AtlasItems.Chest> chestList; // List of chests at the passed position.
         boolean chestNearbyInd; // Whether chest exists either in current location or immediately in front 
           // of player.
         int counter; // Used to increment through array list of BaseActor objects associated with tiles.
