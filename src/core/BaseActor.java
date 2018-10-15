@@ -104,7 +104,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     private Color tintColor; // Color to tint the Actor.
     
     // Declare regular variables.
-    private String actorName; // Name of actor.
+    protected String actorName; // Name of actor.
     private boolean groupOnlyInd; // Whether operating only as a group.
     private float groupHeight; // Height of group.
     private float groupWidth; // Width of group.
@@ -191,7 +191,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         // Assign texture to actor.
         setTexture( texture );
         
-        // Position the background with its lower left corner at the corresponding location in the screen.
+        // Position the lower left corner of the actor.
         setPosition( x, y );
         
     }
@@ -214,7 +214,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         // Assign texture region to actor.
         setTextureRegion( textureRegion );
         
-        // Position the background with its lower left corner at the corresponding location in the screen.
+        // Position the lower left corner of the actor.
         setPosition( x, y );
         
     }
@@ -239,7 +239,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         // Assign texture region to actor.
         setTextureRegion( assetMgr.getTextureRegion(regionKey) );
         
-        // Position the background with its lower left corner at the corresponding location in the screen.
+        // Position the lower left corner of the actor.
         setPosition( x, y );
         
     }

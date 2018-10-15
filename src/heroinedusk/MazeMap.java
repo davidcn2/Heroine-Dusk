@@ -6,14 +6,18 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import core.AssetMgr;
 
 // Local project imports.
 import core.BaseActor;
+import core.ShakyActor;
 import gui.CustomLabel;
+import routines.UtilityRoutines;
 
 // Java imports.
-import java.util.ArrayList;
+import java.security.SecureRandom;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,6 +61,7 @@ public class MazeMap
     private final AtlasItems atlasItems; // Reference to the atlas items information.
     private ArrayList<HeroineEnum.ItemEnum> chestOtherItems; // Additional items in chest(s).
     private ArrayList<Integer> chestOtherItemsQty; // Quantity of each additional item in chest(s).
+    private final Combat combat; // Reference to the combat engine.
     private final RegionMap currentRegion; // Reference to current region / map.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
     private ArrayList<BaseActor> goldPile; // List of gold actors.
@@ -82,6 +87,7 @@ public class MazeMap
       // tile texture region in stage -- adjusted by scale factor.  Excludes render offset.
     private final float dest_y[]; // Array holding Y-coordinate (relative to the bottom left corner) to display
       // tile texture region in stage -- adjusted by scale factor.  Excludes render offset.
+    private int encounter_chance; // Current encounter chance -- increases (to a point) until combat occurs.
     private boolean lockedDoorActiveInd; // Whether locked door in square in front of (NOT UNDER) player enabled.
     private final int map_id; // Current region / map location (number).
     private final float minimapIconSize; // Size of an icon in minimap (width and height match).
@@ -89,6 +95,7 @@ public class MazeMap
     private final float minimapOffsetY; // Y-coordinate of lower left corner of minimap.
     private float minimapHeight; // Height of the minimap, including the background.
     private float minimapWidth; // Width of the minimap, including the background.
+    private final SecureRandom number; // Used for generating random numbers.
     private final String regionName; // Name of current region / map location.
       // Maps to one of the integers in the mapIdentifiers object in the atlas.
     private HeroineEnum.MusicEnum current_song; // Song associated with the current region / map location.
@@ -97,7 +104,8 @@ public class MazeMap
     
     // Declare constants.
     private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1);
-    //private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{65, 56, 74, 74, 50, 63, 41, 90, 87, 29};
+    private final int ENCOUNTER_INCREMENT = 5; // Amount by which encounter chance increases.
+    private final int ENCOUNTER_MAX = 30; // Maximum encounter chance.
     private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{36, 27, 45, 45, 21, 34, 12, 61, 58, 0};
     //private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{93, 96, 95, 86, 80, 78, 92, 76, 94, 77};
     private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{17, 20, 19, 10, 4, 2, 16, 0, 18, 1};
@@ -120,18 +128,19 @@ public class MazeMap
         The constructor performs the following actions:
         
         1.  Initializes array lists and hash maps and allocate space for arrays.
-        2.  Store reference to main game class.
-        3.  Stores references to atlas region and item information.
-        4.  Sets starting region / map location.
-        5.  Stores region name.
-        6.  Stores reference to current region / map.
-        7.  Copies tiles for current region to class-level variable.
-        8.  Stores region width and height -- in tiles.
-        9.  Calculate and store destinations for tiles.
-        10.  Populate hash maps with unique texture regions used with minimap.
-        11.  Store minimap icon size.
-        12.  Calculate minimap offset (lower left corner) based on scale.
-        13.  Calculate destination coordinates for minimap icons.
+        2.  Initializes combat engine.
+        3.  Stores reference to main game class.
+        4.  Stores references to atlas region and item information.
+        5.  Sets starting region / map location.
+        6.  Stores region name.
+        7.  Stores reference to current region / map.
+        8.  Copies tiles for current region to class-level variable.
+        9.  Stores region width and height -- in tiles.
+        10.  Calculates and store destinations for tiles.
+        11.  Populates hash maps with unique texture regions used with minimap.
+        12.  Stores minimap icon size.
+        13.  Calculates minimap offset (lower left corner) based on scale.
+        14.  Calculates destination coordinates for minimap icons.
         */
         
         ArrayList<Float> tempMinimapDestX; // Holder for x-coordinate values for current row (for placing minimap icons).
@@ -140,7 +149,13 @@ public class MazeMap
         float minimapDestPosY; // Y-coordinate at which to place minimap icon.
         int counter; // Used to increment through tile region enumerations.
         
-        // 1.  Set defauls and initialize array lists and hash maps.
+        // 1.  Set defaults and initialize array lists and hash maps.
+        
+        // Set basic defaults.
+        encounter_chance = 0;
+        
+        // Start random number generator.
+        number = new SecureRandom();
         
         // Disable events for objects in square in front of player (position 9).
         bonePileActiveInd = false;
@@ -163,10 +178,13 @@ public class MazeMap
         dest_x = new float[HeroineEnum.TileRegionEnum.values().length];
         dest_y = new float[HeroineEnum.TileRegionEnum.values().length];
         
-        // 2.  Store reference to main game class.
+        // 2.  Initialize combat engine.
+        combat = new Combat(hdg.getAvatar(), hdg.getConfig().getScale());
+        
+        // 3.  Store reference to main game class.
         gameHD = hdg;
         
-        // 3.  Store reference to atlas region and items information.
+        // 4.  Store reference to atlas region and items information.
         
         // Store reference to the atlas region information.
         this.atlas = gameHD.getAtlas();
@@ -174,27 +192,27 @@ public class MazeMap
         // Store reference to the atlas items information.
         this.atlasItems = gameHD.getAtlasItems();
         
-        // 4.  Set starting region / map location.
+        // 5.  Set starting region / map location.
         this.map_id = map_id; // 0;
         
-        // 5.  Get region name.
+        // 6.  Get region name.
         regionName = atlas.mapIdentifiersRev.get(this.map_id);
         
-        // 6.  Store reference to current region / map.
+        // 7.  Store reference to current region / map.
         this.currentRegion = atlas.maps.get(regionName);
         
         System.out.println("Current region: " + regionName);
         
-        // 7.  Copy tiles for current region. -- Actually, stores references.
+        // 8.  Copy tiles for current region. -- Actually, stores references.
         regionTiles.addAll(currentRegion.getRegionTiles());
         
-        // 8.  Copy current region width and height -- in tiles.
+        // 9.  Copy current region width and height -- in tiles.
         regionWidth = currentRegion.getRegionWidth();
         regionHeight = currentRegion.getRegionHeight();
         
         System.out.println("Region size: " + regionWidth + " by " + regionHeight);
         
-        // 9.  Calculate and store destinations for tiles.
+        // 10.  Calculate and store destinations for tiles.
         
         // Set starting value for counter.
         counter = 0;
@@ -212,7 +230,7 @@ public class MazeMap
             
         }
         
-        // 10.  Populate hash maps with unique texture regions used with minimap.
+        // 11.  Populate hash maps with unique texture regions used with minimap.
         
         // Loop through minimap enumerated values.
         for (HeroineEnum.MinimapEnum minimapEnum : HeroineEnum.MinimapEnum.values())
@@ -233,14 +251,14 @@ public class MazeMap
             
         }
         
-        // 11.  Store minimap icon size.
+        // 12.  Store minimap icon size.
         minimapIconSize = minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLACK).getRegionWidth();
         
-        // 12.  Calculate minimap offset (lower left corner) based on scale.
+        // 13.  Calculate minimap offset (lower left corner) based on scale.
         minimapOffsetX = 2f * gameHD.getConfig().getScale();
         minimapOffsetY = viewHeight - (regionHeight * minimapIconSize) - (2f * gameHD.getConfig().getScale()); // 106f * gameHD.getConfig().getScale();
         
-        // 13.  Calculate destination coordinates for minimap icons.
+        // 14.  Calculate destination coordinates for minimap icons.
         
         // Set starting y-coordinate at which to place minimap icon (bottom of lowest icon).
         minimapDestPosY = 0f; // minimapOffsetY;
@@ -365,10 +383,9 @@ public class MazeMap
     }
     
     // bonePileActor = Reference to BaseActor for the bone pile tile.
-    // viewWidth = Width of the stage.
-    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
-    private void addEvent_BonePileActor(BaseActor bonePileActor, int viewWidth, 
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic)
+    // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
+    private void addEvent_BonePileActor(BaseActor bonePileActor,
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton)
     {
         
         // The function adds events to the passed bone pile related tile (BaseActor).
@@ -450,8 +467,8 @@ public class MazeMap
                     */
                     
                     // Call function to handle mouse move event logic.
-                    return eventMouseMoveMagic(bonePileActiveInd, HeroineEnum.ImgOtherEnum.IMG_OTHER_SKULL_PILE, x, y, 
-                      bonePileActor, mapActionButtonMagic, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN);
+                    return eventMouseMoveAction(bonePileActiveInd, HeroineEnum.ImgOtherEnum.IMG_OTHER_SKULL_PILE, x, y, 
+                      bonePileActor, mapActionButton, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN);
                     
                 }
                 
@@ -509,7 +526,7 @@ public class MazeMap
                     
                     // Call function to handle exit event logic.
                     ignoreNextExitEvent = eventExitMagic(ignoreNextExitEvent, bonePileActiveInd, 
-                      bonePileActor, mapActionButtonMagic);
+                      bonePileActor, mapActionButton);
                         
                 } // End ... exit event.
                 
@@ -774,10 +791,9 @@ public class MazeMap
     }
     
     // lockActor = Reference to BaseActor for the lock tile.
-    // viewWidth = Width of the stage.
-    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
-    private void addEvent_LockActor(BaseActor lockActor, int viewWidth, 
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic)
+    // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
+    private void addEvent_LockActor(BaseActor lockActor, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton)
     {
         
         // The function adds events to the passed lock related tile (BaseActor).
@@ -859,8 +875,8 @@ public class MazeMap
                     */
                     
                     // Call function to handle mouse move logic.
-                    return eventMouseMoveMagic(lockedDoorActiveInd, HeroineEnum.ImgOtherEnum.IMG_OTHER_LOCK, 
-                      x, y, lockActor, mapActionButtonMagic, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK);
+                    return eventMouseMoveAction(lockedDoorActiveInd, HeroineEnum.ImgOtherEnum.IMG_OTHER_LOCK, 
+                      x, y, lockActor, mapActionButton, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK);
                     
                 }
                 
@@ -918,7 +934,7 @@ public class MazeMap
                     
                     // Call function to handle exit event logic.
                     ignoreNextExitEvent = eventExitMagic(ignoreNextExitEvent, lockedDoorActiveInd, 
-                      lockActor, mapActionButtonMagic);
+                      lockActor, mapActionButton);
                         
                 } // End ... exit event.
                 
@@ -1399,6 +1415,97 @@ public class MazeMap
         
     }
     
+    // enemyLabel = Reference to label showing enemy type.
+    // infoButtonSelector = BaseActor object that acts as the selector for the current action button.
+    // hpLabel = Label showing player hit points.
+    // mpLabel = Label showing player magic points.
+    // infoButton = BaseActor object that acts as the information button.
+    // facingLabel = Label showing direction player is facing.
+    // regionLabel = Label showing the current region name.
+    // enemy = ShakyActor object that acts as the enemy.
+    // assetMgr = Reference to the asset manager class.
+    // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
+    // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
+    // mapActionButtonPosX = X-coordinate of each action button.
+    // mapActionButtonPosY = Y-coordinate of bottom of each action button.
+    public boolean check_random_encounter(CustomLabel enemyLabel, BaseActor infoButtonSelector, 
+      CustomLabel hpLabel, CustomLabel mpLabel, BaseActor infoButton, CustomLabel facingLabel, 
+      CustomLabel regionLabel, ShakyActor enemy, AssetMgr assetMgr, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled,
+      Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX,
+      Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosY)
+    {
+        
+        // The function checks and returns whether a random encounter occurs.
+        
+        boolean encounterInd; // Whether encounter occurs.
+        HeroineEnum.EnemyEnum enemyEnum; // Enemy type encountered.
+        int random; // Random number between 1 and 100.
+        
+        // Set defaults.
+        encounterInd = false;
+        
+        // If one or more enemies exist in current region, then...
+        if ( currentRegion.getEnemyCount() > 0 )
+        {
+            
+            // One or more enemies exist in current region.
+            
+            // Generate random number between one and one hundred.
+            random = UtilityRoutines.generateStandardRnd(number, 1, 100);
+            
+            // If random number in range of encounter, then...
+            if (random < encounter_chance)
+            {
+                
+                // Random number in range of encounter.
+                
+                // Reset encounter chance.
+                encounter_chance = 0;
+                
+                // Set game state as in combat.
+                gameHD.setGameState(HeroineEnum.GameState.STATE_COMBAT);
+                
+                // Generate random number between one and number of enemies in current region.
+                random = UtilityRoutines.generateStandardRnd(number, 0, 1);
+                
+                System.out.println("Enemy count: " + currentRegion.getEnemyCount());
+                System.out.println("Random: " + random);
+                
+                // Store type of enemy encountered.
+                enemyEnum = currentRegion.getEnemyList().get(random);
+                
+                // Initiate combat.
+                combat.initiate_combat(enemyEnum, enemyLabel, infoButtonSelector, hpLabel, mpLabel, 
+                  infoButton, facingLabel, regionLabel, enemy, assetMgr, mapActionButtons, 
+                  mapActionButtonEnabled, mapActionButtonPosX, mapActionButtonPosY);
+                
+                // Temp.
+                gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+                
+            } // End ... If random number in range of encounter.
+            
+            else
+            {
+                
+                // Random number resulted in NO encounter.
+                
+                // Increase encounter chance.
+                encounter_chance += ENCOUNTER_INCREMENT;
+                
+                // If necessary, reduce encounter chance to maximum.
+                encounter_chance = Math.min(encounter_chance, ENCOUNTER_MAX);
+                
+            } // End... If random number resulted in NO encounter.
+            
+        } // End ... If one or more enemies exist in current region.
+        
+        // Return whether encounter occurs.
+        return encounterInd;
+        
+    }
+    
     // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
     private void clearGoldPile(BaseActor treasureGroup)
     {
@@ -1592,9 +1699,9 @@ public class MazeMap
     // ignoreNextExitEvent = Whether to ignore next exit event (used with touchUp / exit).
     // activeInd = Active indicator related to item (bone pile, lock, ...).
     // actor = Reference to BaseActor related to the item.
-    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
+    // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
     private boolean eventExitMagic(boolean ignoreNextExitEvent, boolean activeInd, BaseActor actor,
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic)
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton)
     {
         
         /*
@@ -1642,7 +1749,7 @@ public class MazeMap
                 }
 
                 // Set action button to not visible.
-                mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
+                mapActionButton.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
 
             } // Processing exit event.
 
@@ -1658,10 +1765,10 @@ public class MazeMap
     // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
     // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
     // actor = Reference to BaseActor related to the item.
-    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
+    // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
     // actionButtonEnum = Enumerated value for the action button related to the item.
-    private boolean eventMouseMoveMagic(boolean activeInd, HeroineEnum.ImgOtherEnum imgOtherEnum, float x,
-      float y, BaseActor actor, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic,
+    private boolean eventMouseMoveAction(boolean activeInd, HeroineEnum.ImgOtherEnum imgOtherEnum, float x,
+      float y, BaseActor actor, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton,
       HeroineEnum.ActionButtonEnum actionButtonEnum)
     {
         
@@ -1699,7 +1806,7 @@ public class MazeMap
                 }
 
                 // Set related magic / action button to not visible.
-                mapActionButtonMagic.get(actionButtonEnum).setVisible(false);
+                mapActionButton.get(actionButtonEnum).setVisible(false);
                 
             }
 
@@ -1709,10 +1816,10 @@ public class MazeMap
                 // Rolling over a non-transparent pixel in the image.
 
                 // Set position of related magic / action button center on current mouse position.
-                mapActionButtonMagic.get(actionButtonEnum).setX( actor.getX() + x - 
-                  mapActionButtonMagic.get(actionButtonEnum).getWidth() / 2 );
-                mapActionButtonMagic.get(actionButtonEnum).setY(actor.getY() + y - 
-                  mapActionButtonMagic.get(actionButtonEnum).getHeight() / 2 );
+                mapActionButton.get(actionButtonEnum).setX(actor.getX() + x - 
+                  mapActionButton.get(actionButtonEnum).getWidth() / 2 );
+                mapActionButton.get(actionButtonEnum).setY(actor.getY() + y - 
+                  mapActionButton.get(actionButtonEnum).getHeight() / 2 );
                 
                 // If player has no magic left, then...
                 if (gameHD.getAvatar().getMp() == 0)
@@ -1721,7 +1828,7 @@ public class MazeMap
                     // Player has no magic left.
 
                     // Apply a dark shade to the button to signify not currently enabled.
-                    mapActionButtonMagic.get(actionButtonEnum).setColor( COLOR_MED_GRAY );
+                    mapActionButton.get(actionButtonEnum).setColor( COLOR_MED_GRAY );
 
                 }
 
@@ -1731,12 +1838,12 @@ public class MazeMap
                     // Player has magic left.
 
                     // Remove shading from button to signify enabled.
-                    mapActionButtonMagic.get(actionButtonEnum).setColor( Color.WHITE );
+                    mapActionButton.get(actionButtonEnum).setColor( Color.WHITE );
 
                 }
                 
                 // Set button to visible.
-                mapActionButtonMagic.get(actionButtonEnum).setVisible( true );
+                mapActionButton.get(actionButtonEnum).setVisible( true );
                 
             } // End ... If rolling over a non-transparent pixel in the image.
 
@@ -1794,14 +1901,14 @@ public class MazeMap
     // statusLabel = General status label.
     // turnInd = Whether movement involved turning.
     // redrawInd = Whether redrawing screen -- like when waking screen or loading game.
-    // mapActionButtonMagic = Hash map containing BaseActor objects that act as the spell action buttons.
-    // mapActionButtonEnabled = Hash map containing enabled status of spell action buttons.
+    // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
+    // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     public ArrayList<BaseActor> mazemap_render(int x, int y, HeroineEnum.FacingEnum facing, int viewWidth,
       CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, 
       CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel,
       CustomLabel regionLabel, CustomLabel statusLabel, boolean turnInd, boolean redrawInd,
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic, 
-      Map<String, Boolean> mapActionButtonEnabled)
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton, 
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled)
     {
         
         /*
@@ -2222,7 +2329,7 @@ public class MazeMap
                 // Player knows burn spell and has sufficient magic points for casting.
             
                 // Add events to actor.
-                addEvent_BonePileActor( tempBonePile, viewWidth, mapActionButtonMagic );
+                addEvent_BonePileActor(tempBonePile, mapActionButton );
                 
             }
             
@@ -2233,7 +2340,7 @@ public class MazeMap
             tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE.getValue(), counter );
             
             // Enable burn button.
-            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN.toString(), true);
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, true);
             
             // Incement hash map counter.
             counter++;
@@ -2246,7 +2353,7 @@ public class MazeMap
             // Bone pile DOES NOT exist immediately in front of player.
             
             // Disable burn button.
-            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN.toString(), false);
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, false);
             
         }
         
@@ -2283,7 +2390,7 @@ public class MazeMap
                 // Player knows unlock spell and has sufficient magic points for casting.
                 
                 // Add events to actor.
-                addEvent_LockActor( tempLock, viewWidth, mapActionButtonMagic );
+                addEvent_LockActor(tempLock, mapActionButton );
                 
             }
             
@@ -2294,7 +2401,7 @@ public class MazeMap
             tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_LOCK.getValue(), counter );
             
             // Enable unlock button.
-            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK.toString(), true);
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, true);
             
             // Incement hash map counter.
             counter++;
@@ -2307,14 +2414,14 @@ public class MazeMap
             // Locked door DOES NOT exist immediately in front of player.
             
             // Disable unlock button.
-            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK.toString(), false);
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, false);
             
         }
         
         // 9.  Handle objects that exist in current location (at feet of player).
         
         // If player has already moved, is headed forward or backward, and a redraw is not occurring, then...
-        if ( gameHD.getAvatar().movedInd() && !turnInd && !redrawInd )
+        if ( gameHD.getAvatar().getMovedInd() && !turnInd && !redrawInd )
         {
             
             // Player has already moved, is headed forward or backward, and a redraw is not occurring.

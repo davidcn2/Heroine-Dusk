@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.Array;
 import core.BaseActor;
 import core.BaseScreen;
 import core.CoreEnum;
+import core.ShakyActor;
 import gui.CustomLabel;
 import heroinedusk.HeroineDuskGame;
 import heroinedusk.HeroineEnum;
@@ -80,14 +81,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     */
     
     // Declare object variables.
-    private Map<String, Boolean> mapActionButtonEnabled; // Hash map containing
-      // enabled status of spell action buttons.
-    private Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtonMagic; // Hash map containing
-      // BaseActor objects that will act as the spell action buttons.
-    private Map<String, Boolean> mapIgnoreNextExitEvent_ActionButtons; // Hash map containing
-      // whether to ignore next exit event (used with touchUp / exit) -- for action buttons.
     private CustomLabel armorLabel; // Label showing current player armor.
     private BaseActor background; // BaseActor object that will act as the background.
+    private ShakyActor enemy; // ShakyActor object that will act as the enemy.
+    private CustomLabel enemyLabel; // Label showing enemy type.
     private CustomLabel facingLabel; // Label showing direction player is facing.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
     private CustomLabel goldLabel; // Label showing current player gold.
@@ -97,9 +94,18 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel hpLabel; // Label showing player hit points.
     private BaseActor infoButton; // BaseActor object that will act as the information button.
     private BaseActor infoButtonSelector; // BaseActor object that will act as the selector for the
-      // information button.
+      // information and other buttons.
     private CustomLabel infoLabel; // Label showing "INFO" text.
+    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled; // Hash map containing enabled 
+      // status of action buttons.
+    private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX; // X-coordinate of each action button.
+    private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosY; // Y-coordinate of bottom of each action button.
+    private Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons; // Hash map containing
+      // BaseActor objects that will act as the action buttons.
+    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapIgnoreNextExitEvent_ActionButtons; // Hash map containing
+      // whether to ignore next exit event (used with touchUp / exit) -- for action buttons.
     private MazeMap mazemap; // Stores data for the current active region / map.
+    private Array<Actor> middleStageActors; // List of actors in middle stage used when waking screen.
     private Group minimapGroup; // Group containing minimap actors.
     private ArrayList<BaseActor> minimapIcons; // BaseActor objects associated with minimap.
     private CustomLabel mpLabel; // Label showing player magic points.
@@ -166,7 +172,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         8.  Configure and add the label with the direction the player is facing.
         9.  Configure and add the information button Actor.
         10.  Configure and add the label with the "INFO" text.  Hidden at start.
-        11.  Configure and add the selector Actor for the information button.  Hidden at start.
+        11.  Configure and add the selector actor for the information button.  Hidden at start.
         12.  Configure and add the label with the "SPELLS" text.  Hidden at start.
         13.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
         14.  Configure and add the labels for the current player armor and weapon.  Hidden at start.
@@ -178,7 +184,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
              Hidden at start.
         20.  Configure and add the label showing the current region name.  Hidden at start.
         21.  Configure and add the label showing the treasure description.  Hidden at start.
-        
+        22.  Configure and add the label showing the enemy type.  Hidden at start.
+        23.  Configure and add the enemy actor to the middle stage.  Hidden at start.
         */
         
         // 1.  Set defaults.
@@ -187,10 +194,13 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
         
         // 2.  Initialize arrays, array lists, and hash maps.
+        middleStageActors = new Array<>();
         uiStageActors = new Array<>();
         tiles = new ArrayList<>();
         minimapIcons = new ArrayList<>();
-        mapActionButtonMagic = new HashMap<>();
+        mapActionButtonPosX = new HashMap<>();
+        mapActionButtonPosY = new HashMap<>();
+        mapActionButtons = new HashMap<>();
         mapActionButtonEnabled = new HashMap<>();
         mapIgnoreNextExitEvent_ActionButtons = new HashMap<>();
         
@@ -219,7 +229,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
           heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, false, false,
-          mapActionButtonMagic, mapActionButtonEnabled);
+          mapActionButtons, mapActionButtonEnabled);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -329,10 +339,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         {
             
             // Add default value of not enabled for current enumeration to hash map.
-            mapActionButtonEnabled.put(actionButtonEnum.toString(), false);
+            mapActionButtonEnabled.put(actionButtonEnum, false);
             
             // Add default value of do not exit for current enumation to hash map.
-            mapIgnoreNextExitEvent_ActionButtons.put(actionButtonEnum.toString(), false);
+            mapIgnoreNextExitEvent_ActionButtons.put(actionButtonEnum, false);
             
         }
         
@@ -345,7 +355,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             // Player NOT at maximum hit points.
             
             // Enable heal button.
-            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL.toString(), true);
+            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, true);
             
         }
         
@@ -376,6 +386,27 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         treasureLabel.applyVisible(false);
         
+        // 22.  Configure and add the label showing the enemy type.  Hidden at start.
+        enemyLabel = new CustomLabel(game.skin, "NO ENEMY HERE", "uiLabelStyle", 
+          1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
+          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, 0f, 
+          (float)(gameHD.getConfig().getScale() * -2), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // Hide the label.
+        enemyLabel.applyVisible(false);
+        
+        // 23.  Configure and add the enemy actor to the middle stage.  Hidden at start.
+        enemy = new ShakyActor(viewWidthMain, viewHeightMain);
+        
+        // Hide the actor.
+        enemy.setVisible(false);
+        
+        // Add the enemy Actor to the scene graph.
+        middleStage.addActor(enemy);
+        
+        // Add the actor to the list for use when waking the screen.
+        middleStageActors.add(enemy);
+        
     }
     
     // buttonActor = Reference to BaseActor for the button.
@@ -383,7 +414,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function adds basic events to the passed action button / BaseActor.
-        // Events include touchDown, enter, and exit.
+        // Events include enter and exit.
         
         InputListener buttonEvent; // Events to add to passed button (BaseActor).
         
@@ -406,8 +437,13 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // (pointer will be -1).
                     // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
                     
+                    HeroineEnum.ActionButtonEnum actionButtonEnum; // Enumerated value for current action button.
+                    
+                    // Get enumerated value for current action button.
+                    actionButtonEnum = HeroineEnum.ActionButtonEnum.valueOf(buttonActor.getActorName());
+                    
                     // If action button enabled, then...
-                    if (mapActionButtonEnabled.get(buttonActor.getActorName()))
+                    if (mapActionButtonEnabled.get(actionButtonEnum))
                     {
                         
                         // Action button enabled.
@@ -444,13 +480,18 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // (pointer will be -1).
                     // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
                     
+                    HeroineEnum.ActionButtonEnum actionButtonEnum; // Enumerated value for current action button.
+                    
+                    // Get enumerated value for current action button.
+                    actionButtonEnum = HeroineEnum.ActionButtonEnum.valueOf(buttonActor.getActorName());
+                    
                     // If ignoring next exit event, then...
-                    if (mapIgnoreNextExitEvent_ActionButtons.get(buttonActor.getActorName()))
+                    if (mapIgnoreNextExitEvent_ActionButtons.get(actionButtonEnum))
                     {
                         // Ignoring next exit event.
                         
                         // Flag to process next exit event.
-                        mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), false);
+                        mapIgnoreNextExitEvent_ActionButtons.put(actionButtonEnum, false);
                     }
                     
                     // Otherwise, ...
@@ -459,7 +500,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Process exit event.
                         
                         // If action button enabled, then...
-                        if (mapActionButtonEnabled.get(buttonActor.getActorName()))
+                        if (mapActionButtonEnabled.get(actionButtonEnum))
                         {
 
                             // Action button enabled.
@@ -784,7 +825,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     String mpText; // Text to display for magic points.
                     
                     // Flag to ignore next exit event.
-                    mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), true);
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, 
+                      true);
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
@@ -895,7 +937,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
                             // Pos X = -18 * scale factor.  -- Relative to right of screen.
                             // Pos Y = +62 * scale factor.  -- Relative to bottom of screen.
-                            mapActionButtonMagic.get( 
+                            mapActionButtons.get( 
                               HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setRelativePosition(null, 
                               CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
                               uiStage.getHeight(), -18f * gameHD.getConfig().getScale(), 
@@ -915,15 +957,15 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             info_update_powerResponseLines("BURN!", "CLEARED PATH!");
                             
                             // Set the burn button to not visible.
-                            mapActionButtonMagic.get(
+                            mapActionButtons.get(
                               HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
                             
                             // Apply a dark shade to the burn button to signify not currently enabled.
-                            mapActionButtonMagic.get(
+                            mapActionButtons.get(
                               HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( COLOR_MED_GRAY );
                             
                             // Disable burn button.
-                            mapActionButtonEnabled.put(buttonActor.getActorName(), false);
+                            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, false);
                             
                             // TO DO:  Add avatar save.
                             
@@ -999,7 +1041,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  Occurs when user releases mouse on button.
                     
                     // Flag to ignore next exit event.
-                    mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), true);
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE, 
+                      true);
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
@@ -1092,7 +1135,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     String mpText; // Text to display for magic points.
                     
                     // Flag to ignore next exit event.
-                    mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), true);
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, 
+                      true);
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
@@ -1184,7 +1228,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             buttonActor.setColor( Color.DARK_GRAY );
                             
                             // Disable heal button.
-                            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL.toString(), 
+                            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, 
                               false);
                             
                         }
@@ -1263,7 +1307,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  Occurs when user releases mouse on button.
                     
                     // Flag to ignore next exit event.
-                    mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), true);
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT, 
+                      true);
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
@@ -1354,7 +1399,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     String mpText; // Text to display for magic points.
                     
                     // Flag to ignore next exit event.
-                    mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), true);
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, 
+                      true);
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
@@ -1465,7 +1511,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             
                             // Pos X = -38 * scale factor.  -- Relative to right of screen.
                             // Pos Y = +42 * scale factor.  -- Relative to bottom of screen.
-                            mapActionButtonMagic.get( 
+                            mapActionButtons.get( 
                               HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setRelativePosition(null, 
                               CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
                               uiStage.getHeight(), -38f * gameHD.getConfig().getScale(), 
@@ -1485,15 +1531,15 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             info_update_powerResponseLines("UNLOCK!", "DOOR OPENED!");
                             
                             // Set the unlock button to not visible.
-                            mapActionButtonMagic.get(
+                            mapActionButtons.get(
                               HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(false);
                             
                             // Apply a dark shade to the unlock button to signify not currently enabled.
-                            mapActionButtonMagic.get(
+                            mapActionButtons.get(
                               HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( COLOR_MED_GRAY );
                             
                             // Disable unlock button.
-                            mapActionButtonEnabled.put(buttonActor.getActorName(), false);
+                            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, false);
                             
                             // TO DO:  Add avatar save.
                             
@@ -1569,7 +1615,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  Occurs when user releases mouse on button.
                     
                     // Flag to ignore next exit event.
-                    mapIgnoreNextExitEvent_ActionButtons.put(buttonActor.getActorName(), true);
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT, 
+                      true);
                     
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
@@ -1598,7 +1645,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // The function only displays available actions.
         // Note:  Actor hidden at start.
         
-        BaseActor temp; // Used as placeholder for actor for a spell action button, for adding to hash map.
+        BaseActor temp; // Used as placeholder for actor for an action button, for adding to hash map.
         
         // 1.  Configure and add the heal (spell) button Actor.
         
@@ -1633,13 +1680,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         temp.setVisible( false );
         
         // Add the actor for the heal (spell) button to the hash map.
-        mapActionButtonMagic.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, temp );
+        mapActionButtons.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, temp );
         
         // Add the heal (spell) button Actor to the scene graph.
-        uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL) );
+        uiStage.addActor( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL) );
         
         // Add the actor to the list for use when waking the screen.
-        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL) );
+        uiStageActors.add( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL) );
+        
+        // Store stage location of button.
+        mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, temp.getX());
+        mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, temp.getY());
         
         // 2.  Configure and add the burn (spell) button Actor.
         
@@ -1666,13 +1717,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         temp.setVisible( false );
         
         // Add the actor for the burn (spell) button to the hash map.
-        mapActionButtonMagic.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, temp );
+        mapActionButtons.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, temp );
         
         // Add the burn (spell) button Actor to the scene graph.
-        uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN) );
+        uiStage.addActor( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN) );
         
         // Add the actor to the list for use when waking the screen.
-        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN) );
+        uiStageActors.add( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN) );
+        
+        // Store stage location of button.
+        mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, temp.getX());
+        mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, temp.getY());
         
         // 3.  Configure and add the unlock (spell) button Actor.
         
@@ -1699,13 +1754,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         temp.setVisible( false );
         
         // Add the actor for the unlock (spell) button to the hash map.
-        mapActionButtonMagic.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, temp );
+        mapActionButtons.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, temp );
         
         // Add the unlock (spell) button Actor to the scene graph.
-        uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK) );
+        uiStage.addActor( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK) );
         
         // Add the actor to the list for use when waking the screen.
-        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK) );
+        uiStageActors.add( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK) );
+        
+        // Store stage location of button.
+        mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, temp.getX());
+        mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, temp.getY());
         
         // 4.  Configure and add the light (spell) button Actor.
         
@@ -1732,13 +1791,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         temp.setVisible( false );
         
         // Add the actor for the light (spell) button to the hash map.
-        mapActionButtonMagic.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT, temp );
+        mapActionButtons.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT, temp );
         
         // Add the light (spell) button Actor to the scene graph.
-        uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT) );
+        uiStage.addActor( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT) );
         
         // Add the actor to the list for use when waking the screen.
-        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT) );
+        uiStageActors.add( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT) );
+        
+        // Store stage location of button.
+        mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT, temp.getX());
+        mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT, temp.getY());
         
         // 5.  Configure and add the freeze (spell) button Actor.
         
@@ -1765,13 +1828,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         temp.setVisible( false );
         
         // Add the actor for the freeze (spell) button to the hash map.
-        mapActionButtonMagic.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE, temp );
+        mapActionButtons.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE, temp );
         
         // Add the freeze (spell) button Actor to the scene graph.
-        uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE) );
+        uiStage.addActor( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE) );
         
         // Add the actor to the list for use when waking the screen.
-        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE) );
+        uiStageActors.add( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE) );
+        
+        // Store stage location of button.
+        mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE, temp.getX());
+        mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE, temp.getY());
         
         // 6.  Configure and add the reflect (spell) button Actor.
         
@@ -1798,32 +1865,85 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         temp.setVisible( false );
         
         // Add the actor for the reflect (spell) button to the hash map.
-        mapActionButtonMagic.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT, temp );
+        mapActionButtons.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT, temp );
         
         // Add the reflect (spell) button Actor to the scene graph.
-        uiStage.addActor( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT) );
+        uiStage.addActor( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT) );
         
         // Add the actor to the list for use when waking the screen.
-        uiStageActors.add( mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT) );
+        uiStageActors.add( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT) );
         
-        /*
-        // if in combat, show fight and run
-        if (gamestate == STATE_COMBAT) {
-          action_render_button(0, BUTTON_POS_ATTACK);
-          action_render_button(1, BUTTON_POS_RUN);
-        }
-
-
-        // show spells
-        if (avatar.spellbook >= 1) action_render_button(2, BUTTON_POS_HEAL);
-        if (avatar.spellbook >= 2) action_render_button(3, BUTTON_POS_BURN);
-        if (avatar.spellbook >= 3) action_render_button(4, BUTTON_POS_UNLOCK);
-        if (avatar.spellbook >= 4) action_render_button(5, BUTTON_POS_LIGHT);
-        if (avatar.spellbook >= 5) action_render_button(6, BUTTON_POS_FREEZE);
-        if (avatar.spellbook >= 6) action_render_button(7, BUTTON_POS_REFLECT);
-
-        action_render_select(action.select_pos);
-        */
+        // Store stage location of button.
+        mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT, temp.getX());
+        mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT, temp.getY());
+        
+        // 7.  Configure and add the attack (combat) button Actor.
+        
+        // Create and configure new BaseActor for the attack (combat) button.
+        
+        // Pos X = -38 * scale factor.  -- Relative to right of screen.
+        // Pos Y = -22 * scale factor.  -- Relative to top of screen.
+        temp = new BaseActor( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK.toString(), 
+          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK.getValue_Key(), 
+          gameHD.getAssetMgr(), null, CoreEnum.PosRelativeEnum.REL_POS_UPPER_RIGHT, uiStage.getWidth(), 
+          uiStage.getHeight(), -38f * gameHD.getConfig().getScale(), 
+          -22f * gameHD.getConfig().getScale(), CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE_REGION );
+        
+        // Add basic events (enter, exit) to button.
+        addEventBasics( temp );
+        
+        // Add click-related events to button.
+        //addEvent_Touch_Reflect( temp );
+        
+        // Hide the button.
+        temp.setVisible( false );
+        
+        // Add the actor for the attack (combat) button to the hash map.
+        mapActionButtons.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, temp );
+        
+        // Add the attack (combat) button Actor to the scene graph.
+        uiStage.addActor( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK) );
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK) );
+        
+        // Store stage location of button.
+        mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, temp.getX());
+        mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, temp.getY());
+        
+        // 8.  Configure and add the run (combat) button Actor.
+        
+        // Create and configure new BaseActor for the run (combat) button.
+        
+        // Pos X = -18 * scale factor.  -- Relative to right of screen.
+        // Pos Y = -22 * scale factor.  -- Relative to top of screen.
+        temp = new BaseActor( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN.toString(), 
+          HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN.getValue_Key(), 
+          gameHD.getAssetMgr(), null, CoreEnum.PosRelativeEnum.REL_POS_UPPER_RIGHT, uiStage.getWidth(), 
+          uiStage.getHeight(), -18f * gameHD.getConfig().getScale(), 
+          -22f * gameHD.getConfig().getScale(), CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE_REGION );
+        
+        // Add basic events (enter, exit) to button.
+        addEventBasics( temp );
+        
+        // Add click-related events to button.
+        //addEvent_Touch_Reflect( temp );
+        
+        // Hide the button.
+        temp.setVisible( false );
+        
+        // Add the actor for the run (combat) button to the hash map.
+        mapActionButtons.put( HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, temp );
+        
+        // Add the run (combat) button Actor to the scene graph.
+        uiStage.addActor( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN) );
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN) );
+        
+        // Store stage location of button.
+        mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, temp.getX());
+        mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, temp.getY());
         
     }
     
@@ -1922,16 +2042,16 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 entryKey = (HeroineEnum.SpellEnum)entrySpell.getKey();
                 
                 // Display current player spell in loop.
-                mapActionButtonMagic.get(entryKey.getValue_ActionButtonEnum()).setVisible(true);
+                mapActionButtons.get(entryKey.getValue_ActionButtonEnum()).setVisible(true);
             }
             
             /*
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL).setVisible(true);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(true);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(true);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT).setVisible(true);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE).setVisible(true);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT).setVisible(true);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL).setVisible(true);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(true);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(true);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT).setVisible(true);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE).setVisible(true);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT).setVisible(true);
             */
             
             // If minimap already rendered, then...
@@ -1990,7 +2110,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
                 // Pos X = -18 * scale factor.  -- Relative to right of screen.
                 // Pos Y = +62 * scale factor.  -- Relative to bottom of screen.
-                mapActionButtonMagic.get( 
+                mapActionButtons.get( 
                   HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setRelativePosition(null, 
                   CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
                   uiStage.getHeight(), -18f * gameHD.getConfig().getScale(), 
@@ -2057,16 +2177,16 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 entryKey = (HeroineEnum.SpellEnum)entrySpell.getKey();
                 
                 // Display current player spell in loop.
-                mapActionButtonMagic.get(entryKey.getValue_ActionButtonEnum()).setVisible(false);
+                mapActionButtons.get(entryKey.getValue_ActionButtonEnum()).setVisible(false);
             }
             
             /*
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL).setVisible(false);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(false);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT).setVisible(false);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE).setVisible(false);
-            mapActionButtonMagic.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT).setVisible(false);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL).setVisible(false);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setVisible(false);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT).setVisible(false);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE).setVisible(false);
+            mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT).setVisible(false);
             */
             
             // Hide minimap group.
@@ -2550,7 +2670,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
           heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, turnInd, redrawInd,
-          mapActionButtonMagic, mapActionButtonEnabled);
+          mapActionButtons, mapActionButtonEnabled);
         
         // Loop through base actors in array list.
         tiles.forEach((actor) -> {
@@ -2588,8 +2708,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         2.  Adds the background actor to the scene graph.
         3.  Renders the current view -- tiles and minimap.
         4.  Adds back the actors in the ui stage (based on the list, uiStageActors).
-        5.  Updates the text for the labels.
-        6.  Renders the updated armor and weapon.
+        5.  Adds back the actors in the middle stage (based on the list, middleStageActors).
+        6.  Updates the text for the labels.
+        7.  Renders the updated armor and weapon.
         */
         
         String armorKey; // Asset manager key related to armor texture region.
@@ -2610,6 +2731,13 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         {
             // Add actor to ui stage.
             uiStage.addActor( actor );
+        }
+        
+         // Loop through actors required for middle stage.
+        for (Actor actor : middleStageActors)
+        {
+            // Add actor to ui stage.
+            middleStage.addActor( actor );
         }
         
         // Update labels.
@@ -2800,6 +2928,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             
                             // Render updated view.
                             renderCurrentView(turnInd, false);
+                            
+                            // Check for encounter.
+                            mazemap.check_random_encounter(enemyLabel, infoButtonSelector, hpLabel, mpLabel, 
+                              infoButton, facingLabel, regionLabel, enemy, gameHD.getAssetMgr(), 
+                              mapActionButtons, mapActionButtonEnabled, mapActionButtonPosX, 
+                              mapActionButtonPosY);
                             
                         } // End ... If NO exit or shop exists at current location.
                            

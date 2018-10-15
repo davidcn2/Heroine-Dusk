@@ -1,7 +1,6 @@
 package core;
 
 // LibGDX imports.
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.controllers.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -165,28 +164,31 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
     // same package to access them, and subclasses of that class to access them.
 
     // A final variable can only be initialized once, either via an initializer or an assignment statement.
-
-    protected AssetManager manager; // Loads and stores assets like textures, bitmap fonts, tile maps, sounds, music, ...
-
+    
     protected SpriteBatch batch; // Takes care of all the steps needed to achieve texture mapping and 
       // displaying texture mapped rectangles on the screen.
     protected ArrayList<BatchTexture> batchTextureList; // List containing texture details for drawing with batch.
     protected ArrayList<BatchTextureRegion> batchTextureRegionList; // List containing texture regions for drawing with batch.
     
     protected BaseGame game; // Screen object used for current window.
-    // Game objects allow an application to easily have multiple screens.
+      // Game objects allow an application to easily have multiple screens.
 
     protected Stage mainStage; // Stores a 2D scene graph containing the hierarchies of actors.
-    // Stage handles the viewport and distributes input events.  Contains the non-UI actors.
+      // Stage handles the viewport and distributes input events.  Contains the non-UI actors.
 
+    protected Stage middleStage; // Stores a 2D scene graph containing actors.  Displayed between
+      // main and ui stages, in terms of z-order.
+    
     protected Stage uiStage; // Stores a 2D scene graph containing UI actors.  Includes win text / labels.
 
     // A Table consists of Cell objects, laid out in rows and columns, each Cell containing an Actor.
     protected Table uiTable; // Table containing main menu elements.
 
     protected int viewHeightMain; // Window height for the main stage.
+    protected int viewHeightMiddle; // Window height for the middle stage.
     protected int viewHeightUI; // Window height for the ui stage.
     protected int viewWidthMain; // Window width for the main stage.
+    protected int viewWidthMiddle; // Window width for the middle stage.
     protected int viewWidthUI; // Window width for the ui stage.
 
     private boolean batchInd; // Whether to add SpriteBatch to rendering.
@@ -219,8 +221,10 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
         // Set window size values, based on parameters.
         this.viewWidthMain = windowWidth;
+        this.viewWidthMiddle = windowWidth;
         this.viewWidthUI = windowWidth;
         this.viewHeightMain = windowHeight;
+        this.viewHeightMiddle = windowHeight;
         this.viewHeightUI = windowHeight;
 
         // Store Screen object for current window.
@@ -229,13 +233,14 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // Scale each stage and its contents to fit the current window size.
         // If aspect ratio of window does not match stage, fill in extra region with solid black.
         mainStage = new Stage( new FitViewport(windowWidth, windowHeight) );
+        middleStage = new Stage( new FitViewport(windowWidth, windowHeight) );
         uiStage   = new Stage( new FitViewport(windowWidth, windowHeight) );
 
         // An InputMultiplexer object is itself an InputProcessor that contains a list of other InputProcessors.
 
         // Set up input multiplexer to receive all input data and pass the information along to
         // the current class and the stages.
-        im = new InputMultiplexer(this, uiStage, mainStage);
+        im = new InputMultiplexer(this, uiStage, mainStage, middleStage);
         Gdx.input.setInputProcessor( im );
 
         uiTable = new Table(); // Create new Table object.
@@ -254,9 +259,12 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
     // g = Screen object for current window.
     // mainWidth = Width to use for main stage.
     // mainHeight = Height to use for main stage.
+    // middleWidth = Width to use for the middle stage.
+    // middleHeight = Height to use for the middle stage.
     // uiWidth = Width to use for ui stage.
     // uiHeight = Height to use for ui stage.
-    public BaseScreen(BaseGame g, int mainWidth, int mainHeight, int uiWidth, int uiHeight)
+    public BaseScreen(BaseGame g, int mainWidth, int mainHeight, int middleWidth, int middleHeight, 
+      int uiWidth, int uiHeight)
     {
 
         // The constructor of the class:
@@ -280,6 +288,8 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // Set window size values, based on parameters.
         this.viewWidthMain = mainWidth;
         this.viewHeightMain = mainHeight;
+        this.viewWidthMiddle = middleWidth;
+        this.viewHeightMiddle = middleHeight;
         this.viewWidthUI = uiWidth;
         this.viewHeightUI = uiHeight;
 
@@ -289,13 +299,14 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // Scale each stage and its contents to fit the current window size.
         // If aspect ratio of window does not match stage, fill in extra region with solid black.
         mainStage = new Stage( new FitViewport(mainWidth, mainHeight) );
+        middleStage = new Stage( new FitViewport(middleWidth, middleHeight) );
         uiStage   = new Stage( new FitViewport(uiWidth, uiHeight) );
 
         // An InputMultiplexer object is itself an InputProcessor that contains a list of other InputProcessors.
 
         // Set up input multiplexer to receive all input data and pass the information along to
         // the current class and the stages.
-        im = new InputMultiplexer(this, uiStage, mainStage);
+        im = new InputMultiplexer(this, uiStage, mainStage, middleStage);
         Gdx.input.setInputProcessor( im );
 
         uiTable = new Table(); // Create new Table object.
@@ -333,7 +344,8 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         The function occurs during the render phase and accomplishes the following:
 
         1.  Adjusts Actor positions and other properties in the UI stage.
-        2.  If game not paused, adjusts Actor positions and other properties in the main stage and processes player input.
+        2.  If game not paused, adjusts Actor positions and other properties in the middle stage and processes player input.
+        3.  If game not paused, adjusts Actor positions and other properties in the main stage and processes player input.
         3.  Draws the actor-related graphics.
         4.  Draws the batch-related graphics.
         */
@@ -351,9 +363,10 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
             // Game active (not paused).
 
-            // Call the Actor.act(float) method on each actor in the non-UI stage.
+            // Call the Actor.act(float) method on each actor in the non-UI stages.
             // Typically called each frame.  The method also fires enter and exit events.
             // Updates the position of each Actor based on time.
+            middleStage.act(dt);
             mainStage.act(dt);
 
             // Handle game logic -- allow processing based on player actions / input.
@@ -376,6 +389,9 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // Draw the main stage.
         mainStage.draw();
 
+        // Draw the middle stage.
+        middleStage.draw();
+        
         // Reposition rendering location of the UI stage.
         Gdx.gl.glViewport(0,0, viewWidthUI, viewHeightUI);
         
@@ -581,10 +597,6 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
         // normal dispose method.
 
         // Clear LibGDX objects from memory.
-        
-        // If asset manager initialized, then...
-        if (manager != null)
-            manager.dispose();
         
         uiStage.dispose();
         mainStage.dispose();

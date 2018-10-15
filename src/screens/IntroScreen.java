@@ -601,6 +601,19 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                     
                 } // End ... Loop through interface image enumerations.
             
+            // Loop through enemy image enumerations.
+            for (HeroineEnum.ImgEnemyEnum imgEnum : HeroineEnum.ImgEnemyEnum.values())
+                
+                {
+                // Specify image path.
+                imagePath = "assets/enemies/" + imgEnum.getValue_File();
+                
+                // Add to lists.
+                imageMapList.add(imagePath);
+                imageMapList.add(imgEnum.getValue_Key());
+                imagePathList.add(imagePath);
+                }
+            
             // Loop through other image enumerations.
             for (HeroineEnum.ImgOtherEnum imgEnum : HeroineEnum.ImgOtherEnum.values())
                 
@@ -701,6 +714,19 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                     }
                 
                 } // End ... Loop through interface image enumerations.
+            
+            // Loop through enemy image enumerations.
+            for (HeroineEnum.ImgEnemyEnum imgEnum : HeroineEnum.ImgEnemyEnum.values())
+                
+                {
+                // Specify image path.
+                imagePath = gameHD.getConfig().getPrescaleFolder_Enemies() + imgEnum.getValue_File();
+                
+                // Add to lists.
+                imageMapList.add(imagePath);
+                imageMapList.add(imgEnum.getValue_Key());
+                imagePathList.add(imagePath);
+                }
             
             // Loop through other image enumerations.
             for (HeroineEnum.ImgOtherEnum imgEnum : HeroineEnum.ImgOtherEnum.values())

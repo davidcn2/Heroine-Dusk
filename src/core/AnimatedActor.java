@@ -76,19 +76,19 @@ public class AnimatedActor extends BaseActor { // Extends the BaseActor class.
     storeAnimation:  Adds an Animation object to the hash map using the specified key.
     */
 
+    // Declare object variables.
+    private Animation activeAnim; // Current (active) Animation object.
+    private String activeName; // Name / key value for current (active) Animation object.
+    @SuppressWarnings("FieldMayBeFinal")
+    private HashMap<String,Animation> animationStorage; // HashMap data structure storing Animation
+    // objects and associated keys.
+    
     // Declare regular variables.
     private boolean pauseAnim; // Whether animation currently paused.
     private float elapsedTime; // Total elapsed time the animation has been playing.
     private int frameCount; // Number of frames in animation.
     private float frameDuration; // Duration (in seconds) between each animation frame.
     private float framePassRate; // Duration to run all frames in animation.
-    
-    // Declare objects.
-    private Animation activeAnim; // Current (active) Animation object.
-    private String activeName; // Name / key value for current (active) Animation object.
-    @SuppressWarnings("FieldMayBeFinal")
-    private HashMap<String,Animation> animationStorage; // HashMap data structure storing Animation
-    // objects and associated keys.
     
     public AnimatedActor()
     {

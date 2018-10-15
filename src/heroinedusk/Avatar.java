@@ -554,7 +554,7 @@ public class Avatar
         
     }
     
-    public boolean movedInd() {
+    public boolean getMovedInd() {
         return moved;
     }
     

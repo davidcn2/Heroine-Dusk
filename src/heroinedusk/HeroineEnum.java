@@ -20,35 +20,37 @@ public class HeroineEnum
     
     1.  ActionButtonEnum:  Enumerations related to action buttons.  Helps with atlas keys.
     2.  ArmorEnum:  Enumerations related to armors.
-    3.  DialogButtonEnum:  Enumerations related to dialog buttons.  Helps with atlas keys.
-    4.  EnemyCategoryEnum:  Enumerations related to enemy categories.
-    5.  EnemyEnum:  Enumerations related to enemies.
-    6.  EnemyPowerEnum:  Enumerations realted to enemy powers.
-    7.  FacingEnum:  Enumerations related to direction player is facing.
-    8.  FontEnum:  Enumerations related to fonts.
-    9.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
-    10.  HeroinePlayerEnum:  Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
-    11.  ImgBackgroundEnum:  Enumerations related to background images.
-    12.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
-    13.  ImgOtherEnum:  Enumerations related to other images.
-    14.  ImgTileEnum:  Enumerations related to tile images.
-    15.  ImgTreasureEnum:  Enumerations related to treasure images.
-    16.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
-    17.  ItemCategoryEnum:  Enumerations related to item categories.
-    18.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
-    19.  ItemTypeEnum:  Enumerations related to item types.
-    20.  ListEnum:  Enumerations related to list types.
-    21.  MagicItemEnum:  Enumerations related to magic items.
-    22.  MusicEnum:  Enumerations related to music.
-    23.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
-    24.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
-    25.  SelectPosEnum:  Enumerations related to explore screen button selection.
-    26.  ShopEnum:  Enumerations related to shops / locations.
-    27.  ShopTypeEnum:  Enumerations related to shop / location types.
-    28.  SoundsEnum:  Enumerations related to sounds.
-    29.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    30.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
-    31:  WeaponEnum:  Enumerations related to weapons.
+    3.  CombatPhaseEnum:  Enumerations related to combat phases.
+    4.  DialogButtonEnum:  Enumerations related to dialog buttons.  Helps with atlas keys.
+    5.  EnemyCategoryEnum:  Enumerations related to enemy categories.
+    6.  EnemyEnum:  Enumerations related to enemies.
+    7.  EnemyPowerEnum:  Enumerations realted to enemy powers.
+    8.  FacingEnum:  Enumerations related to direction player is facing.
+    9.  FontEnum:  Enumerations related to fonts.
+    10.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
+    11.  HeroinePlayerEnum:  Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
+    12.  ImgBackgroundEnum:  Enumerations related to background images.
+    13.  ImgEnemyEnum:  Enumerations related to images of enemies.
+    14.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
+    15.  ImgOtherEnum:  Enumerations related to other images.
+    16.  ImgTileEnum:  Enumerations related to tile images.
+    17.  ImgTreasureEnum:  Enumerations related to treasure images.
+    18.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
+    19.  ItemCategoryEnum:  Enumerations related to item categories.
+    20.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
+    21.  ItemTypeEnum:  Enumerations related to item types.
+    22.  ListEnum:  Enumerations related to list types.
+    23.  MagicItemEnum:  Enumerations related to magic items.
+    24.  MusicEnum:  Enumerations related to music.
+    25.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
+    26.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
+    27.  SelectPosEnum:  Enumerations related to explore screen button selection.
+    28.  ShopEnum:  Enumerations related to shops / locations.
+    29.  ShopTypeEnum:  Enumerations related to shop / location types.
+    30.  SoundsEnum:  Enumerations related to sounds.
+    31.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    32.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
+    33:  WeaponEnum:  Enumerations related to weapons.
     */
     
     // Enumerations related to action buttons.  Helps with atlas keys.
@@ -222,6 +224,59 @@ public class HeroineEnum
         
     }
     
+    // Enumerations related to combat phases.
+    public enum CombatPhaseEnum 
+    {
+        
+        COMBAT_PHASE_INTRO (0), // Introduction / setup.  Only occurs once each combat.
+        COMBAT_PHASE_INPUT (1), // Player action selection for the current round.
+        COMBAT_PHASE_OFFENSE (2), // Handle offense actions (or running) for the current round.
+        COMBAT_PHASE_DEFENSE (3), // Handle player defense for the current round.
+        COMBAT_PHASE_VICTORY (4), // Handle player victory.
+        COMBAT_PHASE_DEFEAT (5) // Handle defeat of player.
+        ; // semicolon needed when fields / methods follow
+
+        private final int combatPhaseEnum; // Enumerations related to combat phases.
+        private static final Map combatPhaseMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // combatPhaseEnum = Value to associate.
+        private CombatPhaseEnum(int combatPhaseEnum) 
+        {
+            // The constructor sets the numeric values for each enumeration.
+            this.combatPhaseEnum = combatPhaseEnum;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (CombatPhaseEnum combatPhaseEnum : CombatPhaseEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                combatPhaseMap.put(combatPhaseEnum.combatPhaseEnum, combatPhaseEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_DEFENSE.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return combatPhaseEnum;
+        }
+        
+        // combatPhase = Numeric value to convert to text.
+        public static CombatPhaseEnum valueOf(int combatPhase) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (CombatPhaseEnum) combatPhaseMap.get(combatPhase);
+        }
+        
+    }
+    
     // Enumerations related to dialog buttons.  Helps with atlas keys.
     public enum DialogButtonEnum 
     {
@@ -339,27 +394,32 @@ public class HeroineEnum
     public enum EnemyEnum
     {
         ENEMY_SHADOW_TENDRILS (0, 2, 5, EnemyCategoryEnum.ENEMY_CATEGORY_SHADOW, 6, "Shadow Tendrils", 1, 
-          2, "shadow_tendrils.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK}), // Shadow tendrils.
+          2, "shadow_tendrils.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK},
+          ImgEnemyEnum.IMG_ENEMY_SHADOW_TENDRILS), // Shadow tendrils.
         ENEMY_IMP (1, 2, 6, EnemyCategoryEnum.ENEMY_CATEGORY_DEMON, 7, "Imp", 1, 3, "imp.png",
           new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, EnemyPowerEnum.ENEMY_POWER_ATTACK, 
-              EnemyPowerEnum.ENEMY_POWER_SCORCH}), // Imp.
+              EnemyPowerEnum.ENEMY_POWER_SCORCH}, ImgEnemyEnum.IMG_ENEMY_IMP), // Imp.
         ENEMY_SHADOW_SOUL (2, 3, 8, EnemyCategoryEnum.ENEMY_CATEGORY_SHADOW, 8, "Shadow Soul", 
           2, 4, "shadow_soul.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, 
-              EnemyPowerEnum.ENEMY_POWER_ATTACK, EnemyPowerEnum.ENEMY_POWER_MPDRAIN}), // Shadow soul
+              EnemyPowerEnum.ENEMY_POWER_ATTACK, EnemyPowerEnum.ENEMY_POWER_MPDRAIN},
+              ImgEnemyEnum.IMG_ENEMY_SHADOW_SOUL), // Shadow soul
         ENEMY_ZOMBIE (3, 4, 10, EnemyCategoryEnum.ENEMY_CATEGORY_UNDEAD, 12, "Zombie", 
           3, 6, "zombie.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, 
-              EnemyPowerEnum.ENEMY_POWER_ATTACK, EnemyPowerEnum.ENEMY_POWER_HPDRAIN}), // Zombie.
+              EnemyPowerEnum.ENEMY_POWER_ATTACK, EnemyPowerEnum.ENEMY_POWER_HPDRAIN},
+              ImgEnemyEnum.IMG_ENEMY_ZOMBIE), // Zombie.
         ENEMY_SKELETON (4, 6, 12, EnemyCategoryEnum.ENEMY_CATEGORY_UNDEAD, 18, "Skeleton", 
-          5, 8, "skeleton.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK}), // Skeleton.
+          5, 8, "skeleton.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK},
+              ImgEnemyEnum.IMG_ENEMY_SKELETON), // Skeleton.
         ENEMY_DRUID (5, 7, 14, EnemyCategoryEnum.ENEMY_CATEGORY_DEMON, 16, "Druid", 
           7, 12, "druid.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, 
               EnemyPowerEnum.ENEMY_POWER_SCORCH, EnemyPowerEnum.ENEMY_POWER_HPDRAIN, 
-              EnemyPowerEnum.ENEMY_POWER_MPDRAIN}), // Druid.
+              EnemyPowerEnum.ENEMY_POWER_MPDRAIN}, ImgEnemyEnum.IMG_ENEMY_DRUID), // Druid.
         ENEMY_MIMIC (6, 10, 16, EnemyCategoryEnum.ENEMY_CATEGORY_AUTOMATON, 30, "Mimic", 
-          16, 25, "mimic.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK}), // Mimic.
+          16, 25, "mimic.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK},
+              ImgEnemyEnum.IMG_ENEMY_MIMIC), // Mimic.
         ENEMY_DEATH_SPEAKER (7, 8, 15, EnemyCategoryEnum.ENEMY_CATEGORY_DEMON, 84, "Death Speaker", 
           225, 275, "death_speaker.png", new EnemyPowerEnum[]{EnemyPowerEnum.ENEMY_POWER_ATTACK, 
-              EnemyPowerEnum.ENEMY_POWER_SCORCH}) // Death speaker.
+              EnemyPowerEnum.ENEMY_POWER_SCORCH}, ImgEnemyEnum.IMG_ENEMY_DEATH_SPEAKER) // Death speaker.
         ; // semicolon needed when fields / methods follow
         
         private final int enemyAtkMax; // Enemy maximum attack value.
@@ -371,6 +431,7 @@ public class HeroineEnum
         private final String enemyName; // Enemy name.
         private final int enemyGoldMax; // Enemy maximum gold value.
         private final int enemyGoldMin; // Enemy minimum gold value.
+        private final ImgEnemyEnum imgEnemyEnum; // Enumerated value for image.
         private final String imageFile; // Image filename (just name and extension, no path).
         private final EnemyPowerEnum[] powers; // Enemy powers.
         
@@ -384,9 +445,10 @@ public class HeroineEnum
         // enemyGoldMax = Enemy maximum gold value.
         // imageFile = Image filename (just name and extension, no path).
         // powers = List of enemy powers.
+        // imgEnemyEnum = Enumerated value for image.
         private EnemyEnum(int enemyEnum, int enemyAtkMin, int enemyAtkMax, EnemyCategoryEnum enemyCategory, 
           int enemyHP, String enemyName, int enemyGoldMin, int enemyGoldMax, String imageFile, 
-          EnemyPowerEnum[] powers) 
+          EnemyPowerEnum[] powers, ImgEnemyEnum imgEnemyEnum)
         {
             // The constructor sets the values for each enumeration.
             this.enemyEnum = enemyEnum;
@@ -394,11 +456,12 @@ public class HeroineEnum
             this.enemyAtkMax = enemyAtkMax;
             this.enemyCategory = enemyCategory;
             this.enemyHP = enemyHP;
-            this.enemyName = enemyName;
+            this.enemyName = enemyName.toUpperCase();
             this.enemyGoldMin = enemyGoldMin;
             this.enemyGoldMax = enemyGoldMax;
             this.imageFile = imageFile;
             this.powers = powers;
+            this.imgEnemyEnum = imgEnemyEnum;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -444,7 +507,7 @@ public class HeroineEnum
         public EnemyCategoryEnum getValue_Category() 
         {
             // The function returns the category for the enemy.
-            // Example for use:  MusicEnum x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Category();
+            // Example for use:  EnemyCategoryEnum x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Category();
             
             // Return the category for the enemy.
             return enemyCategory;
@@ -484,6 +547,15 @@ public class HeroineEnum
             
             // Return the enemy name.
             return enemyName;
+        }
+        
+        public ImgEnemyEnum getValue_ImageEnum() 
+        {
+            // The function returns the enumerated value for the image for the enemy.
+            // Example for use:  ImgEnemyEnum x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_ImageEnum();
+            
+            // Return the enumerated value for the image for the enemy.
+            return imgEnemyEnum;
         }
         
         public String getValue_ImageFile() 
@@ -951,6 +1023,86 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (ImgBackgroundEnum) imgBackgroundMap.get(imgBackground);
+        }
+        
+    }
+    
+    // Enumerations related to images of enemies.
+    public enum ImgEnemyEnum
+    {
+        
+        IMG_ENEMY_BONE_SHIELD (0, "bone_shield.png", "bone_shield"), // Image for bone shield effect for enemy.
+        IMG_ENEMY_DEATH_SPEAKER (1, "death_speaker.png", "death_speaker"), // Image for death speaker enemy.
+        IMG_ENEMY_DRUID (2, "druid.png", "druid"), // Image for druid enemy.
+        IMG_ENEMY_IMP (3, "imp.png", "imp"), // Image for imp enemy.
+        IMG_ENEMY_MIMIC (4, "mimic.png", "mimic"), // Image for mimic enemy.
+        IMG_ENEMY_SHADOW_SOUL (5, "shadow_soul.png", "shadow_soul"), // Image for shadow soul enemy.
+        IMG_ENEMY_SHADOW_TENDRILS (6, "shadow_tendrils.png", "shadow_tendrils"), // Image for shadow tendrils enemy.
+        IMG_ENEMY_SKELETON (7, "skeleton.png", "skeleton"), // Image for skeleton enemy.
+        IMG_ENEMY_ZOMBIE (8, "zombie.png", "zombie") // Image for zombie enemy.
+        ; // semicolon needed when fields / methods follow
+        
+        private final int imgEnemyEnum; // Enumerations related to enemy images.
+        private final String imgFile; // Filename (just name and extension, no path).
+        private final String imgKey; // Key associated with image -- used with asset manager hash map.
+        private static final Map imgEnemyMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        
+        // imgEnemyEnum = Value to associate.
+        // imgFile = Filename (just name and extension, no path).
+        // imgKey = Key associated with image -- used with asset manager hash map.
+        private ImgEnemyEnum(int imgEnemyEnum, String imgFile, String imgKey) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.imgEnemyEnum = imgEnemyEnum;
+            this.imgFile = imgFile;
+            this.imgKey = imgKey;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ImgEnemyEnum imgEnemyEnum : ImgEnemyEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                imgEnemyMap.put(imgEnemyEnum.imgEnemyEnum, imgEnemyEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ImgEnemyEnum.IMG_ENEMY_SKELETON.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return imgEnemyEnum;
+        }
+        
+        public String getValue_File() 
+        {
+            // The function returns the filename (just name and extension, no path).
+            // Example for use:  String x = HeroineEnum.ImgEnemyEnum.IMG_ENEMY_SKELETON.getValue_File();
+            
+            // Return the filename (just name and extension, no path).
+            return imgFile;
+        }
+        
+        public String getValue_Key() 
+        {
+            // The function returns the image key -- used with the asset manager hash map.
+            // Example for use:  String x = HeroineEnum.ImgEnemyEnum.IMG_ENEMY_SKELETON.getValue_Key();
+            
+            // Return the key.
+            return imgKey;
+        }
+        
+        // imgEnemy = Numeric value to convert to text.
+        public static ImgEnemyEnum valueOf(int imgEnemy) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ImgEnemyEnum) imgEnemyMap.get(imgEnemy);
         }
         
     }
@@ -2280,6 +2432,7 @@ public class HeroineEnum
         SPELL_REFLECT (6, "Reflect", 50000, "Spellbook: Reflect", ActionButtonEnum.ACTION_BUTTON_REFLECT) // Reflect spell.
         ; // semicolon needed when fields / methods follow
 
+        private static final Map actionMap = new HashMap<>(); // Hash map related spell and action button.
         private final ActionButtonEnum actionButtonEnum; // Associated action button enumeration value.
         private final int gold; // Value of the spell, in gold.
         private final int spellEnum; // Enumerations related to spells.
@@ -2303,15 +2456,20 @@ public class HeroineEnum
             this.actionButtonEnum = actionButtonEnum;
         }
         
-        // Populate the hash map containing the text and numbers.
+        // Populate the hash maps containing (1) the text and numbers and (2) the cross reference between
+        // the action buttons and spells.
         static 
         {
             
             // Loop through each of the enumerated values.
             for (SpellEnum spellEnum : SpellEnum.values()) 
             {
-                // Add the current enumeration to the hash map.
+                // Add the current enumeration to the hash maps.
                 spellMap.put(spellEnum.spellEnum, spellEnum);
+                
+                // If related action button exists, then...
+                if (spellEnum.actionButtonEnum != null)
+                    actionMap.put(spellEnum.actionButtonEnum, spellEnum);
             }
             
         }
@@ -2359,6 +2517,13 @@ public class HeroineEnum
             
             // Return the treasure description value for the enumeration.
             return treasureDesc;
+        }
+        
+        // spell = Enuemration value to convert to text.
+        public static SpellEnum valueOf(ActionButtonEnum actionButtonEnum) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (SpellEnum) actionMap.get(actionButtonEnum);
         }
         
         // spell = Numeric value to convert to text.

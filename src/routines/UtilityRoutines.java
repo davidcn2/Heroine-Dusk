@@ -2,7 +2,9 @@ package routines;
 
 // LibGDX imports.
 import com.badlogic.gdx.graphics.Color;
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -113,6 +115,23 @@ public class UtilityRoutines
         
         // Return the array list.
         return temp;
+        
+    }
+    
+    // start = First integer in random range.
+    // end = Last integer in random range.
+    public static int generateStandardRnd(SecureRandom number, int start, int end)
+    {
+        
+        // The function returns a random number in the passed range.
+        
+        int range; // Difference between start and end.
+        
+        // Calculate difference between start and end.
+        range = end - start;
+        
+        // Return random number in passed range.
+        return (number.nextInt(range + 1) + start);
         
     }
     
