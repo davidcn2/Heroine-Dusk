@@ -2800,6 +2800,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         {
             
             // In explore mode.
+        
+            // TESTING
+            
+            if (keycode == Input.Keys.S)
+            {
+                // Shake the enemy.
+                System.out.println("Shake the enemy");
+                enemy.startShake(5);
+            }
+            
+            // TESTING
             
             // If the user pressed the up arrow key, then...
             if (keycode == Input.Keys.UP)
@@ -2953,10 +2964,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
             } // End ... If movement occurred.
             
-        }
+        } // End ... If in explore mode.
         
         // Return a value.
         return false;
+        
     }
     
 }

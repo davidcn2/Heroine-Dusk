@@ -3,6 +3,8 @@ package core;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import java.security.SecureRandom;
+import routines.UtilityRoutines;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -61,13 +63,29 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
     private float basePosY; // Base y-position of actor.  Actor moves to here at beginning and goes back here 
       // after "shaking".  Bottom of actor.
     private float elapsedTime; // Total elapsed time the actor has existed.
+    private final SecureRandom number; // Used for generating random numbers.
+    private int shakeCount; // Number of animations to process related to "shaking" actor.
+    private int shakeCounter; // Used to iterate through animations related to "shaking" actor.
+    private double shakeDirectionX; // X-component of direction vector related to "shake" action.
+    private double shakeDirectionY; // Y-component of direction vector related to "shake" action.
+    private double shakeDistanceCurr; // Current number of pixels to move actor while "shaking".
+    private int shakeDistanceMax; // Maximum number of pixels to move actor while "shaking".
+    private boolean shakeInd; // Whether to "shake" actor.
+    private float shakeDestX; // Destination x-position in current "shake" action.
+    private float shakeDestY; // Destination y-position in current "shake" action.
+    private float shakeOrigPosX; // X-position at which to start "shaking".
+    private float shakeOrigPosY; // Y-position at which to start "shaking".
+    private float shakeSrcX; // Source x-position in current "shake" action.
+    private float shakeSrcY; // Source y-position in current "shake" action.
     private boolean slideToBasePosInd; // Whether to slide to base position.
       // Assumes offscreen, to the left, and already at y-coordinate.
     private Vector2 velocity; // Actor velocity (speed) in x and y directions.
+    private Vector2 velocityShake; // Actor velocity (speed) in x and y directions, specific for "shaking".
     private int viewHeight; // Height of the stage.
     private int viewWidth; // Width of the stage.
     
     // Declare constants.
+    private final float SHAKE_VELOCITY = 500f; // Velocity (speed) at which to "shake" actor.
     private final float SLIDE_VELOCITY = 2000f; // Velocity (speed) at which to slide actor to base position.
     
     // Constructors below...
@@ -80,11 +98,8 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // The method calls the constructor of the parent (BaseActor) to create an actor.
         // The constructor also initializes the elapsed time.
         
-        // Initialized elapsed time to 0.
-        elapsedTime = 0;
-        
-        // Initialize the velocity vector.
-        velocity = new Vector2();
+        // Perform common initialization steps.
+        performInitialization();
         
         // Set the x and y portions of the velocity vector to the constant values used for sliding
         // the actor to its base position.
@@ -93,6 +108,9 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // Store view width and height.
         this.viewWidth = viewWidth;
         this.viewHeight = viewHeight;
+        
+        // Start random number generator.
+        number = new SecureRandom();
         
     }
     
@@ -120,14 +138,11 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         this.basePosX = ( viewWidth - textureRegion.getRegionWidth() ) / 2;
         this.basePosY = ( viewHeight - textureRegion.getRegionHeight() ) / 2;
         
-        // Initialized elapsed time to 0.
-        elapsedTime = 0;
+        // Perform common initialization steps.
+        performInitialization();
         
         // Store whether to slide to base position.
         this.slideToBasePosInd = slideToBasePosInd;
-        
-        // Initialize the velocity vector.
-        velocity = new Vector2();
         
         // Set the x and y portions of the velocity vector to the constant values used for sliding
         // the actor to its base position.
@@ -136,6 +151,9 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // Store view width and height.
         this.viewWidth = viewWidth;
         this.viewHeight = viewHeight;
+        
+        // Start random number generator.
+        number = new SecureRandom();
         
     }
     
@@ -163,14 +181,11 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         this.basePosX = ( viewWidth - texture.getWidth() ) / 2;
         this.basePosY = ( viewHeight - texture.getHeight() ) / 2;
         
-        // Initialized elapsed time to 0.
-        elapsedTime = 0;
+        // Perform common initialization steps.
+        performInitialization();
         
         // Store whether to slide to base position.
         this.slideToBasePosInd = slideToBasePosInd;
-        
-        // Initialize the velocity vector.
-        velocity = new Vector2();
         
         // Set the x and y portions of the velocity vector to the constant values used for sliding
         // the actor to its base position.
@@ -179,6 +194,9 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // Store view width and height.
         this.viewWidth = viewWidth;
         this.viewHeight = viewHeight;
+        
+        // Start random number generator.
+        number = new SecureRandom();
         
     }
     
@@ -197,18 +215,18 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // Call the constructor for the BaseActor (parent / super) class.
         super( actorName, textureRegion, basePosX, basePosY );
         
-        // Initialized elapsed time to 0.
-        elapsedTime = 0;
-        
         // Set base position of actor.
         this.basePosX = basePosX;
         this.basePosY = basePosY;
         
-        // Initialize the velocity vector.
-        velocity = new Vector2();
+        // Perform common initialization steps.
+        performInitialization();
         
         // Store whether to slide to base position.
         this.slideToBasePosInd = false;
+        
+        // Start random number generator.
+        number = new SecureRandom();
         
     }
     
@@ -227,18 +245,18 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // Call the constructor for the BaseActor (parent / super) class.
         super( actorName, texture, basePosX, basePosY );
         
-        // Initialized elapsed time to 0.
-        elapsedTime = 0;
-        
         // Set base position of actor.
         this.basePosX = basePosX;
         this.basePosY = basePosY;
         
-        // Initialize the velocity vector.
-        velocity = new Vector2();
+        // Perform common initialization steps.
+        performInitialization();
         
         // Store whether to slide to base position.
         this.slideToBasePosInd = false;
+        
+        // Start random number generator.
+        number = new SecureRandom();
         
     }
     
@@ -253,7 +271,9 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
 
         // 1.  Performs a time based positional update.
         // 2.  Updates the elapsed time value.
-
+        // 3.  Conditionally slides the actor to base position.
+        // 4.  Conditionally "shakes" the actor.
+        
         // Call the act method of the Actor, which performs a time based positional update.
         super.act(dt);
 
@@ -261,7 +281,7 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         elapsedTime += dt;
 
         // If sliding to base position, then...
-        if (slideToBasePosInd)
+        if ( slideToBasePosInd )
         {
             
             // Sliding to base position.
@@ -285,7 +305,237 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
             } // End ... If Actor at or past base position.
             
         } // End ... If sliding to base position.
+        
+        // Otherwise, if "shaking" actor, then...
+        else if (shakeInd)
+        {
+            
+            // "Shake" actor.
+                
+            // See https://gamedev.stackexchange.com/questions/23447/moving-from-ax-y-to-bx1-y1-with-constant-speed.
+            
+            // Moves current Actor (adds X and Y to current position) based on constant velocity (speed)
+            // and elapsed seconds since last frame.
+            moveBy( velocityShake.x * dt, velocityShake.y * dt );
 
+            // If actor at or past destination, then...
+            if ( distancePoints(this.shakeSrcX, this.shakeSrcY, super.getX(), 
+                super.getY()) >= this.shakeDistanceCurr )
+            {
+
+                // Actor at or past destination.
+                
+                // Move actor to destination.
+                this.setX(this.shakeDestX);
+                this.setY(this.shakeDestY);
+
+                // Increment "shake" counter.
+                shakeCounter++; 
+                
+                // If more "shake" animations remain, then...
+                if (shakeCounter <= shakeCount)
+                {
+                    
+                    // More "shake" animations remain.
+                    
+                    // Perform calculations related to next "shake".
+                    nextShake(null, null);
+                    
+                }
+
+                // Otherwise, if in first iteration after going through all "shake" animations, then...
+                else if (shakeCounter == shakeCount + 1)
+                {
+
+                    // In first iteration after going through all "shake" animations.
+                    // Go through one more movement to return actor to original location.
+                    
+                    // Return actor to original location.
+                    nextShake(this.shakeOrigPosX, this.shakeOrigPosY);
+
+                }
+                
+                else
+                {
+                    
+                    // Actor in original location.
+                    
+                    // Reset "shake" indicator and counter.
+                    shakeInd = false;
+                    shakeCounter = 1;
+                    
+                }
+
+            } // End ... If actor at or past destination.
+            
+        } // End ... if "shaking" actor.
+
+    }
+    
+    // posX_Src = X-coordinate of source location.
+    // posY_Src = Y-coordinate of source location.
+    // posX_Dest = X-coordinate of destination location.
+    // posY_Dest = Y-coordinate of destionation location.
+    private double distancePoints(float posX_Src, float posY_Src, float posX_Dest, float posY_Dest)
+    {
+        
+        // The function returns the distance between two points.
+        
+        // Return distance between passed point and original location of actor (before "shaking").
+        return Math.sqrt(Math.pow(posX_Dest - posX_Src, 2) + Math.pow(posY_Dest - posY_Src, 2));
+        
+    }
+    
+    // posX = X-coordinate of point for which to get distance to original location of actor (before "shaking").
+    // posY = Y-coordinate of point for which to get distance to original location of actor (before "shaking").
+    private double distanceToShakeOrigin(float posX, float posY)
+    {
+        
+        // The function returns the distance between the passed point and the original location of the actor
+        // (before "shaking").
+        
+        // Return distance between passed point and original location of actor (before "shaking").
+        return Math.sqrt(Math.pow(posX - this.shakeOrigPosX, 2) + Math.pow(posY - this.shakeOrigPosY, 2));
+        
+    }
+    
+    // shakeDestX = X-coordinate of static location to move actor.
+    // shakeDestY = Y-coordinate of static location to move actor.
+    private void nextShake(Float shakeDestX, Float shakeDestY)
+    {
+        
+        // The function performs calculations for the next "shake" of the actor.
+        // Use destination when passed.
+        // Otherwise, sets actor on path to within x pixels of original location in each direction.
+        // x = shakeDistanceMax.
+        
+        double shakeDirSum; // Sum of x and y components of direction vector (using absolute values).
+        double shakeDirX_Abs; // Absolute value of x component of direction vector.
+        double shakeDirY_Abs; // Absolute value of y component of direction vector.
+        int velocityMultipleX; // Velocity multiple in the x-direction to account for direction (left or right).
+        int velocityMultipleY; // Velocity multiple in the y-direction to account for direction (up or down).
+        
+        // Set current "shake" source to current actor location.
+        this.shakeSrcX = super.getX();
+        this.shakeSrcY = super.getY();
+        
+        // If static destination passed, then...
+        if (shakeDestX != null)
+        {
+            // Static destination passed.
+            
+            // Set current "shake" destination.
+            this.shakeDestX = shakeDestX;
+            this.shakeDestY = shakeDestY;
+        }
+        
+        else
+        {
+            // No static destination passed.
+            
+            // Set current "shake" destination.
+            // Position located within shakeDistanceMax pixels to left, right, above, and below original location.
+            this.shakeDestX = this.shakeOrigPosX + UtilityRoutines.generateStandardRnd(number, 1, 
+              this.shakeDistanceMax) - UtilityRoutines.generateStandardRnd(number, 1, this.shakeDistanceMax);
+            this.shakeDestY = this.shakeOrigPosY + UtilityRoutines.generateStandardRnd(number, 1, 
+              this.shakeDistanceMax) - UtilityRoutines.generateStandardRnd(number, 1, this.shakeDistanceMax);
+        }
+        
+        // Calculate current "shake" distance.
+        this.shakeDistanceCurr = distancePoints(this.shakeSrcX, this.shakeSrcY, this.shakeDestX, 
+          this.shakeDestY);
+        
+        // If current "shake" distance is zero, then...
+        if (this.shakeDistanceCurr == 0)
+        {
+            
+            // Current "shake" distance is zero.
+            
+            // Set components of direction vector to zero.
+            this.shakeDirectionX = 0;
+            this.shakeDirectionY = 0;
+            
+            // Set components of velocity vector to zero.
+            this.velocityShake.x = 0;
+            this.velocityShake.y = 0;
+            
+        }
+        
+        else
+        {
+            
+            // Current "shake" distance other than zero.
+            
+            // Calculate components of direction vector.
+            this.shakeDirectionX = (this.shakeDestX - this.shakeSrcX) / this.shakeDistanceCurr;
+            this.shakeDirectionY = (this.shakeDestY - this.shakeSrcY) / this.shakeDistanceCurr;
+            
+            // Store absolute values of components of direction vector.
+            shakeDirX_Abs = Math.abs(this.shakeDirectionX);
+            shakeDirY_Abs = Math.abs(this.shakeDirectionY);
+
+            // Store sum of absolute values.
+            shakeDirSum = shakeDirX_Abs + shakeDirY_Abs;
+
+            // Determine velocity multiples.
+            velocityMultipleX = this.shakeDestX > this.shakeSrcX ? 1 : -1;
+            velocityMultipleY = this.shakeDestY > this.shakeSrcY ? 1 : -1;
+
+            // Calculate proportional velocity vector.
+            this.velocityShake.x = (float)(SHAKE_VELOCITY * velocityMultipleX * (shakeDirX_Abs / shakeDirSum));
+            this.velocityShake.y = (float)(SHAKE_VELOCITY * velocityMultipleY * (shakeDirY_Abs / shakeDirSum));
+        
+        }
+        
+    }
+    
+    private void performInitialization()
+    {
+        
+        // The function performs basic shared preparation steps, such as setting defaults and initializing
+        // arrays, array lists, hash maps, ...
+        
+        // Initialized elapsed time to 0.
+        this.elapsedTime = 0;
+        
+        // Flag to not "shake" actor yet.
+        this.shakeInd = false;
+        
+        // Initialize the velocity vectors.
+        this.velocity = new Vector2();
+        this.velocityShake = new Vector2();
+        
+        // Set number of animations to process related to "shaking" actor.
+        shakeCount = 14;
+        
+        // Initialize "shake" counter.
+        shakeCounter = 1;
+        
+    }
+    
+    // shakeDistanceMax = Maximum number of pixels to move actor.
+    public void startShake(int shakeDistance)
+    {
+        
+        // The function sets values for and initiates a "shake" operation.
+        // The actor shakes within the passed number of pixels of its original location.
+        
+        // Store current actor position as originating point.
+        this.shakeOrigPosX = super.getX();
+        this.shakeOrigPosY = super.getY();
+        
+        // Store maximum number of pixels to move actor with each "shake".
+        this.shakeDistanceMax = shakeDistance;
+        
+        // Reset "shake" counter.
+        this.shakeCounter = 1;
+        
+        // Turn on "shake" effect.
+        this.shakeInd = true;
+        
+        // Perform "shake" calculations.
+        nextShake(null, null);
+        
     }
     
     // actorName = Name of actor.
@@ -419,6 +669,19 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
 
     public void setBasePosY(float basePosY) {
         this.basePosY = basePosY;
+    }
+    
+    public boolean getShakeInd() {
+        return shakeInd;
+    }
+
+    public void setShakeInd(boolean shakeInd) {
+        // Do not start a "shake" movement here.
+        this.shakeInd = shakeInd;
+    }
+    
+    public boolean getSlideToBasePosInd() {
+        return slideToBasePosInd;
     }
     
     public void setSlideToBasePosInd(boolean slideToBasePosInd) {
