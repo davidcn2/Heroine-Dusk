@@ -88,6 +88,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel facingLabel; // Label showing direction player is facing.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
     private CustomLabel goldLabel; // Label showing current player gold.
+    private ArrayList<BaseActor> goldPile; // List of gold actors.
     private BaseActor heroineArmor; // BaseActor object that will act as the player armor.
     private BaseActor heroineBase; // BaseActor object that will act as the base player.
     private BaseActor heroineWeapon; // BaseActor object that will act as the player weapon.
@@ -115,6 +116,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel spellsLabel; // Label showing "SPELLS" text.
     private CustomLabel statusLabel; // General status label.
     private ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
+      // 0 to 12 = Background tiles.  13 = Treasure.  14 = Treasure group.  15 = Chest.  16 = Bone pile.
+      // 17 = Lock.
     private CustomLabel treasureLabel; // Label showing treasure description.
     private Array<Actor> uiStageActors; // List of actors in ui stage used when waking screen.
     private CustomLabel weaponLabel; // Label showing current player weapon.
@@ -130,7 +133,15 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private boolean minimapRenderInd; // Whether minimap rendered for current location yet.
     
     // Declare constants.
-    private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1);
+    private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1); // Disabled color.
+    private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{36, 27, 45, 45, 21, 34, 12, 61, 58, 0};
+    private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{17, 20, 19, 10, 4, 2, 16, 0, 18, 1};
+    private final int TILE_COUNT = 25; // Number of tile actors.
+    private final int TILE_POS_TREASURE = 13; // Tile position of treasure (actor).
+    private final int TILE_POS_TREASURE_GROUP = 14; // Tile position of treasure (group).
+    private final int TILE_POS_CHEST = 15; // Tile position of chest.
+    private final int TILE_POS_BONE_PILE = 16; // Tile position of bone pile.
+    private final int TILE_POS_LOCK = 17; // Tile position of lock.
     
     // hdg = Reference to Heroine Dusk (main) game.
     // windowWidth = Width to use for stages.
@@ -168,24 +179,27 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         4.  Configure and add the background Actor.
         5.  Configure and add the label showing the general status.  Hidden at start.
         6.  Configure and add the labels for the player hit and magic points.  Hidden at start.
-        7.  Render current map location / tiles.
-        8.  Configure and add the label with the direction the player is facing.
-        9.  Configure and add the information button Actor.
-        10.  Configure and add the label with the "INFO" text.  Hidden at start.
-        11.  Configure and add the selector actor for the information button.  Hidden at start.
-        12.  Configure and add the label with the "SPELLS" text.  Hidden at start.
-        13.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
-        14.  Configure and add the labels for the current player armor and weapon.  Hidden at start.
-        15.  Configure and add the label for the current player gold.  Hidden at start.
-        16.  Populate hash map with starting enabled statuses for action buttons.
-        17.  Populate hash map with starting ignore next exit event flags for action buttons.
-        18.  Configure and add the actors for the action buttons (excluding information).  Hidden at start.
-        19.  Configure and add the labels for the two lines for responses to spells / powers / actions.
-             Hidden at start.
-        20.  Configure and add the label showing the current region name.  Hidden at start.
-        21.  Configure and add the label showing the treasure description.  Hidden at start.
-        22.  Configure and add the label showing the enemy type.  Hidden at start.
-        23.  Configure and add the enemy actor to the middle stage.  Hidden at start.
+        7.  Add unconfigured tiles to array -- creating actors.
+        8.  Configure special tiles -- chest, bone pile, lock, ...
+        9.  Add and configure the actors for the gold pile.
+        10.  Render current map location / tiles.
+        11.  Configure and add the label with the direction the player is facing.
+        12.  Configure and add the information button Actor.
+        13.  Configure and add the label with the "INFO" text.  Hidden at start.
+        14.  Configure and add the selector actor for the information button.  Hidden at start.
+        15.  Configure and add the label with the "SPELLS" text.  Hidden at start.
+        16.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
+        17.  Configure and add the labels for the current player armor and weapon.  Hidden at start.
+        18.  Configure and add the label for the current player gold.  Hidden at start.
+        19.  Populate hash map with starting enabled statuses for action buttons.
+        20.  Populate hash map with starting ignore next exit event flags for action buttons.
+        21.  Configure and add the actors for the action buttons (excluding information).  Hidden at start.
+        22.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+            Hidden at start.
+        23.  Configure and add the label showing the current region name.  Hidden at start.
+        24.  Configure and add the label showing the treasure description.  Hidden at start.
+        25.  Configure and add the label showing the enemy type.  Hidden at start.
+        26.  Configure and add the enemy actor to the middle stage.  Hidden at start.
         */
         
         // 1.  Set defaults.
@@ -223,23 +237,31 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the general status label.
         statusLabel.applyVisible(false);
         
-        // 7.  Render current map location / tiles.
+        // 7.  Add unconfigured tiles to array list -- creating actors.
+        for (int tileCounter = 1; tileCounter <= TILE_COUNT; tileCounter++)
+        {
+            
+            // Add tile-related array to array list.
+            tiles.add( new BaseActor() );
+            
+            // Add the tile Actor to the scene graph.
+            mainStage.addActor( tiles.get(tileCounter - 1) );
+            
+        }
         
-        // Store array list with base actors for tiles to display.
-        tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
+        // 8.  Configure special tiles -- chest, bone pile, lock, ...
+        mazemap.prepareSpecialTiles( tiles, viewWidthMain );
+        
+        // 9.  Add and configure the actors for the gold pile.
+        prepareGoldPile(tiles);
+        
+        // 10.  Render current map location / tiles.
+        mazemap.mazemap_render(tiles, goldPile, gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
           heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, false, false,
           mapActionButtons, mapActionButtonEnabled);
         
-        // Loop through base actors in array list.
-        tiles.forEach((actor) -> {
-            
-            // Add the tile Actor to the scene graph.
-            mainStage.addActor( actor );
-        
-        });
-        
-        // 8.  Configure and add the label with the direction the player is facing.
+        // 11.  Configure and add the label with the direction the player is facing.
         
         // Initialize and add label with facing text.
         facingLabel = new CustomLabel(game.skin, gameHD.getAvatar().getFacing().toString(), "uiLabelStyle", 
@@ -250,7 +272,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( facingLabel.getLabel() );
         
-        // 9.  Configure and add the information button Actor.
+        // 12.  Configure and add the information button Actor.
         
         // Create and configure new BaseActor for the information button.
         
@@ -270,7 +292,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoButton );
         
-        // 10.  Configure and add the label with the "INFO" text.
+        // 13.  Configure and add the label with the "INFO" text.
         
         // Initialize and add label with the "INFO" text.
         infoLabel = new CustomLabel(game.skin, "INFO", "uiLabelStyle", 1.0f, 
@@ -284,7 +306,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoLabel.getLabel() );
         
-        // 11.  Configure and add the selector Actor for the selector for the information button.
+        // 14.  Configure and add the selector Actor for the selector for the information button.
         
         // Create and configure new BaseActor for the selector for the information button.
         
@@ -308,7 +330,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoButtonSelector );
         
-        // 12.  Configure and add the label with the "SPELLS" text.  Hidden at start.
+        // 15.  Configure and add the label with the "SPELLS" text.  Hidden at start.
         
         // Initialize and add label with the "SPELLS" text.
         spellsLabel = new CustomLabel(game.skin, "SPELLS", "uiLabelStyle", 1.0f, 
@@ -322,17 +344,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( spellsLabel.getLabel() );
         
-        // 13.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
+        // 16.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
         info_render_equipment();
         
-        // 14.  Configure and adds the labels for the player armor and weapon.  Hidden at start.
+        // 17.  Configure and adds the labels for the player armor and weapon.  Hidden at start.
         info_render_itemlist();
         
-        // 15.  Configure and add the label for the current player gold.  Hidden at start.
+        // 18.  Configure and add the label for the current player gold.  Hidden at start.
         info_render_gold();
     
-        // 16.  Populate hash map with starting enabled statuses for action buttons.
-        // 17.  Populate hash map with starting ignore next exit event flags for action buttons.
+        // 19.  Populate hash map with starting enabled statuses for action buttons.
+        // 20.  Populate hash map with starting ignore next exit event flags for action buttons.
         
         // Loop through action button enumerations.
         for (HeroineEnum.ActionButtonEnum actionButtonEnum : HeroineEnum.ActionButtonEnum.values())
@@ -359,14 +381,14 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         }
         
-        // 18.  Configure and add the actors for the action buttons (excluding information).
+        // 21.  Configure and add the actors for the action buttons (excluding information).
         action_render();
         
-        // 19.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+        // 22.  Configure and add the labels for the two lines for responses to spells / powers / actions.
         //      Hidden at start.
         info_render_powerResponseLines();
         
-        // 20.  Configure and add the label showing the current region name.  Hidden at start.
+        // 23.  Configure and add the label showing the current region name.  Hidden at start.
         
         // Initialize and add label with the "SPELLS" text.
         regionLabel = new CustomLabel(game.skin, mazemap.getCurrentRegion().getRegionName(), "uiLabelStyle", 
@@ -377,7 +399,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         regionLabel.applyVisible(false);
         
-        // 21.  Configure and add the label showing the treasure description.  Hidden at start.
+        // 24.  Configure and add the label showing the treasure description.  Hidden at start.
         treasureLabel = new CustomLabel(game.skin, "NO TREASURE HERE", "uiLabelStyle", 
           0.8f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, 0f, 
@@ -386,7 +408,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         treasureLabel.applyVisible(false);
         
-        // 22.  Configure and add the label showing the enemy type.  Hidden at start.
+        // 25.  Configure and add the label showing the enemy type.  Hidden at start.
         enemyLabel = new CustomLabel(game.skin, "NO ENEMY HERE", "uiLabelStyle", 
           1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, 0f, 
@@ -395,7 +417,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         enemyLabel.applyVisible(false);
         
-        // 23.  Configure and add the enemy actor to the middle stage.  Hidden at start.
+        // 26.  Configure and add the enemy actor to the middle stage.  Hidden at start.
         enemy = new ShakyActor(viewWidthMain, viewHeightMain);
         
         // Hide the actor.
@@ -913,10 +935,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_FIRE);
                             
                             // Set up an action to fade out the skull pile.
-                            tiles.get(
-                              mazemap.getTileMap_Value(
-                              HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE)).addAction_FadeOut(
-                              0.25f, 0.75f);
+                            tiles.get(TILE_POS_BONE_PILE).addAction_FadeOut(0.25f, 0.75f);
                             
                             // Disable skull pile events.
                             mazemap.setBonePileActiveInd(false);
@@ -927,7 +946,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                               gameHD.getAvatar().getMapLocation_ForwardLoc());
                             
                             // Remove tile showing skull pile.
-                            mazemap.removeTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE);
+                            //mazemap.removeTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE);
                             
                             // Change tile in front of player to dungeon floor.
                             mazemap.setImgTileEnum_ForwardLoc(gameHD.getAvatar(), 
@@ -1487,10 +1506,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_UNLOCK);
                             
                             // Set up an action to fade out the lock.
-                            tiles.get(
-                              mazemap.getTileMap_Value(
-                              HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_LOCK)).addAction_FadeOut(
-                              0.25f, 0.75f);
+                            tiles.get(TILE_POS_LOCK).addAction_FadeOut(0.25f, 0.75f);
                             
                             // Disable lock events.
                             mazemap.setLockedDoorActiveInd(false);
@@ -1501,7 +1517,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                               gameHD.getAvatar().getMapLocation_ForwardLoc());
                             
                             // Remove tile showing locked door.
-                            mazemap.removeTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_LOCK);
+                            //mazemap.removeTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_LOCK);
                             
                             // Change tile in front of player to regular (unlocked) door.
                             mazemap.setImgTileEnum_ForwardLoc(gameHD.getAvatar(), 
@@ -2080,31 +2096,34 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
             // Hide any visible secondary items.
             
-            // If treasure actor exists, then...
-            if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE) != null)    
+            // If treasure actor active, then...
+            if (mazemap.getTileActiveInd(TILE_POS_TREASURE))   
             {
-                // Treasure actor exists.
+                // Treasure actor active.
                 
                 // Hide treasure actor.
-                tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE)).setVisible(false);
+                tiles.get(TILE_POS_TREASURE).setVisible(false);
                 
                 // Hide treasure label.
                 treasureLabel.applyVisible(false);
             }
             
-            // If treasure actor (group) exists, then...
-            if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP) != null)    
+            // If treasure actor (group) active, then...
+            if (mazemap.getTileActiveInd(TILE_POS_TREASURE_GROUP))  
             {
-                // Treasure actor (group) exists.
+                // Treasure actor (group) active.
                 
                 // Hide treasure actor (group).
-                tiles.get(mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP)).setVisible(false);
+                tiles.get(TILE_POS_TREASURE_GROUP).setVisible(false);
+                
+                // Hide treasure label.
+                treasureLabel.applyVisible(false);
             }
             
-            // If bone pile actor exists, then...
-            if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE) != null)    
+            // If bone pile actor active, then...
+            if (mazemap.getTileActiveInd(TILE_POS_BONE_PILE))   
             {
-                // Bone pile actor exists.
+                // Bone pile actor active.
                 
                 // Move burn button to original location (in spell list / area).
                 
@@ -2192,10 +2211,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             // Hide minimap group.
             minimapGroup.setVisible(false);
             
-            // If bone pile actor exists, then...
-            if (mazemap.getTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE) != null)    
+            // If bone pile actor active, then...
+            if (mazemap.getTileActiveInd(TILE_POS_BONE_PILE))   
             {
-                // Bone pile actor exists.
+                // Bone pile actor active.
                 
                 // Enable bone pile actor events.
                 mazemap.setBonePileActiveInd(true);
@@ -2556,6 +2575,119 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    private void prepareGoldPile(ArrayList<BaseActor> tiles)
+    {
+        
+        // The function configures properties for the gold pile (array list of actors) and related treasure group.
+        // The function supports displaying up to 1023 gold.
+        
+        ArrayList<Integer> bitwiseList; // List of numbers that add up to gold amount.
+        int counter; // Used to iterate through gold actors.
+        int destIndex; // Index in arrays, GOLD_BASE_POS_X_LIST and GOLD_BASE_POS_Y_LIST, of positions to 
+          // place gold.
+        float goldHeight; // Height of current gold actor (in group).
+        float goldMaxX; // Maximum x-coordinate for placement of gold (in group).
+        float goldMaxY; // Maximum y-coordinate for placement of gold (in group).
+        float goldMinX; // Minimum x-coordinate for placement of gold (in group).
+        float goldMinY; // Minimum y-coordinate for placement of gold (in group).
+        float goldPosX; // X-coordinate to place current gold actor (in group).
+        float goldPosY; // Y-coordinate to place current gold actor (in group).
+        float goldWidth; // Width of current gold actor (in group).
+        HeroineEnum.ImgTreasureEnum imgTreasureEnum; // Enumerated value for treasure.
+        float treasureHeight; // Height to which to resize treasure.
+        float treasureWidth; // Width to which to resize treasure.
+        
+        // Set defaults.
+        counter = 0;
+        goldMinX = 999999;
+        goldMinY = 999999;
+        goldMaxX = 0;
+        goldMaxY = 0;
+        
+        // Populate list of numbers that add up to gold amount.
+        bitwiseList = routines.UtilityRoutines.bitwiseList(1023);
+        
+        // Initialize array list for gold pile.
+        goldPile = new ArrayList<>();
+
+        // Loop through gold amounts to show.
+        for (Integer gold : bitwiseList)
+        {
+
+            // Get treasure enumeration value.
+            imgTreasureEnum = HeroineEnum.ImgTreasureEnum.valueOf("IMG_TREASURE_GOLD_" + Integer.toString(gold));
+
+            // Determine index in position lists with location to place gold.
+            destIndex = imgTreasureEnum.getValue();
+
+            // Determine x and y coordinates to place current gold actor (in group / loop).
+            goldPosX = GOLD_BASE_POS_X_LIST[destIndex] * gameHD.getConfig().getScale();
+            goldPosY = GOLD_BASE_POS_Y_LIST[destIndex] * gameHD.getConfig().getScale();
+
+            // Determine dimensions of current gold actor (in group / loop).
+            goldWidth = gameHD.getConfig().getScale() * 
+              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionWidth();
+            goldHeight = gameHD.getConfig().getScale() * 
+              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionHeight();
+
+            // Configure and add actor to gold pile.
+            
+            // Add image to gold pile.
+            goldPile.add(new BaseActor("GOLD" + Integer.toString(gold), imgTreasureEnum.getValue_AtlasKey(), 
+              goldPosX, goldPosY, gameHD.getAssetMgr()));
+            
+            // Scale actor.
+            goldPile.get(counter).setWidth(goldWidth);
+            goldPile.get(counter).setHeight(goldHeight);
+
+            // Set actor as not visible.
+            goldPile.get(counter).setVisible(false);
+            
+            // Store minimum and maximum x and y to calculate dimensions and adjust base location to 0, 0.
+            goldMinX = Math.min(goldMinX, goldPosX);
+            goldMinY = Math.min(goldMinY, goldPosY);
+            goldMaxX = Math.max(goldMaxX, goldPosX + goldWidth);
+            goldMaxY = Math.max(goldMaxY, goldPosY + goldHeight);
+
+            // Increment counter.
+            counter++;
+            
+        }
+
+        // Loop through gold actors in group.
+        for (BaseActor gold : goldPile)
+        {
+            // Adjust base location to 0, 0 -- allows easy positioning of group and proper centering.
+            gold.setX(gold.getX() - goldMinX);
+            gold.setY(gold.getY() - goldMinY);
+
+            // Add actor to group.
+            tiles.get(TILE_POS_TREASURE_GROUP).addActor(gold);
+        }
+
+        // Set treasure actor to function / draw as group only.
+        tiles.get(TILE_POS_TREASURE_GROUP).setGroupOnlyInd(true);
+
+        // Determine width and height of treasure.
+        treasureWidth = goldMaxX - goldMinX;
+        treasureHeight = goldMaxY - goldMinY;
+
+        // Store width and height of treasure (group) in actor.
+        tiles.get(TILE_POS_TREASURE_GROUP).setGroupWidth(treasureWidth);
+        tiles.get(TILE_POS_TREASURE_GROUP).setGroupHeight(treasureHeight);
+        
+        // Set treasure origin to center to allow for proper rotation.
+        tiles.get(TILE_POS_TREASURE_GROUP).setOriginCenter_Group();
+        
+        // Set position of treasure group.
+        
+        // Position treasure actor (group) at center of stage horizontally and chest vertically.
+        tiles.get(TILE_POS_TREASURE_GROUP).setPosition( (viewWidthMain - treasureWidth) / 2, 
+          tiles.get(TILE_POS_CHEST).getOriginY() );
+        
+    }
+    
     // regionExit = Reference to the exit to process.
     // turnInd = Whether movement involved turning.
     private void processExit(RegionMap.RegionExit regionExit, boolean turnInd)
@@ -2626,40 +2758,14 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         6.  Reset flag for minimap rendering, indicating regeneration necessary.
         */
         
-        ArrayList<BaseActor> removeList; // List of actors to remove.
-        
         // 1.  Initialize array lists.
-        removeList = new ArrayList<>();
+        
         
         // 2.  Update the background Actor.
         
         // Assign the Texture to the background Actor.
-        background.setTexture(gameHD.getAssetMgr().getImage_xRef(mazemap.getCurrentRegion().getRegionBackground().getValue_Key()));
-        
-        // 3.  Remove existing actors related to current map location / tiles.
-        
-        // Loop through base actors in array list.
-        tiles.forEach((actor) -> {
-            
-            // Add the tile Actor to the removalList.
-            removeList.add( actor );
-        
-        });
-        
-        // Clear actors in removal list -- remove them from the array list with the tiles.
-        // Loop through actors in removal list.
-        removeList.forEach((ba) -> {
-            
-            // Remove actor from stage.
-            ba.destroy();
-            
-            // Remove actor from array list.
-            //tiles.remove(ba);
-        
-        });
-        
-        // Reinitialize array list for tiles.
-        tiles = new ArrayList<>();
+        background.setTexture(
+          gameHD.getAssetMgr().getImage_xRef(mazemap.getCurrentRegion().getRegionBackground().getValue_Key()));
         
         // 4.  Hide any treasure text.
         treasureLabel.applyVisible(false);
@@ -2667,18 +2773,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 5.  Render current map location / tiles.
         
         // Store array list with base actors for tiles to display.
-        tiles = mazemap.mazemap_render(gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
+        mazemap.mazemap_render(tiles, goldPile, gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
           heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, turnInd, redrawInd,
           mapActionButtons, mapActionButtonEnabled);
-        
-        // Loop through base actors in array list.
-        tiles.forEach((actor) -> {
-            
-            // Add the tile Actor to the scene graph.
-            mainStage.addActor( actor );
-        
-        });
         
         // 6.  Reset flag for minimap rendering, indicating regeneration necessary.
         minimapRenderInd = false;

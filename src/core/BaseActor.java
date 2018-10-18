@@ -1372,7 +1372,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         setWidth( w ); // Set the width of the texture region to that of the passed texture.
         setHeight( h ); // Set the height of the texture region to that of the passed texture.
         region.setRegion( t ); // Set the texture region and coordinates to the size of the specified texture.
-
+        
         // Set default color the Actor will be tinted when drawn.
         tintColor = getColor();
 

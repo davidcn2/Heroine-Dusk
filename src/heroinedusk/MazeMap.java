@@ -3,12 +3,15 @@ package heroinedusk;
 // LibGDX imports.
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
-import core.AssetMgr;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 // Local project imports.
+import core.AssetMgr;
 import core.BaseActor;
 import core.ShakyActor;
 import gui.CustomLabel;
@@ -64,7 +67,9 @@ public class MazeMap
     private final Combat combat; // Reference to the combat engine.
     private final RegionMap currentRegion; // Reference to current region / map.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
-    private ArrayList<BaseActor> goldPile; // List of gold actors.
+    private final ArrayList<Action> goldActions; // List of actions to apply to gold actors.
+    private final HashMap<Integer, Integer> goldXRef; // Cross reference between amount of gold (key) and 
+      // index in array list (value).  Array list = goldPile.
     private final HashMap<HeroineEnum.MinimapCursorEnum, TextureRegion> minimapCursorRegions; // Unique set of
       // texture regions used with minimap cursors.
     private final HashMap<HeroineEnum.MinimapEnum, TextureRegion> minimapRegions; // Unique set of texture
@@ -73,9 +78,7 @@ public class MazeMap
     private final ArrayList<ArrayList<Float>> minimapDestY; // Y-coordinates for destination of icons in stage.
     private final ArrayList<ArrayList<Integer>> regionTiles; // List of tiles composing the current region.
       // Example for use -- get(x).get(y):  Integer x = regionTiles.get(0).get(0);
-    private HashMap<Integer, Integer> tileMap; // Cross reference with key = position (related to tile image 
-      // offset) and value = array index (in array list with tile actors).  Also, includes special key values
-      // for chest, treasure, and skull pile.
+    private final ArrayList<Boolean> tileActiveInd; // Whether each tile is active.
     
     // Declare regular variables.
     private boolean bonePileActiveInd; // Whehter bone pile in square in front of player enabled.
@@ -88,6 +91,8 @@ public class MazeMap
     private final float dest_y[]; // Array holding Y-coordinate (relative to the bottom left corner) to display
       // tile texture region in stage -- adjusted by scale factor.  Excludes render offset.
     private int encounter_chance; // Current encounter chance -- increases (to a point) until combat occurs.
+    private boolean goldPileActiveInd; // Whether gold pile active.
+    private final boolean[] goldVisibleList =  new boolean[]{false, false, false, false, false, false, false, false, false, false};
     private boolean lockedDoorActiveInd; // Whether locked door in square in front of (NOT UNDER) player enabled.
     private final int map_id; // Current region / map location (number).
     private final float minimapIconSize; // Size of an icon in minimap (width and height match).
@@ -106,13 +111,17 @@ public class MazeMap
     private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1);
     private final int ENCOUNTER_INCREMENT = 5; // Amount by which encounter chance increases.
     private final int ENCOUNTER_MAX = 30; // Maximum encounter chance.
-    private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{36, 27, 45, 45, 21, 34, 12, 61, 58, 0};
-    //private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{93, 96, 95, 86, 80, 78, 92, 76, 94, 77};
-    private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{17, 20, 19, 10, 4, 2, 16, 0, 18, 1};
     private final String decFormatText000 = "000"; // Text used for decimal style used to format numbers as 000.
       // Examples:  1 > 001, 2 > 002, ...
     private final DecimalFormat decimalFormat000 = new DecimalFormat(decFormatText000); // Decimal style used to
       // format numbers as 000.  Examples:  1 > 001, 2 > 002, ...
+    private final int TILE_COUNT = 25; // Number of tile actors.
+    private final int TILE_COUNT_BASE_0 = 24; // Number of tile actors, base 0.
+    private final int TILE_POS_TREASURE = 13; // Tile position of treasure (actor).
+    private final int TILE_POS_TREASURE_GROUP = 14; // Tile position of treasure (group).
+    private final int TILE_POS_CHEST = 15; // Tile position of chest.
+    private final int TILE_POS_BONE_PILE = 16; // Tile position of bone pile.
+    private final int TILE_POS_LOCK = 17; // Tile position of lock.
     private final int TREASURE_LABEL_POS_Y = 2; // How many pixels (adjusted by scale) to place label above
       // treasure.
     private final int TREASURE_POS_Y = 1; // Y-coordinate at which to place treasure when in same square 
@@ -130,17 +139,19 @@ public class MazeMap
         1.  Initializes array lists and hash maps and allocate space for arrays.
         2.  Initializes combat engine.
         3.  Stores reference to main game class.
-        4.  Stores references to atlas region and item information.
-        5.  Sets starting region / map location.
-        6.  Stores region name.
-        7.  Stores reference to current region / map.
-        8.  Copies tiles for current region to class-level variable.
-        9.  Stores region width and height -- in tiles.
-        10.  Calculates and store destinations for tiles.
-        11.  Populates hash maps with unique texture regions used with minimap.
-        12.  Stores minimap icon size.
-        13.  Calculates minimap offset (lower left corner) based on scale.
-        14.  Calculates destination coordinates for minimap icons.
+        4.  Populates hash map with gold pile cross reference.
+        5.  Stores references to atlas region and item information.
+        6.  Sets starting region / map location.
+        7.  Stores region name.
+        8.  Stores reference to current region / map.
+        9.  Copies tiles for current region to class-level variable.
+        10.  Stores region width and height -- in tiles.
+        11.  Calculates and store destinations for tiles.
+        12.  Populates hash maps with unique texture regions used with minimap.
+        13.  Stores minimap icon size.
+        14.  Calculates minimap offset (lower left corner) based on scale.
+        15.  Calculates destination coordinates for minimap icons.
+        16.  Adds elements to tile active array list.
         */
         
         ArrayList<Float> tempMinimapDestX; // Holder for x-coordinate values for current row (for placing minimap icons).
@@ -153,6 +164,7 @@ public class MazeMap
         
         // Set basic defaults.
         encounter_chance = 0;
+        goldPileActiveInd = false;
         
         // Start random number generator.
         number = new SecureRandom();
@@ -163,16 +175,18 @@ public class MazeMap
         lockedDoorActiveInd = false;
         
         // Initialize array lists.
+        goldActions = new ArrayList<>();
         regionTiles = new ArrayList<>();
         minimapDestX = new ArrayList<>();
         minimapDestY = new ArrayList<>();
         chestOtherItems = new ArrayList<>();
         chestOtherItemsQty = new ArrayList<>();
+        tileActiveInd = new ArrayList<>();
         
         // Initialize hash maps.
+        goldXRef = new HashMap<>();
         minimapRegions = new HashMap<>();
         minimapCursorRegions = new HashMap<>();
-        tileMap = new HashMap<>();
         
         // Allocate space for arrays and array lists.
         dest_x = new float[HeroineEnum.TileRegionEnum.values().length];
@@ -184,7 +198,19 @@ public class MazeMap
         // 3.  Store reference to main game class.
         gameHD = hdg;
         
-        // 4.  Store reference to atlas region and items information.
+        // 4.  Populate hash map with gold pile cross reference.
+        goldXRef.put(1, 0);
+        goldXRef.put(2, 1);
+        goldXRef.put(4, 2);
+        goldXRef.put(8, 3);
+        goldXRef.put(16, 4);
+        goldXRef.put(32, 5);
+        goldXRef.put(64, 6);
+        goldXRef.put(128, 7);
+        goldXRef.put(256, 8);
+        goldXRef.put(512, 9);
+        
+        // 5.  Store reference to atlas region and items information.
         
         // Store reference to the atlas region information.
         this.atlas = gameHD.getAtlas();
@@ -192,27 +218,27 @@ public class MazeMap
         // Store reference to the atlas items information.
         this.atlasItems = gameHD.getAtlasItems();
         
-        // 5.  Set starting region / map location.
+        // 6.  Set starting region / map location.
         this.map_id = map_id; // 0;
         
-        // 6.  Get region name.
+        // 7.  Get region name.
         regionName = atlas.mapIdentifiersRev.get(this.map_id);
         
-        // 7.  Store reference to current region / map.
+        // 8.  Store reference to current region / map.
         this.currentRegion = atlas.maps.get(regionName);
         
         System.out.println("Current region: " + regionName);
         
-        // 8.  Copy tiles for current region. -- Actually, stores references.
+        // 9.  Copy tiles for current region. -- Actually, stores references.
         regionTiles.addAll(currentRegion.getRegionTiles());
         
-        // 9.  Copy current region width and height -- in tiles.
+        // 10.  Copy current region width and height -- in tiles.
         regionWidth = currentRegion.getRegionWidth();
         regionHeight = currentRegion.getRegionHeight();
         
         System.out.println("Region size: " + regionWidth + " by " + regionHeight);
         
-        // 10.  Calculate and store destinations for tiles.
+        // 11.  Calculate and store destinations for tiles.
         
         // Set starting value for counter.
         counter = 0;
@@ -230,7 +256,7 @@ public class MazeMap
             
         }
         
-        // 11.  Populate hash maps with unique texture regions used with minimap.
+        // 12.  Populate hash maps with unique texture regions used with minimap.
         
         // Loop through minimap enumerated values.
         for (HeroineEnum.MinimapEnum minimapEnum : HeroineEnum.MinimapEnum.values())
@@ -251,14 +277,14 @@ public class MazeMap
             
         }
         
-        // 12.  Store minimap icon size.
+        // 13.  Store minimap icon size.
         minimapIconSize = minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLACK).getRegionWidth();
         
-        // 13.  Calculate minimap offset (lower left corner) based on scale.
+        // 14.  Calculate minimap offset (lower left corner) based on scale.
         minimapOffsetX = 2f * gameHD.getConfig().getScale();
         minimapOffsetY = viewHeight - (regionHeight * minimapIconSize) - (2f * gameHD.getConfig().getScale()); // 106f * gameHD.getConfig().getScale();
         
-        // 14.  Calculate destination coordinates for minimap icons.
+        // 15.  Calculate destination coordinates for minimap icons.
         
         // Set starting y-coordinate at which to place minimap icon (bottom of lowest icon).
         minimapDestPosY = 0f; // minimapOffsetY;
@@ -300,6 +326,15 @@ public class MazeMap
         Collections.reverse(minimapDestX);
         Collections.reverse(minimapDestY);
         
+        // 16.  Add elements to active tile list.
+        
+        // Loop through and add elements to active tile list, defaulting to false.
+        for (int tileCounter = 0; tileCounter <= TILE_COUNT_BASE_0; tileCounter++)
+        {
+            // Add tile active indicator -- default to false.
+            tileActiveInd.add(false);
+        }
+        
     }
     
     // posX = X-coordinate in map / region of chest(s).
@@ -311,9 +346,9 @@ public class MazeMap
     // hpLabel = Label showing player hit points.
     // mpLabel = Label showing player magic points.
     // goldLabel = Label showing player gold.
-    private ArrayList<AtlasItems.Chest> acquireChestContents(int posX, int posY, BaseActor heroineWeapon, CustomLabel weaponLabel, 
-      BaseActor heroineArmor, CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel,
-      CustomLabel goldLabel)
+    private ArrayList<AtlasItems.Chest> acquireChestContents(int posX, int posY, BaseActor heroineWeapon, 
+      CustomLabel weaponLabel, BaseActor heroineArmor, CustomLabel armorLabel, CustomLabel hpLabel, 
+      CustomLabel mpLabel, CustomLabel goldLabel)
     {
         
         // The function gives the contents of the chest(s) at the passed location to the player.
@@ -382,9 +417,9 @@ public class MazeMap
         
     }
     
-    // bonePileActor = Reference to BaseActor for the bone pile tile.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
     // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
-    private void addEvent_BonePileActor(BaseActor bonePileActor,
+    private void addEvent_BonePileActor(ArrayList<BaseActor> tiles, 
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton)
     {
         
@@ -467,40 +502,11 @@ public class MazeMap
                     */
                     
                     // Call function to handle mouse move event logic.
-                    return eventMouseMoveAction(bonePileActiveInd, HeroineEnum.ImgOtherEnum.IMG_OTHER_SKULL_PILE, x, y, 
-                      bonePileActor, mapActionButton, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN);
+                    return eventMouseMoveAction(bonePileActiveInd, 
+                      HeroineEnum.ImgOtherEnum.IMG_OTHER_SKULL_PILE, x, y, tiles.get(TILE_POS_BONE_PILE), 
+                      mapActionButton, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN);
                     
                 }
-                
-                /*
-                // event = Event for actor input: touch, mouse, keyboard, and scroll.
-                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // pointer = Pointer for the event.
-                // fromActor = Reference to actor losing focus.
-                @Override
-                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
-                {
-                    
-                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
-                    
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
-                        
-                    // If bone pile active, then...
-                    if (bonePileActiveInd)
-                    {
-                        
-                        // Bone pile active.
-                    
-                        // Apply a light shade to the bone pile.
-                        bonePileActor.setColor(Color.LIGHT_GRAY);
-                        
-                    }
-                    
-                } // End ... enter event.
-                */
                 
                 // event = Event for actor input: touch, mouse, keyboard, and scroll.
                 // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
@@ -526,20 +532,20 @@ public class MazeMap
                     
                     // Call function to handle exit event logic.
                     ignoreNextExitEvent = eventExitMagic(ignoreNextExitEvent, bonePileActiveInd, 
-                      bonePileActor, mapActionButton);
-                        
+                      tiles.get(TILE_POS_BONE_PILE), 
+                      mapActionButton.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN));
+                      
                 } // End ... exit event.
                 
             }; // End ... InputListener.
         
         // Add event to tile actor.
-        bonePileActor.addListener(tileEvent);
+        tiles.get(TILE_POS_BONE_PILE).addListener(tileEvent);
         
     }
     
-    // chestActor = Reference to BaseActor for the chest tile.
-    // treasureActor = Reference to BaseActor for the treasure tile.
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
     // viewWidth = Width of the stage.
     // treasureLabel = Reference to label with the treasure description.
     // heroineWeapon = BaseActor object that acts as the player weapon.
@@ -550,10 +556,10 @@ public class MazeMap
     // mpLabel = Label showing player magic points.
     // goldLabel = Label showing player gold.
     // regionLabel = Label showing the current region name.
-    private void addEvent_ChestActor(BaseActor chestActor, BaseActor treasureActor, BaseActor treasureGroup,
-      int viewWidth, CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, 
-      BaseActor heroineArmor, CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel,
-      CustomLabel goldLabel, CustomLabel regionLabel)
+    private void addEvent_ChestActor(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, int viewWidth, 
+      CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, 
+      CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel, 
+      CustomLabel regionLabel)
     {
         
         // The function adds events to the passed chest-related tile (BaseActor).
@@ -632,21 +638,22 @@ public class MazeMap
                             // 2.  Perform actions on chest actor.
 
                             // Set up an action to fade out the chest.
-                            chestActor.addAction_FadeOut(0.25f, 0.75f);
-
-                            System.out.println("Chest metadata: " + chestActor.getVirtualString());
+                            tiles.get(TILE_POS_CHEST).addAction_FadeOut(0.25f, 0.75f);
+                            
+                            System.out.println("Chest metadata: " + 
+                              tiles.get(TILE_POS_CHEST).getVirtualString());
 
                             // Get position of first comma in virtual text.
-                            index1 = chestActor.getVirtualString().indexOf(",");
+                            index1 = tiles.get(TILE_POS_CHEST).getVirtualString().indexOf(",");
 
                             // Get position of second comma in virtual text.
-                            index2 = chestActor.getVirtualString().indexOf(",", index1 + 1);
+                            index2 = tiles.get(TILE_POS_CHEST).getVirtualString().indexOf(",", index1 + 1);
 
                             // Get x and y coordinates associated with the tile.
-                            posX = Integer.valueOf( chestActor.getVirtualString().substring(index1 + 1, 
+                            posX = Integer.valueOf( tiles.get(TILE_POS_CHEST).getVirtualString().substring(index1 + 1, 
                               index2) );
-                            posY = Integer.valueOf( chestActor.getVirtualString().substring(index2 + 1, 
-                              chestActor.getVirtualString().length()) );
+                            posY = Integer.valueOf( tiles.get(TILE_POS_CHEST).getVirtualString().substring(index2 + 1, 
+                              tiles.get(TILE_POS_CHEST).getVirtualString().length()) );
 
                             // 3.  Give chest contents to the player.
 
@@ -657,14 +664,13 @@ public class MazeMap
                             // 4.  Perform actions on treasure actor and label.
 
                             // Display the first chest / item.
-                            treasureImageInd = render_treasure( chestList.get(0).getPrimaryItem(), chestActor, 
-                              treasureActor, treasureGroup, viewWidth, treasureLabel, 
-                              chestList.get(0).getPrimaryItemCount() );
+                            treasureImageInd = render_treasure_first( chestList.get(0).getPrimaryItem(), tiles, 
+                              goldPile, viewWidth, treasureLabel, chestList.get(0).getPrimaryItemCount() );
 
                             // If image available, draw treasure.
                             // Always show associated label.
-                            draw_treasure(treasureImageInd, chestActor, treasureActor, treasureGroup, 
-                              treasureLabel, viewWidth, 1.00f, regionLabel );
+                            draw_treasure_first(treasureImageInd, tiles, goldPile, treasureLabel, viewWidth, 1.00f, 
+                              regionLabel );
 
                             // 5.  Remove chests from array list and hash map in atlas items.
 
@@ -700,7 +706,7 @@ public class MazeMap
                         // Chest active.
                         
                         // If fade not occurring, then...
-                        if (chestActor.getActionMapCount() == 0)
+                        if (tiles.get(TILE_POS_CHEST).getActionMapCount() == 0)
                         {
                             // Fade not occurring yet.
                 
@@ -712,7 +718,7 @@ public class MazeMap
                                 // Rolling over a transparent pixel in image.
 
                                 // Return chest to normal color.
-                                chestActor.setColor(Color.WHITE);
+                                tiles.get(TILE_POS_CHEST).setColor(Color.WHITE);
 
                             }
 
@@ -722,7 +728,7 @@ public class MazeMap
                                 // Rolling over a non-transparent pixel in image.
 
                                 // Apply a light shade to the chest.
-                                chestActor.setColor(Color.LIGHT_GRAY);
+                                tiles.get(TILE_POS_CHEST).setColor(Color.LIGHT_GRAY);
 
                             }
                         
@@ -771,12 +777,12 @@ public class MazeMap
                             // Process exit event.
 
                             // If fade not occurring, then...
-                            if (chestActor.getActionMapCount() == 0)
+                            if (tiles.get(TILE_POS_CHEST).getActionMapCount() == 0)
                             {
                                 // Fade not occurring yet.
                                 
                                 // Return chest to normal color.
-                                chestActor.setColor(Color.WHITE);
+                                tiles.get(TILE_POS_CHEST).setColor(Color.WHITE);
                             }
                         
                     } // End ... If chest active.
@@ -786,18 +792,18 @@ public class MazeMap
             }; // End ... InputListener.
         
         // Add event to tile actor.
-        chestActor.addListener(tileEvent);
+        tiles.get(TILE_POS_CHEST).addListener(tileEvent);
         
     }
     
-    // lockActor = Reference to BaseActor for the lock tile.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
     // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
-    private void addEvent_LockActor(BaseActor lockActor, 
+    private void addEvent_LockActor(ArrayList<BaseActor> tiles, 
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton)
     {
         
         // The function adds events to the passed lock related tile (BaseActor).
-        // Events include touchDown, touchUp, mouseMoved, enter, and exit.
+        // Events include touchDown, touchUp, mouseMoved, and exit.
         
         InputListener tileEvent; // Events to add to passed button (BaseActor).
         
@@ -876,39 +882,10 @@ public class MazeMap
                     
                     // Call function to handle mouse move logic.
                     return eventMouseMoveAction(lockedDoorActiveInd, HeroineEnum.ImgOtherEnum.IMG_OTHER_LOCK, 
-                      x, y, lockActor, mapActionButton, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK);
+                      x, y, tiles.get(TILE_POS_LOCK), mapActionButton, 
+                      HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK);
                     
                 }
-                
-                /*
-                // event = Event for actor input: touch, mouse, keyboard, and scroll.
-                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // pointer = Pointer for the event.
-                // fromActor = Reference to actor losing focus.
-                @Override
-                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
-                {
-                    
-                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
-                    
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
-                        
-                    // If locked door active, then...
-                    if (lockedDoorActiveInd)
-                    {
-                        
-                        // Locked door active.
-                    
-                        // Apply a light shade to the lock.
-                        lockActor.setColor(Color.LIGHT_GRAY);
-                        
-                    }
-                    
-                } // End ... enter event.
-                */
                 
                 // event = Event for actor input: touch, mouse, keyboard, and scroll.
                 // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
@@ -934,24 +911,25 @@ public class MazeMap
                     
                     // Call function to handle exit event logic.
                     ignoreNextExitEvent = eventExitMagic(ignoreNextExitEvent, lockedDoorActiveInd, 
-                      lockActor, mapActionButton);
-                        
+                      tiles.get(TILE_POS_LOCK), 
+                      mapActionButton.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK));
+                    
                 } // End ... exit event.
                 
             }; // End ... InputListener.
         
         // Add event to tile actor.
-        lockActor.addListener(tileEvent);
+        tiles.get(TILE_POS_LOCK).addListener(tileEvent);
+        //lockActor.addListener(tileEvent);
         
     }
     
-    // treasureActor = Reference to actor acting as the treasure.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
     // treasureLabel = Reference to label with the treasure description.
-    // chestActor = Reference to BaseActor for the chest tile.
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
     // viewWidth = Width of the stage.
-    private void addEvent_TreasureActor(BaseActor treasureActor, CustomLabel treasureLabel,
-      BaseActor chestActor, BaseActor treasureGroup, int viewWidth)
+    private void addEvent_TreasureActor(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+      CustomLabel treasureLabel, int viewWidth)
     {
         
         // The function adds events to the passed treasure actor and label.
@@ -1001,11 +979,8 @@ public class MazeMap
                     // Notes:  Occurs when user releases mouse on button.
                     
                     HeroineEnum.ImgTreasureEnum imgTreasureEnum; // Enumerated value for treasure.
-                    float treasureHeight; // Height to which to resize treasure.
-                    float treasureWidth; // Width to which to resize treasure.
                     boolean switchFromGold; // Whether switching from gold to non-gold.
                     boolean switchToGold; // Whether switching from non-gold to gold.
-                    boolean treasureImageInd; // Whether treasure image exists for current item.
                     
                     // Flag to ignore next exit event.
                     ignoreNextExitEvent = true;
@@ -1022,15 +997,11 @@ public class MazeMap
                         // Set defaults.
                         switchFromGold = false;
                         switchToGold = false;
-                        treasureImageInd = false;
                         
-                        // If gold pile exists, then...
-                        if (goldPile != null)
+                        // If gold pile active, then...
+                        if (goldPileActiveInd)
                         {
-                            // Gold pile exists.
-                            
-                            // Clear gold pile, including associated actors.
-                            clearGoldPile(treasureGroup);
+                            // Gold pile active.
                             
                             // Store whether switching from gold to non-gold.
                             switchFromGold = chestOtherItems.get(chestOtherItemIndex) != 
@@ -1055,45 +1026,14 @@ public class MazeMap
                             
                             // Item represents gold.
                             
-                            // Update actor information for gold pile and treasure group.
-                            render_gold(chestActor, treasureGroup, viewWidth, 
-                              chestOtherItemsQty.get(chestOtherItemIndex));
-                            
-                            // Remove existing actions on treasure group.
-                            treasureGroup.removeActions();
-                            
-                            // Flag image of treasure as existing.
-                            treasureImageInd = true;
-                            
-                            // If switching from treasure actor to gold pile, then...
-                            if (switchToGold)
-                            {
-                                
-                                // Switching from treasure actor to gold pile.
-                                
-                                // If texture for treasure actor initialized, then...
-                                if (treasureActor.getRegion().getTexture() != null)
-                                {
-                                    // Texture for treasure actor initialized.
-                                
-                                    // Fade out treasure actor.
-                                    treasureActor.addAction_FadeOut( 0.00f, 0.50f );
-                                }
-                                
-                            }
-                            
-                            // Set up an action to fade in the treasure group.
-                            treasureGroup.addAction_FadeIn( 0.50f, 0.50f );
-                            
-                            // Update the treasure description in the associated label and center horizontally.
-                            render_treasure_label( treasureLabel, treasureImageInd, chestActor, treasureActor, 
-                              treasureGroup );
+                            // Display gold pile and label.
+                            display_gold(tiles, goldPile, treasureLabel, viewWidth, switchToGold, true);
                             
                             // Move to the next item.
                             chestOtherItemIndex++;
                             
                         } // End ... If item represents gold.
-                            
+                        
                         else
                         {
                             
@@ -1108,162 +1048,9 @@ public class MazeMap
                             {
                                 // Enumeration value points at an image.
                                 
-                                // Switch treasure actor to more than a group.
-                                treasureActor.setGroupOnlyInd(false);
-                                
-                                // Flag image of treasure as existing.
-                                treasureImageInd = true;
-                                
-                                // Determine width and height to resize treasure.
-                                
-                                // Magnify by scale factor.
-                                treasureWidth = gameHD.getConfig().getScale() * 
-                                  gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionWidth();
-                                treasureHeight = gameHD.getConfig().getScale() * 
-                                  gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionHeight();
-                                
-                                // If chest actor "passed" (not null), then...
-                                if (chestActor != null)
-                                {
-
-                                    // Chest actor "passed" (not null).
-                                
-                                    // If treasure width greater than chest, then... > Limit to chest width.
-                                    if (treasureWidth > chestActor.getWidth())
-                                        treasureWidth = chestActor.getWidth();
-
-                                    // If treasure height greater than chest, then... > Limit to chest height.
-                                    if (treasureHeight > chestActor.getHeight())
-                                        treasureHeight = chestActor.getHeight();
-
-                                    // Take the lower of the treasure width and height.
-                                    treasureWidth = Math.min(treasureWidth, treasureHeight);
-                                    treasureHeight = treasureWidth;
-                                    
-                                }
-                                
-                                // Remove existing treasure actor actions.
-                                treasureActor.removeActions();
-                                
-                                // If switching from gold, then...
-                                if (switchFromGold)
-                                {
-                                    
-                                    // Switching from gold.
-                                    
-                                    // Fade out gold pile.
-                                    treasureGroup.addAction_FadeOut( 0.00f, 0.50f );
-                                    
-                                    // Update image for treasure actor.
-                                    treasureActor.setTextureRegion( 
-                                      gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()) );
-                                    
-                                    // Set dimensions of treasure actor.
-                                    treasureActor.setWidth( treasureWidth );
-                                    treasureActor.setHeight( treasureHeight );
-                                    
-                                    // Set treasure origin to center to allow for proper rotation.
-                                    treasureActor.setOriginCenter();
-
-                                    // If chest actor "passed" (not null), then...
-                                    if (chestActor != null)
-                                    {
-
-                                        // Chest actor "passed" (not null).
-                                        
-                                        // Position treasure actor at center of stage horizontally and chest 
-                                        // vertically.
-                                        treasureActor.setPosition( (viewWidth - treasureWidth) / 2, 
-                                          chestActor.getOriginY() );
-                                        
-                                    }
-                                    
-                                    else
-                                    {
-                                        
-                                        // Chest actor NOT "passed" (null).
-                                        
-                                        // Position treasure actor at center of stage horizontally and 
-                                        // vertically slightly above the bottom.
-                                        treasureActor.setPosition( (viewWidth - treasureWidth) / 2, 
-                                          TREASURE_POS_Y * gameHD.getConfig().getScale() );
-                                        
-                                    }
-                                    
-                                    // Set treasure actor to not visible to allow for fade in effect.
-                                    treasureActor.setVisible( false );
-                                    
-                                    // Remove existing actions on treasure actor.
-                                    treasureActor.removeActions();
-                                    
-                                    // Add fade in effect to treasure actor.
-                                    treasureActor.addAction_FadeIn( 0.50f, 0.50f );
-                                    
-                                }
-                                
-                                else
-                                {
-                                    // Displaying another non-gold item.
-                                    
-                                    // If texture for treasure actor initialized, then...
-                                    if (treasureActor.getRegion().getTexture() != null)
-                                    {
-                                        // Texture for treasure actor initialized.
-                                        
-                                        // Remove existing actions on treasure actor.
-                                        treasureActor.removeActions();
-                                        
-                                        // Fade in the next treasure actor / image.
-                                        treasureActor.addAction_FadeIn( 0.50f, 0.50f, 
-                                          gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()), 
-                                          imgTreasureEnum.toString(), treasureWidth, treasureHeight );
-                                    }
-                                    
-                                    else
-                                    {
-                                        // Texture for treasure actor NOT initialized.
-                                        
-                                        // Update image for treasure actor.
-                                        treasureActor.setTextureRegion( 
-                                          gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()) );
-                                        
-                                        // If chest actor "passed" (not null), then...
-                                        if (chestActor != null)
-                                        {
-                                            // Chest actor "passed" (not null).
-                                            
-                                            // Position treasure actor at center of stage horizontally and 
-                                            // chest vertically.
-                                            treasureActor.setPosition( (viewWidth - treasureWidth) / 2, 
-                                              chestActor.getOriginY() );
-                                        }
-                                        
-                                        else
-                                        {
-                                            // Chest actor NOT "passed" (null).
-                                            
-                                            // Position treasure actor at center of stage horizontally and 
-                                            // vertically slightly above the bottom.
-                                            treasureActor.setPosition( (viewWidth - treasureWidth) / 2, 
-                                              TREASURE_POS_Y * gameHD.getConfig().getScale() );
-                                        }
-                                        
-                                        // Resize treasure actor based on scale.
-                                        treasureActor.setWidth( treasureWidth );
-                                        treasureActor.setHeight( treasureHeight );
-
-                                        // Set treasure origin to center to allow for proper rotation.
-                                        treasureActor.setOriginCenter();
-                                        
-                                        // Set up an action to fade in the treasure.
-                                        treasureActor.addAction_FadeIn( 0.50f, 0.50f );
-                                    } // End ... If texture for treasure actor NOT initialized.
-                                    
-                                } // End ... If displaying another non-gold item.
-                                
-                                // Update the treasure description in the associated label and center horizontally.
-                                render_treasure_label( treasureLabel, treasureImageInd, chestActor, 
-                                  treasureActor, treasureGroup );
+                                // Display treasure (non-gold) and associated label.
+                                draw_treasure_next(tiles, goldPile, treasureLabel, viewWidth, imgTreasureEnum, 
+                                  switchFromGold, true);
                                 
                                 // Move to the next item.
                                 chestOtherItemIndex++;
@@ -1275,28 +1062,8 @@ public class MazeMap
                                 
                                 // Enumeration value lacks an image.
                                 
-                                // If texture for treasure actor initialized, then...
-                                if (treasureActor.getRegion().getTexture() != null)
-                                {
-                                    // Texture for treasure actor initialized.
-                                
-                                    // Fade out the treasure actor.
-                                    treasureActor.addAction_FadeOut( 0.50f, 0.50f );
-                                }
-                                
-                                // If gold pile exists, then...
-                                if (goldPile != null)
-                                {
-                                    // Gold pile exists.
-                                
-                                    // Fade out the treasure group.
-                                    treasureGroup.addAction_FadeOut( 0.50f, 0.50f );
-                                }
-                                
-                                // Update the treasure description in the associated label and center 
-                                // horizontally.
-                                render_treasure_label( treasureLabel, treasureImageInd, chestActor, 
-                                  treasureActor, treasureGroup );
+                                // Display label associated with treasure.  No image exists.
+                                draw_treasure_no_image(tiles, goldPile, treasureLabel);
                                 
                                 // Move to the next item.
                                 chestOtherItemIndex++;
@@ -1312,105 +1079,18 @@ public class MazeMap
                         
                         // At last item to display.
                         
-                        // If gold pile exists, then...
-                        if (goldPile != null)
-                        {
-                            // Gold pile exists.
-                            
-                            // Fade out the gold pile, including all associated actors.
-                            fadeGoldPile( treasureGroup );
-                            
-                            // Set gold pile as not existing any longer.
-                            goldPile = null;
-                            
-                        }
-                        
-                        // Otherwise, If texture for treasure actor initialized, then...
-                        else if (treasureActor.getRegion().getTexture() != null)
-                        {
-                            // Texture for treasure actor initialized.
-                            
-                            // Fade out the treasure actor.
-                            treasureActor.addAction_FadeOut( 0f, 1f );
-                        }
-                        
-                        // Set up an action to fade out the treasure label.
-                        treasureLabel.addAction_FadeOut(0f, 1f);
+                        // Fade all treasure-related actors (regular, gold, and label).
+                        fade_treasure( tiles, goldPile, treasureLabel );
                         
                     } // End ... If no additional items remain to display.
                     
                 } // End ... touchUp.
                 
-                /*
-                
-                // event = Event for actor input: touch, mouse, keyboard, and scroll.
-                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // pointer = Pointer for the event.
-                // fromActor = Reference to actor losing focus.
-                @Override
-                public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor)
-                {
-                    
-                    // The function occurs when the mouse cursor or a finger touch is moved over the actor.
-                    
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
-                    
-                    // Apply a dark shade to the treasure.
-                    treasureActor.setColor(Color.LIGHT_GRAY);
-                    
-                }
-                
-                // event = Event for actor input: touch, mouse, keyboard, and scroll.
-                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
-                // pointer = Pointer for the event.
-                // toActor = Reference to actor gaining focus.
-                @Override
-                public void exit(InputEvent event, float x, float y, int pointer, Actor toActor)
-                {
-                    
-                    // The function occurs when the mouse cursor or a finger touch is moved out of the actor.
-                    
-                    // Notes:  On the desktop, the event occurs even when no mouse buttons are pressed 
-                    // (pointer will be -1).
-                    // Notes:  Occurs when mouse cursor or finger touch is moved out of the label.
-                    
-                    // If ignoring next exit event, then...
-                    if (ignoreNextExitEvent)
-                        
-                        // Ignoring next exit event.
-                        
-                        // Flag to process next exit event.
-                        ignoreNextExitEvent = false;
-                    
-                    // Otherwise, ...
-                    else 
-                    {
-                        
-                        // Process exit event.
-                        
-                        // If fade out not occurring, then...
-                        if (!treasureLabel.getActionMapKeyInd("FadeOut"))
-                            
-                            // Fade not occurring yet.
-                            
-                            // Return treasure to normal color.
-                            treasureActor.setColor(Color.WHITE);
-                        
-                    }
-                        
-                }
-                
-                */
-                
             }; // End ... InputListener.
         
-        // Add event to actor and label.
-        treasureActor.addListener(treasureEvent);
-        treasureGroup.addListener(treasureEvent);
+        // Add event to actors and label.
+        tiles.get(TILE_POS_TREASURE).addListener(treasureEvent);
+        tiles.get(TILE_POS_TREASURE_GROUP).addListener(treasureEvent);
         treasureLabel.getLabel().addListener(treasureEvent);
         
     }
@@ -1447,7 +1127,7 @@ public class MazeMap
         encounterInd = false;
         
         // If one or more enemies exist in current region, then...
-        if ( currentRegion.getEnemyCount() > 0 )
+        if ( currentRegion.getEnemyCount() > 99990 )
         {
             
             // One or more enemies exist in current region.
@@ -1506,32 +1186,11 @@ public class MazeMap
         
     }
     
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
-    private void clearGoldPile(BaseActor treasureGroup)
-    {
-        
-        // The function clears the gold pile, including associated actors.
-        
-        // Remove actors in gold pile from treasure group.
-        goldPile.forEach((actor) -> {
-
-            // Remove current actor in loop from group.
-            treasureGroup.removeActor(actor);
-
-        });
-
-        // Clear out gold pile.
-        goldPile = null;
-        
-    }
-    
     // treasureImageInd = Whether treasure image exists for current item.
-    // chestActor = Reference to BaseActor for the chest tile.
-    // treasureActor = Reference to BaseActor for the treasure tile.
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
     // treasureLabel = Reference to label with the treasure description.
-    private float determine_treasure_label_pos_y(boolean treasureImageInd, BaseActor chestActor, 
-      BaseActor treasureActor, BaseActor treasureGroup, CustomLabel treasureLabel)
+    private float determine_treasure_label_pos_y(boolean treasureImageInd, ArrayList<BaseActor> tiles, 
+      CustomLabel treasureLabel)
     {
         
         // The function places the treasure label.
@@ -1545,20 +1204,20 @@ public class MazeMap
             // Showing treasure.
 
             // If rendering group, then...
-            if (goldPile != null)
+            if (goldPileActiveInd)
             {
 
                 // Rendering group.
                 
-                // If chest actor "passed" (not null), then...
-                if (chestActor != null)
+                // If chest actor active, then...
+                if (tileActiveInd.get(TILE_POS_CHEST))
                 {
 
-                    // Chest actor "passed" (not null).
+                    // Chest actor active.
                 
                     // Set the vertical position of the label to center between the treasure group 
                     // and the bottom of the stage.
-                    pos_y = (treasureGroup.getY() - treasureLabel.getLabelHeight()) / 2 ;
+                    pos_y = (tiles.get(TILE_POS_TREASURE_GROUP).getY() - treasureLabel.getLabelHeight()) / 2 ;
                     
                 }
                 
@@ -1568,8 +1227,9 @@ public class MazeMap
                     // Chest actor NOT "passed" (null).
                     
                     // Set the vertical position of the label to be slightly above the treasure group.
-                    pos_y = treasureGroup.getY() + treasureGroup.getGroupHeight() + 
-                      TREASURE_LABEL_POS_Y * gameHD.getConfig().getScale();
+                    pos_y = tiles.get(TILE_POS_TREASURE_GROUP).getY() + 
+                      tiles.get(TILE_POS_TREASURE_GROUP).getGroupHeight() + 
+                      treasureLabel.getLabelHeight() + (gameHD.getConfig().getScale() * 1); //TREASURE_LABEL_POS_Y * gameHD.getConfig().getScale();
                     
                 }
 
@@ -1580,15 +1240,15 @@ public class MazeMap
 
                 // Rendering non-group.
 
-                // If chest actor "passed" (not null), then...
-                if (chestActor != null)
+                // If chest actor active, then...
+                if (tileActiveInd.get(TILE_POS_CHEST))
                 {
 
-                    // Chest actor "passed" (not null).
+                    // Chest actor active.
                 
                     // Set the vertical position of the label to center between the treasure and 
                     // bottom of the stage.
-                    pos_y = (treasureActor.getY() - treasureLabel.getLabelHeight()) / 2;
+                    pos_y = (tiles.get(TILE_POS_TREASURE).getY() - treasureLabel.getLabelHeight()) / 2;
                     
                 }
                 
@@ -1598,7 +1258,7 @@ public class MazeMap
                     // Chest actor NOT "passed" (null).
                     
                     // Set the vertical position of the label to be slightly above the treasure.
-                    pos_y = treasureActor.getY() + treasureActor.getHeight() + 
+                    pos_y = tiles.get(TILE_POS_TREASURE).getY() + tiles.get(TILE_POS_TREASURE).getHeight() + 
                       TREASURE_LABEL_POS_Y * gameHD.getConfig().getScale();
                     
                 }
@@ -1622,27 +1282,93 @@ public class MazeMap
         
     }
     
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
+    // treasureLabel = Reference to label with the treasure description.
+    // viewWidth = Width of the stage.
+    // switchToGold = Whether switching from non-gold to gold.
+    // treasureImageInd = Whether treasure image exists for current item.
+    private void display_gold(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+      CustomLabel treasureLabel, int viewWidth, boolean switchToGold, boolean treasureImageInd)
+    {
+        
+        // The function encapsulates logic related to drawing a gold pile and the related label, including
+        // fade effects.
+        
+        // Set vertical position of treasure group.
+        
+        // If chest actor active, then...
+        if (tileActiveInd.get(TILE_POS_CHEST))
+        {
+
+            // Chest actor active.
+
+            // Position treasure actor (group) at center of chest vertically.
+            tiles.get(TILE_POS_TREASURE_GROUP).setY( tiles.get(TILE_POS_CHEST).getOriginY() );
+
+        }
+
+        else
+        {
+
+            // Chest actor NOT active.
+
+            // Position treasure actor (group) vertically slightly above the bottom.
+            tiles.get(TILE_POS_TREASURE_GROUP).setY( TREASURE_POS_Y * gameHD.getConfig().getScale() );
+
+        }
+        
+        // Redraw / update gold pile and treasure group.
+        render_gold(tiles, goldPile, viewWidth, chestOtherItemsQty.get(chestOtherItemIndex));
+
+        // Remove existing actions on treasure group.
+        tiles.get(TILE_POS_TREASURE_GROUP).removeActions();
+        
+        // If switching from treasure actor to gold pile, then...
+        if (switchToGold)
+        {
+
+            // Switching from treasure actor to gold pile.
+
+            // If texture for treasure actor initialized, then...
+            if (tiles.get(TILE_POS_TREASURE).getRegion().getTexture() != null)
+            {
+                // Texture for treasure actor initialized.
+
+                // Fade out treasure actor.
+                tiles.get(TILE_POS_TREASURE).addAction_FadeOut( 0.00f, 0.50f );
+            }
+
+        }
+
+        // Set up an action to fade in the treasure group.
+        tiles.get(TILE_POS_TREASURE_GROUP).addAction_FadeIn( 0.50f, 0.50f );
+
+        // Update the treasure description in the associated label and center horizontally.
+        render_treasure_label( treasureLabel, treasureImageInd, tiles );
+        
+    }
+    
     // treasureImageInd = Whether treasure image exists for primary item in first chest.
-    // chestActor = Reference to BaseActor for the chest tile.
-    // treasureActor = Reference to BaseActor for the treasure tile.
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
     // treasureLabel = Reference to label with the treasure description.
     // viewWidth = Width of the stage.
     // delay = Time, in seconds, before fade occurs.
     // regionLabel = Label showing the current region name.
-    private void draw_treasure(boolean treasureImageInd, BaseActor chestActor, BaseActor treasureActor, 
-      BaseActor treasureGroup, CustomLabel treasureLabel, int viewWidth, float delay, CustomLabel regionLabel)
+    private void draw_treasure_first(boolean treasureImageInd, ArrayList<BaseActor> tiles, 
+      ArrayList<BaseActor> goldPile, CustomLabel treasureLabel, int viewWidth, float delay, 
+      CustomLabel regionLabel)
     {
         
-        // The function (conditionally) displays the treaure.
+        // The function (conditionally) displays the treasure.
         // The function always displays the associated label.
         // NOTE:  The function is only called when rendering the first item in the chest.
         
         float pos_y; // Y-coordinate at which to set bottom of label.
         
         // Store y-coordinate at which to set bottom of label.
-        pos_y = determine_treasure_label_pos_y( treasureImageInd, chestActor, treasureActor, treasureGroup, 
-          treasureLabel );
+        pos_y = determine_treasure_label_pos_y( treasureImageInd, tiles, treasureLabel );
         
         // Update the vertical position of the label.
         treasureLabel.setPosY( pos_y );
@@ -1654,16 +1380,16 @@ public class MazeMap
             // Showing treasure.
 
             // If rendering group, then...
-            if (goldPile != null)
+            if (goldPileActiveInd)
             {
 
                 // Rendering group.
 
                 // Remove existing actions on treasure group.
-                treasureGroup.removeActions();
+                tiles.get(TILE_POS_TREASURE_GROUP).removeActions();
 
                 // Set up an action to fade in the treasure group.
-                treasureGroup.addAction_FadeIn( delay, 0.50f );
+                tiles.get(TILE_POS_TREASURE_GROUP).addAction_FadeIn( delay, 0.50f );
 
             }
 
@@ -1673,17 +1399,17 @@ public class MazeMap
                 // Rendering non-group.
 
                 // Remove existing actions on treasure actor.
-                treasureActor.removeActions();
+                tiles.get(TILE_POS_TREASURE).removeActions();
 
                 // Set up an action to fade in the treasure group.
-                treasureActor.addAction_FadeIn( delay, 0.50f );
+                tiles.get(TILE_POS_TREASURE).addAction_FadeIn( delay, 0.50f );
 
             } // End ... If Rendering non-group.
             
         } // End ... If showing treasure.
         
         // Add events to treasure actor / group / label to display next item (or fade) upon click.
-        addEvent_TreasureActor( treasureActor, treasureLabel, chestActor, treasureGroup, viewWidth );
+        addEvent_TreasureActor( tiles, goldPile, treasureLabel, viewWidth );
         
         // Clear the label with the region name.
         regionLabel.setLabelText("");
@@ -1696,12 +1422,235 @@ public class MazeMap
         
     }
     
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
+    // treasureLabel = Reference to label with the treasure description.
+    // viewWidth = Width of the stage.
+    // imgTreasureEnum = Enumerated value for treasure.
+    // switchFromGold = Whether switching from gold to non-gold.
+    // treasureImageInd = Whether treasure image (regular or gold) exists for current item.
+    private void draw_treasure_next(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile,
+      CustomLabel treasureLabel, int viewWidth, HeroineEnum.ImgTreasureEnum imgTreasureEnum,
+      boolean switchFromGold, boolean treasureImageInd)
+    {
+        
+        // The function displays the treasure.
+        // The function always displays the associated label.
+        // NOTE:  The function is only called when rendering the second or later item in the chest.
+        
+        float treasureHeight; // Height to which to resize treasure.
+        float treasureWidth; // Width to which to resize treasure.
+        
+        // Switch treasure actor to more than a group.
+        tiles.get(TILE_POS_TREASURE).setGroupOnlyInd(false);
+
+        // Determine width and height to resize treasure.
+
+        // Magnify by scale factor.
+        treasureWidth = gameHD.getConfig().getScale() * 
+          gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionWidth();
+        treasureHeight = gameHD.getConfig().getScale() * 
+          gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionHeight();
+
+        // If chest actor active, then...
+        if (tileActiveInd.get(TILE_POS_CHEST))
+        {
+
+            // Chest actor active.
+
+            // If treasure width greater than chest, then... > Limit to chest width.
+            if (treasureWidth > tiles.get(TILE_POS_CHEST).getWidth())
+                treasureWidth = tiles.get(TILE_POS_CHEST).getWidth();
+
+            // If treasure height greater than chest, then... > Limit to chest height.
+            if (treasureHeight > tiles.get(TILE_POS_CHEST).getHeight())
+                treasureHeight = tiles.get(TILE_POS_CHEST).getHeight();
+
+            // Take the lower of the treasure width and height.
+            treasureWidth = Math.min(treasureWidth, treasureHeight);
+            treasureHeight = treasureWidth;
+
+        }
+
+        // Remove existing treasure actor actions.
+        tiles.get(TILE_POS_TREASURE).removeActions();
+
+        // If switching from gold, then...
+        if (switchFromGold)
+        {
+
+            // Switching from gold.
+
+            // Flag gold pile as not active.
+            goldPileActiveInd = false;
+            
+            // Fade out gold pile.
+            fade_gold_pile( tiles, goldPile, 0.00f, 0.50f );
+            
+            // Update image for treasure actor.
+            tiles.get(TILE_POS_TREASURE).setTextureRegion( 
+              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()) );
+
+            // Set dimensions of treasure actor.
+            tiles.get(TILE_POS_TREASURE).setWidth( treasureWidth );
+            tiles.get(TILE_POS_TREASURE).setHeight( treasureHeight );
+
+            // Set treasure origin to center to allow for proper rotation.
+            tiles.get(TILE_POS_TREASURE).setOriginCenter();
+
+            // If chest actor active, then...
+            if (tileActiveInd.get(TILE_POS_CHEST))
+            {
+
+                // Chest actor active.
+
+                // Position treasure actor at center of stage horizontally and chest 
+                // vertically.
+                tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
+                  tiles.get(TILE_POS_CHEST).getOriginY() );
+
+            }
+
+            else
+            {
+
+                // Chest actor NOT active.
+
+                // Position treasure actor at center of stage horizontally and 
+                // vertically slightly above the bottom.
+                tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
+                  TREASURE_POS_Y * gameHD.getConfig().getScale() );
+
+            }
+
+            // Set treasure actor to not visible to allow for fade in effect.
+            tiles.get(TILE_POS_TREASURE).setVisible( false );
+
+            // Remove existing actions on treasure actor.
+            tiles.get(TILE_POS_TREASURE).removeActions();
+
+            // Add fade in effect to treasure actor.
+            tiles.get(TILE_POS_TREASURE).addAction_FadeIn( 0.50f, 0.50f );
+
+        }
+
+        else
+        {
+            // Displaying another non-gold item.
+
+            // If texture for treasure actor initialized, then...
+            if (tiles.get(TILE_POS_TREASURE).getRegion().getTexture() != null)
+            {
+                // Texture for treasure actor initialized.
+
+                // Remove existing actions on treasure actor.
+                tiles.get(TILE_POS_TREASURE).removeActions();
+
+                // Fade in the next treasure actor / image.
+                /*
+                tiles.get(TILE_POS_TREASURE).addAction_FadeIn( 0.50f, 0.50f, 
+                  gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()), 
+                  imgTreasureEnum.toString(), treasureWidth, treasureHeight );
+                */
+                tiles.get(TILE_POS_TREASURE).addAction_FadeIn( 3.50f, 3.50f, 
+                  gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()), 
+                  imgTreasureEnum.toString(), treasureWidth, treasureHeight );
+            }
+
+            else
+            {
+
+                // Texture for treasure actor NOT initialized.
+
+                // Update image for treasure actor.
+                tiles.get(TILE_POS_TREASURE).setTextureRegion( 
+                  gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()) );
+
+                // If chest actor active, then...
+                if (tileActiveInd.get(TILE_POS_CHEST))
+                {
+                    // Chest actor active.
+
+                    // Position treasure actor at center of stage horizontally and 
+                    // chest vertically.
+                    tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
+                      tiles.get(TILE_POS_CHEST).getOriginY() );
+                }
+
+                else
+                {
+                    // Chest actor not active.
+
+                    // Position treasure actor at center of stage horizontally and 
+                    // vertically slightly above the bottom.
+                    tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
+                      TREASURE_POS_Y * gameHD.getConfig().getScale() );
+                }
+
+                // Resize treasure actor based on scale.
+                tiles.get(TILE_POS_TREASURE).setWidth( treasureWidth );
+                tiles.get(TILE_POS_TREASURE).setHeight( treasureHeight );
+
+                // Set treasure origin to center to allow for proper rotation.
+                tiles.get(TILE_POS_TREASURE).setOriginCenter();
+
+                // Set up an action to fade in the treasure.
+                tiles.get(TILE_POS_TREASURE).addAction_FadeIn( 0.50f, 0.50f );
+
+            } // End ... If texture for treasure actor NOT initialized.
+
+        } // End ... If displaying another non-gold item.
+
+        // Update the treasure description in the associated label and center horizontally.
+        render_treasure_label( treasureLabel, treasureImageInd, tiles);
+        
+    }
+    
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
+    // treasureLabel = Reference to label with the treasure description.
+    private void draw_treasure_no_image(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile,
+      CustomLabel treasureLabel)
+    {
+        
+        // The function displays the treasure description when no image exists.
+        // Fade out any active treasure / gold.
+        // The function always displays the label associated with the treasure.
+        // NOTE:  The function is only called when rendering the second or later item in the chest.
+        
+        // If texture for treasure actor initialized, then...
+        if (tiles.get(TILE_POS_TREASURE).getRegion().getTexture() != null)
+        {
+            // Texture for treasure actor initialized.
+
+            // Fade out the treasure actor.
+            tiles.get(TILE_POS_TREASURE).addAction_FadeOut( 0.50f, 0.50f );
+        }
+
+        // If gold pile active, then...
+        if (goldPileActiveInd)
+        {
+            // Gold pile active.
+
+            // Fade out gold pile.
+            fade_gold_pile( tiles, goldPile, 0f, 0.5f );
+
+            // Flag gold pile as inactive.
+            goldPileActiveInd = false;
+        }
+
+        // Update the treasure description in the associated label and center 
+        // horizontally.
+        render_treasure_label( treasureLabel, false, tiles );
+        
+    }
+    
     // ignoreNextExitEvent = Whether to ignore next exit event (used with touchUp / exit).
     // activeInd = Active indicator related to item (bone pile, lock, ...).
     // actor = Reference to BaseActor related to the item.
-    // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
+    // actionButton = Reference to the BaseActor for the action button associated with the item.
     private boolean eventExitMagic(boolean ignoreNextExitEvent, boolean activeInd, BaseActor actor,
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton)
+      BaseActor actionButton)
     {
         
         /*
@@ -1749,7 +1698,7 @@ public class MazeMap
                 }
 
                 // Set action button to not visible.
-                mapActionButton.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
+                actionButton.setVisible(false);
 
             } // Processing exit event.
 
@@ -1854,22 +1803,71 @@ public class MazeMap
         
     }
     
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
-    private void fadeGoldPile(BaseActor treasureGroup)
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
+    // delay = Time, in seconds, before fade occurs.
+    // fadeOut = Duration, in seconds, of fade.
+    private void fade_gold_pile(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, float delay, 
+      float fadeOut)
     {
         
-        // The function fades out the gold pile, including associated actors.
+        // The function fades out the treasure group and gold pile, including associated actors.
         
-        // Remove actors in gold pile from treasure group.
+        // Fade out visible actors in gold pile.
         goldPile.forEach((actor) -> {
 
-            // Fade out the gold actor.
-            actor.addAction_FadeOut( 0f, 1f );
+            // If actor visible, then...
+            if (actor.isVisible())
+            {
+                
+                // Actor is vislble.
+                
+                // Fade out the gold actor.
+                actor.addAction_FadeOut( delay, fadeOut );
+                
+            }
             
         });
         
         // Fade out the treasure group.
-        treasureGroup.addAction_FadeOut( 0f, 1f );
+        tiles.get(TILE_POS_TREASURE_GROUP).addAction_FadeOut( delay, fadeOut );
+        
+    }
+    
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
+    // treasureLabel = Reference to label with the treasure description.
+    private void fade_treasure(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+      CustomLabel treasureLabel)
+    {
+        
+        // The function fades all treasure / gold actors (including the label) and is called when 
+        // clicking on the last item.
+        
+        // If gold pile active, then...
+        if (goldPileActiveInd)
+        {
+            // Gold pile active.
+
+            // Fade out the gold pile, including all associated actors.
+            fade_gold_pile( tiles, goldPile, 0f, 1f );
+
+            // Flag gold pile as inactive.
+            goldPileActiveInd = false;
+
+        }
+
+        // Otherwise, If texture for treasure actor initialized, then...
+        else if (tiles.get(TILE_POS_TREASURE).getRegion().getTexture() != null)
+        {
+            // Texture for treasure actor initialized.
+
+            // Fade out the treasure actor.
+            tiles.get(TILE_POS_TREASURE).addAction_FadeOut( 0f, 1f );
+        }
+
+        // Set up an action to fade out the treasure label.
+        treasureLabel.addAction_FadeOut(0f, 1f);
         
     }
     
@@ -1885,6 +1883,8 @@ public class MazeMap
         
     }
     
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
     // x = X-coordinate within current region to render.
     // y = Y-coordinate within current region to render.
     // facing = Direction the player is facing.
@@ -1903,10 +1903,11 @@ public class MazeMap
     // redrawInd = Whether redrawing screen -- like when waking screen or loading game.
     // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
-    public ArrayList<BaseActor> mazemap_render(int x, int y, HeroineEnum.FacingEnum facing, int viewWidth,
-      CustomLabel treasureLabel, BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, 
-      CustomLabel armorLabel, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel,
-      CustomLabel regionLabel, CustomLabel statusLabel, boolean turnInd, boolean redrawInd,
+    public ArrayList<BaseActor> mazemap_render(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+      int x, int y, HeroineEnum.FacingEnum facing, int viewWidth, CustomLabel treasureLabel, 
+      BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, CustomLabel armorLabel, 
+      CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel, CustomLabel regionLabel, 
+      CustomLabel statusLabel, boolean turnInd, boolean redrawInd, 
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled)
     {
@@ -1919,10 +1920,10 @@ public class MazeMap
         Beyond building the tile array list, logic includes:
         
         1.  Adding event-supported chest when in square in front of player.
-        2.  Handling chest in same square as player.
-        3.  Handling hay bale in same square as player.
-        4.  Adding event-supported skull pile in square in front of player.
-        5.  Adding event-supported locked door in square in front of player.
+        2.  Adding event-supported skull pile in square in front of player.
+        3.  Adding event-supported locked door in square in front of player.
+        4.  Handling chest in same square as player.
+        5.  Handling hay bale in same square as player.
         
         The visibility cone is shaped like this:
 
@@ -1941,23 +1942,13 @@ public class MazeMap
         .........
         */
         
-        String actorName; // Name of current actor in loop.
         boolean bonePileInd; // Whether bone pile exists immediately in front of player.
         boolean chestInd; // Whether chest exists immediately in front of player.
         ArrayList<AtlasItems.Chest> chestList; // List of chests at the passed position.
         boolean chestNearbyInd; // Whether chest exists either in current location or immediately in front 
           // of player.
-        int counter; // Used to increment through array list of BaseActor objects associated with tiles.
-        Integer key; // Key to use when adding value to hash map.
         boolean lockedDoorInd; // Whether locked door exists immediately in front of player.
-        ArrayList<BaseActor> removeList; // List of actors to remove.
-        BaseActor tempBonePile; // Holder for the (bone pile) actor.
-        BaseActor tempChest; // Holder for the (chest) actor.
-        BaseActor tempLock; // Holder for the (lock) actor.
-        BaseActor tempTreasure; // Holder for the (treasure) actor.  For non-group functionality.
-        BaseActor tempTreasureGroup; // Holder for the (treasure) actor.  For group functionality.
         int tileNbr; // Tile number at current (exact) location.
-        ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
         boolean treasureImageInd; // Whether treasure image exists for primary item in first chest.
         String virtualString; // Virtual field (string) for the actor with the chest(s), bone pile(s), ...
         String virtualStringObjType; // Object type parsed from virtual field (string).
@@ -1969,17 +1960,39 @@ public class MazeMap
         chestNearbyInd = false;
         chestActiveInd = false;
         bonePileActiveInd = false;
-        virtualString = "";
-        goldPile = null;
-        tempTreasure = null;
-        tempTreasureGroup = null;
         
-        // 2.  Initialize array lists and hash maps.
-        tiles = new ArrayList<>();
-        removeList = new ArrayList<>();
-        tileMap = new HashMap<>();
+        // 2.  Reset properties of actors in array list.
+        for (BaseActor actor : tiles)
+        {
+            
+            actor.setActorName(null);
+            actor.setVirtualInt(null);
+            actor.setVirtualString(null);
+            actor.setVisible(false);
+            actor.removeActions();
+            
+            // Return actor to normal color.
+            actor.setColor(Color.WHITE);
+            
+            // Remove transparency (results from actions).
+            actor.getColor().a = 1.0f;
+            
+            // Remove events.
+            for (EventListener temp : actor.getListeners())
+            {
+                actor.removeListener(temp);
+            }
+            
+        }
         
-        // 3.  Prepare tiles for rendering.
+        // 3.  Reset active indicators for tiles.
+        for (int tileCounter = 0; tileCounter <= TILE_COUNT_BASE_0; tileCounter++)
+        {
+            // Reset active indicator for current tile in loop.
+            tileActiveInd.set(tileCounter, false);
+        }
+        
+        // 4.  Prepare tiles for rendering.
         
         System.out.println("X: " + x + ", Y: " + y + ", Facing: " + facing);
         
@@ -1989,24 +2002,24 @@ public class MazeMap
             case NORTH:
                 
                 // Render back row.
-                tiles.add(mazemap_render_tile( x - 2, y - 2, 0, -2,  0 ));
-                tiles.add(mazemap_render_tile( x + 2, y - 2, 1, +2, -2 ));
-                tiles.add(mazemap_render_tile( x - 1, y - 2, 2, -1, -2 ));
-                tiles.add(mazemap_render_tile( x + 1, y - 2, 3, +1, -2 ));
-                tiles.add(mazemap_render_tile( x    , y - 2, 4,  0, -2 ));
+                mazemap_render_tile( x - 2, y - 2, 0, -2,  0, tiles );
+                mazemap_render_tile( x + 2, y - 2, 1, +2, -2, tiles );
+                mazemap_render_tile( x - 1, y - 2, 2, -1, -2, tiles );
+                mazemap_render_tile( x + 1, y - 2, 3, +1, -2, tiles );
+                mazemap_render_tile( x    , y - 2, 4,  0, -2, tiles );
                 
                 // Render middle row.
-                tiles.add(mazemap_render_tile( x - 2, y - 1, 5, -2, -1 ));
-                tiles.add(mazemap_render_tile( x + 2, y - 1, 6, +2, -1 ));
-                tiles.add(mazemap_render_tile( x - 1, y - 1, 7, -1, -1 ));
-                tiles.add(mazemap_render_tile( x + 1, y - 1, 8, +1, -1 ));
-                tiles.add(mazemap_render_tile( x    , y - 1, 9,  0, -1 ));
+                mazemap_render_tile( x - 2, y - 1, 5, -2, -1, tiles );
+                mazemap_render_tile( x + 2, y - 1, 6, +2, -1, tiles );
+                mazemap_render_tile( x - 1, y - 1, 7, -1, -1, tiles );
+                mazemap_render_tile( x + 1, y - 1, 8, +1, -1, tiles );
+                mazemap_render_tile( x    , y - 1, 9,  0, -1, tiles );
                 
                 // Render front row.
                 
-                tiles.add(mazemap_render_tile( x - 1, y, 10, -1, 0 ));
-                tiles.add(mazemap_render_tile( x + 1, y, 11, +1, 0 ));
-                tiles.add(mazemap_render_tile( x    , y, 12,  0, 0 ));
+                mazemap_render_tile( x - 1, y, 10, -1, 0, tiles );
+                mazemap_render_tile( x + 1, y, 11, +1, 0, tiles );
+                mazemap_render_tile( x    , y, 12,  0, 0, tiles );
                 
                 // Exit selector.
                 break;
@@ -2014,23 +2027,23 @@ public class MazeMap
             case SOUTH: // Starting direction.
                 
                 // Render back row.
-                tiles.add(mazemap_render_tile( x + 2, y + 2, 0, +2, +2 ));
-                tiles.add(mazemap_render_tile( x - 2, y + 2, 1, -2, +2 ));
-                tiles.add(mazemap_render_tile( x + 1, y + 2, 2, +1, +2 ));
-                tiles.add(mazemap_render_tile( x - 1, y + 2, 3, -1, +2 ));
-                tiles.add(mazemap_render_tile( x    , y + 2, 4,  0, +2 ));
+                mazemap_render_tile( x + 2, y + 2, 0, +2, +2, tiles );
+                mazemap_render_tile( x - 2, y + 2, 1, -2, +2, tiles );
+                mazemap_render_tile( x + 1, y + 2, 2, +1, +2, tiles );
+                mazemap_render_tile( x - 1, y + 2, 3, -1, +2, tiles );
+                mazemap_render_tile( x    , y + 2, 4,  0, +2, tiles );
                 
                 // Render middle row.
-                tiles.add(mazemap_render_tile( x + 2, y + 1, 5, +2, +1 ));
-                tiles.add(mazemap_render_tile( x - 2, y + 1, 6, -2, +1 ));
-                tiles.add(mazemap_render_tile( x + 1, y + 1, 7, +1, +1 ));
-                tiles.add(mazemap_render_tile( x - 1, y + 1, 8, -1, +1 ));
-                tiles.add(mazemap_render_tile( x    , y + 1, 9,  0, +1 ));
+                mazemap_render_tile( x + 2, y + 1, 5, +2, +1, tiles );
+                mazemap_render_tile( x - 2, y + 1, 6, -2, +1, tiles );
+                mazemap_render_tile( x + 1, y + 1, 7, +1, +1, tiles );
+                mazemap_render_tile( x - 1, y + 1, 8, -1, +1, tiles );
+                mazemap_render_tile( x    , y + 1, 9,  0, +1, tiles );
                 
                 // Render front row.
-                tiles.add(mazemap_render_tile( x + 1, y, 10, +1, 0 ));
-                tiles.add(mazemap_render_tile( x - 1, y, 11, -1, 0 ));
-                tiles.add(mazemap_render_tile( x    , y, 12,  0, 0 ));
+                mazemap_render_tile( x + 1, y, 10, +1, 0, tiles );
+                mazemap_render_tile( x - 1, y, 11, -1, 0, tiles );
+                mazemap_render_tile( x    , y, 12,  0, 0, tiles );
                 
                 // Exit selector.
                 break;
@@ -2038,23 +2051,23 @@ public class MazeMap
             case EAST:
                 
                 // Render back row.
-                tiles.add(mazemap_render_tile( x + 2, y - 2, 0, +2, -2 ));
-                tiles.add(mazemap_render_tile( x + 2, y + 2, 1, +2, +2 ));
-                tiles.add(mazemap_render_tile( x + 2, y - 1, 2, +2, -1 ));
-                tiles.add(mazemap_render_tile( x + 2, y + 1, 3, +2, +1 ));
-                tiles.add(mazemap_render_tile( x + 2, y    , 4, +2,  0 ));
+                mazemap_render_tile( x + 2, y - 2, 0, +2, -2, tiles );
+                mazemap_render_tile( x + 2, y + 2, 1, +2, +2, tiles );
+                mazemap_render_tile( x + 2, y - 1, 2, +2, -1, tiles );
+                mazemap_render_tile( x + 2, y + 1, 3, +2, +1, tiles );
+                mazemap_render_tile( x + 2, y    , 4, +2,  0, tiles );
                 
                 // Render middle row.
-                tiles.add(mazemap_render_tile( x + 1, y - 2, 5, +1, -2 ));
-                tiles.add(mazemap_render_tile( x + 1, y + 2, 6, +1, +2 ));
-                tiles.add(mazemap_render_tile( x + 1, y - 1, 7, +1, -1 ));
-                tiles.add(mazemap_render_tile( x + 1, y + 1, 8, +1, +1 ));
-                tiles.add(mazemap_render_tile( x + 1, y    , 9, +1,  0 ));
+                mazemap_render_tile( x + 1, y - 2, 5, +1, -2, tiles );
+                mazemap_render_tile( x + 1, y + 2, 6, +1, +2, tiles );
+                mazemap_render_tile( x + 1, y - 1, 7, +1, -1, tiles );
+                mazemap_render_tile( x + 1, y + 1, 8, +1, +1, tiles );
+                mazemap_render_tile( x + 1, y    , 9, +1,  0, tiles );
                 
                 // Render front row.
-                tiles.add(mazemap_render_tile( x, y - 1, 10, 0, -1 ));
-                tiles.add(mazemap_render_tile( x, y + 1, 11, 0, +1 ));
-                tiles.add(mazemap_render_tile( x,     y, 12, 0,  0 ));
+                mazemap_render_tile( x, y - 1, 10, 0, -1, tiles );
+                mazemap_render_tile( x, y + 1, 11, 0, +1, tiles );
+                mazemap_render_tile( x,     y, 12, 0,  0, tiles );
                 
                 // Exit selector.
                 break;
@@ -2062,23 +2075,23 @@ public class MazeMap
             case WEST:
                 
                 // Render back row.
-                tiles.add(mazemap_render_tile( x - 2, y + 2, 0, -2, +2 ));
-                tiles.add(mazemap_render_tile( x - 2, y - 2, 1, -2, -2 ));
-                tiles.add(mazemap_render_tile( x - 2, y + 1, 2, -2, +1 ));
-                tiles.add(mazemap_render_tile( x - 2, y - 1, 3, -2, -1 ));
-                tiles.add(mazemap_render_tile( x - 2, y    , 4, -2,  0 ));
+                mazemap_render_tile( x - 2, y + 2, 0, -2, +2, tiles );
+                mazemap_render_tile( x - 2, y - 2, 1, -2, -2, tiles );
+                mazemap_render_tile( x - 2, y + 1, 2, -2, +1, tiles );
+                mazemap_render_tile( x - 2, y - 1, 3, -2, -1, tiles );
+                mazemap_render_tile( x - 2, y    , 4, -2,  0, tiles );
                 
                 // Render middle row.
-                tiles.add(mazemap_render_tile( x - 1, y + 2, 5, -1, +2 ));
-                tiles.add(mazemap_render_tile( x - 1, y - 2, 6, -1, -2 ));
-                tiles.add(mazemap_render_tile( x - 1, y + 1, 7, -1, +1 ));
-                tiles.add(mazemap_render_tile( x - 1, y - 1, 8, -1, -1 ));
-                tiles.add(mazemap_render_tile( x - 1, y    , 9, -1,  0 ));
+                mazemap_render_tile( x - 1, y + 2, 5, -1, +2, tiles );
+                mazemap_render_tile( x - 1, y - 2, 6, -1, -2, tiles );
+                mazemap_render_tile( x - 1, y + 1, 7, -1, +1, tiles );
+                mazemap_render_tile( x - 1, y - 1, 8, -1, -1, tiles );
+                mazemap_render_tile( x - 1, y    , 9, -1,  0, tiles );
                 
                 // Render front row.
-                tiles.add(mazemap_render_tile( x, y + 1, 10, 0, +1 ));
-                tiles.add(mazemap_render_tile( x, y - 1, 11, 0, -1 ));
-                tiles.add(mazemap_render_tile( x, y    , 12, 0,  0 ));  
+                mazemap_render_tile( x, y + 1, 10, 0, +1, tiles );
+                mazemap_render_tile( x, y - 1, 11, 0, -1, tiles );
+                mazemap_render_tile( x, y    , 12, 0,  0, tiles );  
                 
                 // Exit selector.
                 break;
@@ -2093,122 +2106,101 @@ public class MazeMap
                 
             } // Depending on direction facing...
         
-        // Loop through and remove empty (null) tiles -- out of bounds entries.
-        tiles.stream().filter((tile) -> (tile == null)).forEachOrdered((tile) -> {
-            
-            // Tile empty (null).
-            
-            // Add tile to removal list.
-            removeList.add(tile);
-        
-        });
-        
-        // Clear actors in removal list -- remove them from the array list with the tiles.
-        // Loop through actors in removal list.
-        removeList.forEach((ba) -> {
-            
-            // Remove actor from array list.
-            tiles.remove(ba);
-        
-        });
-        
-        // 4.  Populate tile cross reference hash map.
-        
-        // Set starting counter value.
-        counter = 0;
+        // 5.  Check whether objects exist immediately in front of player.
         
         // Key = Position (related to tile image offset -- where to crop picture).
         // Value = Index in array list of base actors returned (non-null tiles).
         
-        // Loop through tiles.
-        for (BaseActor tile : tiles)
+        // Loop through background tiles.
+        for (int tileCounter = 0; tileCounter <= 12; tileCounter++)
         {
             
-            // Store name of current actor in loop.
-            actorName = tile.getActorName();
-            
-            // Determine key to use when adding entry to hash map.
-            key = Integer.valueOf(actorName.substring(tile.getActorName().lastIndexOf("_") + 1));
-            
-            // Add entry to hash map.
-            tileMap.put(key, counter);
-            
-            // Increment counter.
-            counter++;
-            
-        }
-        
-        // 5.  Check whether chest or bone pile exists immediately in front of player.
-        
-        // Loop through tiles.
-        for (BaseActor tile : tiles)
-        {
-            
-            // If tile metadata five characters or more, then...
-            if (tile.getVirtualString().length() >= 5)
+            // If tile active, then...
+            if (tileActiveInd.get(tileCounter))
             {
                 
-                // Tile metadata five characters or more.
+                // Tile active.
+        
+                // Check whether objects exist immediately in front of player.
+
+                // Copy virtual string.
+                virtualString = tiles.get(tileCounter).getVirtualString();
                 
-                // Store object type -- extracting information from virtual string associated with tile.
-                virtualStringObjType = 
-                  tile.getVirtualString().substring(0, tile.getVirtualString().indexOf("|"));
-                
-                // Depending on object type...
-                switch (virtualStringObjType) {
-                    
-                    case "Chest":
-                        
-                        // Tile associated with chest.
+                // If tile metadata five characters or more, then...
+                if (virtualString.length() >= 5)
+                {
 
-                        // Flag chest.
-                        chestInd = true;
+                    // Tile metadata five characters or more.
 
-                        // Copy virtual string.
-                        virtualString = tile.getVirtualString();
+                    // Store object type -- extracting information from virtual string associated with tile.
+                    virtualStringObjType = virtualString.substring(0, virtualString.indexOf("|"));
 
-                        // Exit loop.
-                        break;
-                        
-                    case "Bone Pile":
-                        
-                        // Tile associated with bone pile.
-                    
-                        // Flag bone pile.
-                        bonePileInd = true;
+                    // Depending on object type...
+                    switch (virtualStringObjType) {
 
-                        // Copy virtual string.
-                        virtualString = tile.getVirtualString();
+                        case "Chest":
 
-                        // Exit loop.
-                        break;
-                        
-                    case "Locked Door":
-                        
-                        // Tile associated with locked door.
-                        
-                        // Flag locked door.
-                        lockedDoorInd = true;
-                        
-                        // Copy virtual string.
-                        virtualString = tile.getVirtualString();
-                        
-                        // Exit loop.
-                        break;
-                        
-                    default:
-                        
-                        // Display warning message.
-                        System.out.println("Warning:  Found an unknown object!");
-                        
-                        // Exit loop.
-                        break;
-                    
-                } // End ... Depending on object type.
-                
-            } // End ... If tile metadata five characters or more.
+                            // Tile associated with chest.
+
+                            // Flag chest.
+                            chestInd = true;
+
+                            // Copy virtual string.
+                            tiles.get(TILE_POS_CHEST).setVirtualString(virtualString);
+                            
+                            // Set chest tile as active.
+                            tileActiveInd.set(TILE_POS_CHEST, true);
+
+                            // Exit loop.
+                            break;
+
+                        case "Bone Pile":
+
+                            // Tile associated with bone pile.
+
+                            // Flag bone pile.
+                            bonePileInd = true;
+
+                            // Copy virtual string.
+                            tiles.get(TILE_POS_BONE_PILE).setVirtualString(virtualString);
+                            
+                            // Set bone pile tile as active.
+                            tileActiveInd.set(TILE_POS_BONE_PILE, true);
+
+                            // Exit loop.
+                            break;
+
+                        case "Locked Door":
+
+                            // Tile associated with locked door.
+
+                            // Flag locked door.
+                            lockedDoorInd = true;
+
+                            // Copy virtual string.
+                            tiles.get(TILE_POS_LOCK).setVirtualString(virtualString);
+                            
+                            // Set lock tile as active.
+                            tileActiveInd.set(TILE_POS_LOCK, true);
+
+                            // Exit loop.
+                            break;
+
+                        default:
+
+                            // Display warning message.
+                            System.out.println("Warning:  Found an unknown object!");
+
+                            // Exit loop.
+                            break;
+
+                    } // End ... Depending on object type.
+
+                } // End ... If tile metadata five characters or more.
             
-        } // End ... Loop through tiles.
+            } // End ... If tile active.
+            
+        } // End ... Loop through background tiles.
         
         // 6.  If necessary, add actors for chest and treasure.
         
@@ -2228,36 +2220,14 @@ public class MazeMap
             
             // Create new BaseActor objects for the treasure and group, setting most properties when opening 
             // the chest.
-            tempTreasure = new BaseActor();
-            tempTreasureGroup = new BaseActor();
-
-            // Name treasure actor and group.
-            tempTreasure.setActorName( "Treasure" );
-            tempTreasureGroup.setActorName( "Treasure Group" );
-
-            // Set treasure actor and group to hidden.
-            tempTreasure.setVisible( false );
-            tempTreasureGroup.setVisible( false );
-
-            // Add treasure actor to the list.
-            tiles.add( tempTreasure );
-
-            // Add entry to cross reference hash map.
-            tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE.getValue(), counter );
-
-            // Incement hash map counter.
-            counter++;
-
-            // Add treasure group to the list.
-            tiles.add( tempTreasureGroup );
-
-            // Add entry to cross reference hash map.
-            tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_TREASURE_GROUP.getValue(), counter );
-
-            // Incement hash map counter.
-            counter++;
             
-        }
+            // Set treasure tile as active.
+            tileActiveInd.set(TILE_POS_TREASURE, true);
+
+            // Set treasure group tile as active.
+            tileActiveInd.set(TILE_POS_TREASURE_GROUP, true);
+            
+        } // End ... If chest nearby.
         
         // If adding actor for chest -- immediately in front of player, then...
         if (chestInd)
@@ -2265,34 +2235,12 @@ public class MazeMap
             
             // Adding actor for chest -- immediately in front of player.
             
-            // Create actor for the chest, setting position in the next step.
-            tempChest = new BaseActor( "Chest", 
-              gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_CHEST.getValue_Key()), 
-              0f, 0f );
-            
-            // Set position of actor -- centered horizontally and up about 1/4 from the bottom.
-            tempChest.setPosition( (float)((viewWidth - tempChest.getWidth()) / 2), 
-              28f * gameHD.getConfig().getScale() );
-            
-            // Set origin of actor to center of associated image.
-            tempChest.setOriginCenter();
-            
-            // Set virtual string of actor.
-            tempChest.setVirtualString( virtualString );
-            
             // Add events to actor.
-            addEvent_ChestActor( tempChest, tempTreasure, tempTreasureGroup, viewWidth, treasureLabel, 
-              heroineWeapon, weaponLabel, heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel,
-              regionLabel );
+            addEvent_ChestActor( tiles, goldPile, viewWidth, treasureLabel, heroineWeapon, weaponLabel, 
+              heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel );
             
-            // Add chest actor to the list.
-            tiles.add( tempChest );
-            
-            // Add entry to cross reference hash map.
-            tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_CHEST.getValue(), counter );
-            
-            // Incement hash map counter.
-            counter++;
+            // Set chest actor as visible.
+            tiles.get(TILE_POS_CHEST).setVisible(true);
             
         } // End ... If adding actor for chest -- immediately in front of player.
         
@@ -2307,21 +2255,6 @@ public class MazeMap
             
             System.out.println("Bone pile exists immediately in front of player.");
             
-            // Create actor for the bone pile, setting position in the next step.
-            tempBonePile = new BaseActor( "Bone Pile", 
-              gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_SKULL_PILE.getValue_Key()), 
-              0f, 0f );
-            
-            // Set position of actor -- centered horizontally and up about 1/4 from the bottom.
-            tempBonePile.setPosition( (float)((viewWidth - tempBonePile.getWidth()) / 2), 
-              28f * gameHD.getConfig().getScale() );
-            
-            // Set origin of actor to center of associated image.
-            tempBonePile.setOriginCenter();
-            
-            // Set virtual string of actor.
-            tempBonePile.setVirtualString( virtualString );
-            
             // If player knows burn spell and has sufficient magic points for casting, then...
             if (gameHD.getAvatar().getSpellCastInd(HeroineEnum.SpellEnum.SPELL_BURN))
             {
@@ -2329,21 +2262,15 @@ public class MazeMap
                 // Player knows burn spell and has sufficient magic points for casting.
             
                 // Add events to actor.
-                addEvent_BonePileActor(tempBonePile, mapActionButton );
+                addEvent_BonePileActor(tiles, mapActionButton );
                 
             }
             
-            // Add bone pile actor to the list.
-            tiles.add( tempBonePile );
-            
-            // Add entry to cross reference hash map.
-            tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE.getValue(), counter );
+            // Set bone pile actor as visible.
+            tiles.get(TILE_POS_BONE_PILE).setVisible(true);
             
             // Enable burn button.
             mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, true);
-            
-            // Incement hash map counter.
-            counter++;
             
         } // End ... If bone pile exists immediately in front of player.
         
@@ -2368,21 +2295,6 @@ public class MazeMap
             
             System.out.println("Locked door exists immediately in front of player.");
             
-            // Create actor for the lock, setting position in the next step.
-            tempLock = new BaseActor( "Lock", 
-              gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_LOCK.getValue_Key()), 
-              0f, 0f );
-            
-            // Set position of actor -- centered horizontally and up about 1/4 from the bottom.
-            tempLock.setPosition( 74f * gameHD.getConfig().getScale(), 
-              41f * gameHD.getConfig().getScale() );
-            
-            // Set origin of actor to center of associated image.
-            tempLock.setOriginCenter();
-            
-            // Set virtual string of actor.
-            tempLock.setVirtualString( virtualString );
-            
             // If player knows unlock spell and has sufficient magic points for casting, then...
             if (gameHD.getAvatar().getSpellCastInd(HeroineEnum.SpellEnum.SPELL_UNLOCK))
             {
@@ -2390,21 +2302,15 @@ public class MazeMap
                 // Player knows unlock spell and has sufficient magic points for casting.
                 
                 // Add events to actor.
-                addEvent_LockActor(tempLock, mapActionButton );
+                addEvent_LockActor(tiles, mapActionButton );
                 
             }
             
-            // Add lock actor to the list.
-            tiles.add( tempLock );
-            
-            // Add entry to cross reference hash map.
-            tileMap.put( HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_LOCK.getValue(), counter );
+            // Set lock actor as visible.
+            tiles.get(TILE_POS_LOCK).setVisible(true);
             
             // Enable unlock button.
             mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, true);
-            
-            // Incement hash map counter.
-            counter++;
             
         } // End ... If locked door exists immediately in front of player.
         
@@ -2436,7 +2342,7 @@ public class MazeMap
 
                     // Disable chest events -- related to square in front of player (not current location).
                     chestActiveInd = false;
-
+                    
                     // Play coin sound.
                     gameHD.getSounds().playSound( HeroineEnum.SoundEnum.SOUND_COIN );
 
@@ -2445,15 +2351,14 @@ public class MazeMap
                       armorLabel, hpLabel, mpLabel, goldLabel );
 
                     // Display the first chest / item.
-                    treasureImageInd = render_treasure( chestList.get(0).getPrimaryItem(), null, 
-                      tempTreasure, tempTreasureGroup, viewWidth, treasureLabel, 
-                      chestList.get(0).getPrimaryItemCount() );
+                    treasureImageInd = render_treasure_first( chestList.get(0).getPrimaryItem(), tiles, goldPile,
+                      viewWidth, treasureLabel, chestList.get(0).getPrimaryItemCount() );
 
                     // If image available, draw treasure.
                     // Always show associated label.
-                    draw_treasure( treasureImageInd, null, tempTreasure, tempTreasureGroup, treasureLabel, 
-                      viewWidth, 0.00f, regionLabel );
-
+                    draw_treasure_first( treasureImageInd, tiles, goldPile, treasureLabel, viewWidth, 0.00f, 
+                      regionLabel );
+                    
                     // Set chests in array list inactive and remove entry from hash map associated with 
                     // current location.
                     gameHD.getAtlasItems().removeChests( chestList, map_id, x, y );
@@ -2511,7 +2416,8 @@ public class MazeMap
     // position = Position information for tile to render (offset within source graphic).
     // adj_x = Adjustment to X-coordinate used to reach rendering location.
     // adj_y = Adjustment to Y-coordinate used to reach rendering location.
-    public BaseActor mazemap_render_tile(int pos_x, int pos_y, int position, int adj_x, int adj_y)
+    public BaseActor mazemap_render_tile(int pos_x, int pos_y, int position, int adj_x, int adj_y,
+      ArrayList<BaseActor> tiles)
     {
         // The function returns a base actor representing the passed tile in the passed location.
         // Note: x, y flipped to ease map making.
@@ -2522,7 +2428,7 @@ public class MazeMap
         String virtualString; // Virtual text to associate with BaseActor.
         
         // Set defaults.
-        temp = null;
+        temp = tiles.get(position);
         virtualString = "";
         
         // If tile exists in current region, then...
@@ -2551,6 +2457,9 @@ public class MazeMap
                 
                 //System.out.println("tileNbr = " + tileNbr);
                 //System.out.println("position = " + position);
+                
+                // Flag tile as active.
+                tileActiveInd.set(position, true);
                 
                 // 9 = Immediately in front of player.
                 // 12 = At feet of player.
@@ -2657,15 +2566,32 @@ public class MazeMap
                 //System.out.println("tile nbr = " + tileNbr);
                 //System.out.println("dest_x = " + dest_x[position]);
                 
-                // Return the base actor for the tile (possibly null if out of bounds).
-                temp = new BaseActor("TilePos_" + Integer.toString(position), 
-                  gameHD.getAssetMgr().getTextureRegion(key), dest_x[position], dest_y[position] );
+                // Configure the base actor for the tile (possibly null if out of bounds).
+                //temp = new BaseActor("TilePos_" + Integer.toString(position), 
+                //  gameHD.getAssetMgr().getTextureRegion(key), dest_x[position], dest_y[position] );
+                
+                // Configure the actor representing the tile.
+                
+                // Store name for the actor.
+                temp.setActorName("TilePos_" + Integer.toString(position));
+                
+                // Set the texture region for the actor.
+                temp.setTextureRegion(gameHD.getAssetMgr().getTextureRegion(key));
+                
+                // Position the lower left corner of the actor.
+                temp.setPosition( dest_x[position], dest_y[position] );
                 
                 // Store tile type in actor.
                 temp.setVirtualInt(tileNbr);
                 
                 // Store virtual text in actor.
                 temp.setVirtualString(virtualString);
+                
+                // Set actor as visible.
+                temp.setVisible(true);
+                
+                // Update the 
+                tiles.set(position, temp);
                 
             } // End ... If tile exists in current region and NOT a placeholder (empty location).
             
@@ -2893,154 +2819,265 @@ public class MazeMap
 
     }
     
-    // tileMapKeyEnum = Enumerated value for tile type to remove -- chest, treasure, bone pile, ...
-    public void removeTileMap_Value(HeroineEnum.TileMapKeyEnum tileMapKeyEnum) 
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // viewWidth = Width of the stage.
+    public void prepareSpecialTiles(ArrayList<BaseActor> tiles, int viewWidth)
     {
-        // The function removes the value from the tile map hash map related to the passed key.
-        // The key is limited to one of the values in the enumerated list -- chest, treasure, ...
-        tileMap.remove(tileMapKeyEnum.getValue()); 
+        
+        // The function configures properties for the special tile actors, such as the chest, bone pile, and 
+        // lock.
+        
+        // 1.  Configure tile (actor) for chest.
+        
+        // Set actor name.
+        tiles.get(TILE_POS_CHEST).setActorName( "Chest" );
+            
+        // Set texture of actor.
+        tiles.get(TILE_POS_CHEST).setTexture(
+          gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_CHEST.getValue_Key()) );
+
+        // Set position of actor -- centered horizontally and up about 1/4 from the bottom.
+        tiles.get(TILE_POS_CHEST).setPosition( (float)((viewWidth - tiles.get(TILE_POS_CHEST).getWidth()) / 2), 
+          28f * gameHD.getConfig().getScale() );
+
+        // Set origin of actor to center of associated image.
+        tiles.get(TILE_POS_CHEST).setOriginCenter();
+        
+        // 2.  Configure tile (actor) for treasure and related group.
+        
+        // Name treasure actor and group.
+        tiles.get(TILE_POS_TREASURE).setActorName( "Treasure" );
+        tiles.get(TILE_POS_TREASURE_GROUP).setActorName( "Treasure Group" );
+        
+        // 3.  Configure tile (actor) for bone pile.
+        
+        // Set actor name.
+        tiles.get(TILE_POS_BONE_PILE).setActorName( "Bone Pile" );
+
+        // Set texture of actor.
+        tiles.get(TILE_POS_BONE_PILE).setTexture(
+          gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_SKULL_PILE.getValue_Key()) );
+
+        // Set position of actor -- centered horizontally and up about 1/4 from the bottom.
+        tiles.get(TILE_POS_BONE_PILE).setPosition( (float)((viewWidth - tiles.get(TILE_POS_BONE_PILE).getWidth()) / 2), 
+          28f * gameHD.getConfig().getScale() );
+
+        // Set origin of actor to center of associated image.
+        tiles.get(TILE_POS_BONE_PILE).setOriginCenter();
+        
+        // 4.  Configure tile (actor) for lock.
+        
+        // Set actor name.
+        tiles.get(TILE_POS_LOCK).setActorName( "Lock" );
+
+        // Set texture of actor.
+        tiles.get(TILE_POS_LOCK).setTexture(
+          gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_LOCK.getValue_Key()) );
+
+        // Set position of actor -- centered horizontally and up about 1/4 from the bottom.
+        tiles.get(TILE_POS_LOCK).setPosition( 74f * gameHD.getConfig().getScale(), 
+          41f * gameHD.getConfig().getScale() );
+
+        // Set origin of actor to center of associated image.
+        tiles.get(TILE_POS_LOCK).setOriginCenter();
+
+        // Set lock actor as visible.
+        tiles.get(TILE_POS_LOCK).setVisible(true);
+        
     }
     
-    // chestActor = Reference to BaseActor for the chest tile.
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
     // viewWidth = Width of the stage.
     // quantity = Number of items to render.
-    private void render_gold(BaseActor chestActor, BaseActor treasureGroup, int viewWidth, int quantity)
+    private void render_gold(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, int viewWidth, 
+      int quantity)
     {
         
-        // The function populates the gold pile (array list of actors) and related treasure group.
+        // The function displays the current gold pile (only the actors necessary to add up to the desired
+        // quantity).
         
+        int counter; // Used to increment through actors.
         ArrayList<Integer> bitwiseList; // List of numbers that add up to gold amount.
-        int destIndex; // Index in arrays, GOLD_BASE_POS_X_LIST and GOLD_BASE_POS_Y_LIST, of positions to 
-          // place gold.
-        float goldHeight; // Height of current gold actor (in group).
-        float goldMaxX; // Maximum x-coordinate for placement of gold (in group).
-        float goldMaxY; // Maximum y-coordinate for placement of gold (in group).
-        float goldMinX; // Minimum x-coordinate for placement of gold (in group).
-        float goldMinY; // Minimum y-coordinate for placement of gold (in group).
-        float goldPosX; // X-coordinate to place current gold actor (in group).
-        float goldPosY; // Y-coordinate to place current gold actor (in group).
-        float goldWidth; // Width of current gold actor (in group).
-        HeroineEnum.ImgTreasureEnum imgTreasureEnum; // Enumerated value for treasure.
-        BaseActor tempGold; // Temporary actor for displaying current gold in loop.
-        float treasureHeight; // Height to which to resize treasure.
-        float treasureWidth; // Width to which to resize treasure.
+    
+        // Flag gold pile as active.
+        goldPileActiveInd = true;
+    
+        // Clear array list with actions for gold actors.
+        goldActions.clear();
         
-        // Set defaults for gold.
-        goldMinX = 999999;
-        goldMinY = 999999;
-        goldMaxX = 0;
-        goldMaxY = 0;
-
         // Populate list of numbers that add up to gold amount.
         bitwiseList = routines.UtilityRoutines.bitwiseList(quantity);
-
-        // Initialize array list for gold pile.
-        goldPile = new ArrayList<>();
-
-        // Loop through gold amounts to show.
-        for (Integer gold : bitwiseList)
-        {
-
-            //System.out.println("Gold image: " + HeroineEnum.ImgTreasureEnum.getValue_AtlasKey_Gold(gold));
-
-            // Get treasure enumeration value.
-            imgTreasureEnum = HeroineEnum.ImgTreasureEnum.valueOf("IMG_TREASURE_GOLD_" + Integer.toString(gold));
-
-            // Determine index in position lists with location to place gold.
-            destIndex = imgTreasureEnum.getValue();
-
-            // Determine x and y coordinates to place current gold actor (in group / loop).
-            goldPosX = GOLD_BASE_POS_X_LIST[destIndex] * gameHD.getConfig().getScale();
-            goldPosY = GOLD_BASE_POS_Y_LIST[destIndex] * gameHD.getConfig().getScale();
-
-            // Determine dimensions of current gold actor (in group / loop).
-            goldWidth = gameHD.getConfig().getScale() * 
-              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionWidth();
-            goldHeight = gameHD.getConfig().getScale() * 
-              gameHD.getAssetMgr().getTextureRegion(imgTreasureEnum.getValue_AtlasKey()).getRegionHeight();
-
-            // Configure and add actor to gold pile.
-
-            // Create new actor.
-            tempGold = new BaseActor("GOLD" + Integer.toString(gold), imgTreasureEnum.getValue_AtlasKey(), 
-              goldPosX, goldPosY, gameHD.getAssetMgr());
-
-            // Scale actor.
-            tempGold.setWidth(goldWidth);
-            tempGold.setHeight(goldHeight);
-
-            // Add image to gold pile.
-            goldPile.add(tempGold);
-
-            // Store minimum and maximum x and y to calculate dimensions and adjust base location to 0, 0.
-            goldMinX = Math.min(goldMinX, goldPosX);
-            goldMinY = Math.min(goldMinY, goldPosY);
-            goldMaxX = Math.max(goldMaxX, goldPosX + goldWidth);
-            goldMaxY = Math.max(goldMaxY, goldPosY + goldHeight);
-
-        }
-
-        // Loop through gold actors in group.
-        for (BaseActor gold : goldPile)
-        {
-            // Adjust base location to 0, 0 -- allows easy positioning of group and proper centering.
-            gold.setX(gold.getX() - goldMinX);
-            gold.setY(gold.getY() - goldMinY);
-
-            // Add actor to group.
-            treasureGroup.addActor(gold);
-        }
-
-        // Set treasure actor to function / draw as group only.
-        treasureGroup.setGroupOnlyInd(true);
-
-        // Determine width and height of treasure.
-        treasureWidth = goldMaxX - goldMinX;
-        treasureHeight = goldMaxY - goldMinY;
-
-        // Store width and height of treasure (group) in actor.
-        treasureGroup.setGroupWidth(treasureWidth);
-        treasureGroup.setGroupHeight(treasureHeight);
         
-        // Set treasure origin to center to allow for proper rotation.
-        treasureGroup.setOriginCenter_Group();
-
-        // If chest actor "passed" (not null), then...
-        if (chestActor != null)
+        // 1.  Flag all actors as invisible.
+        
+        // Loop through and flag all actors as invisible.
+        for (int counterFlag = 0; counterFlag <= 9; counterFlag++)
         {
-
-            // Chest actor "passed" (not null).
-        
-            // Position treasure actor (group) at center of stage horizontally and chest vertically.
-            treasureGroup.setPosition( (viewWidth - treasureWidth) / 2, chestActor.getOriginY() );
-        
+            // Flag current actor in loop as invisible.
+            this.goldVisibleList[counterFlag] = false;
         }
         
-        else
+        // 2.  Flag relevant actors as visible, based upon bitwise list.
+        
+        // Loop through gold actors to show.
+        bitwiseList.forEach((gold) -> {
+            
+            // Flag current gold actor as visible.
+            this.goldVisibleList[goldXRef.get(gold)] = true;
+            
+        });
+        
+        // 3.  Set up actions related to fading.
+        
+        // Reset counter.
+        counter = 0;
+        
+        // Set up actions...
+        
+        // Loop through actors.
+        for (BaseActor actor : goldPile)
         {
             
-            // Chest actor NOT "passed" (null).
+            // If actor visible, then...
+            if (actor.isVisible())  
+            {
+                
+                // Actor visible.
+                
+                // Route 1:  Visible.  Fade out first.
+                
+                // If rendering current gold actor, then...
+                if (this.goldVisibleList[counter])
+                {
+                    
+                    // Rendering current gold actor.
+                    
+                    // Route 1A:  Visible (before and after).  Fade out.  Then, fade in.
+                    
+                    // Add action to fade out and in the actor.
+                    goldActions.add(
+                        Actions.sequence
+                            (
+                            //Actions.fadeIn(0.0f), // First step of fade out.
+                            //Actions.visible(true),
+                            Actions.delay(0.0f), 
+                            Actions.fadeOut(0.5f), 
+                            Actions.visible(false), // Last step of fade out.
+                            Actions.delay(0.0f), // First step of fade in.
+                            Actions.alpha(0),
+                            Actions.visible(true),
+                            Actions.fadeIn(0.5f) // Last step of fade in.
+                            )
+                            
+                    ); // End ... Add action to fade out and in the actor.
+                    
+                } // End ... If rendering current gold actor
+                
+                else
+                {
+                    
+                    // Actor no longer visible.
+                    
+                    // Route 1B:  Visible (before).  Fade out.  Do not fade in.
+                    
+                    // Add action to fade out the actor.
+                    goldActions.add(
+                        Actions.sequence
+                            (
+                            //Actions.fadeIn(0.0f), // First step of fade out.
+                            //Actions.visible(true),
+                            Actions.delay(0.0f), 
+                            Actions.fadeOut(0.5f), 
+                            Actions.visible(false) // Last step of fade out.
+                            )
+                    ); // End ... Add action to fade out the actor.
+                    
+                } // End ... If actor no longer visible.
+                
+            } // End ... If actor visible.
             
-            // Position treasure actor (group) at center of stage horizontally and vertically slightly above 
-            // the bottom.
-            treasureGroup.setPosition( (viewWidth - treasureWidth) / 2, 
-              TREASURE_POS_Y * gameHD.getConfig().getScale() );
+            else
+            {
+                
+                // Actor not visible.
+                
+                // Route 2:  Not visible (before).  Do NOT fade out first.  Fade in.
+                
+                // If rendering current gold actor, then...
+                if (this.goldVisibleList[counter])
+                {
+                    
+                    // Rendering current gold actor.
+                    
+                    // Add action to fade in the actor.
+                    goldActions.add(
+                        Actions.sequence
+                            (
+                            Actions.delay(0.0f), // First step of fade in.
+                            Actions.alpha(0),
+                            Actions.visible(true),
+                            Actions.fadeIn(0.5f) // Last step of fade in.
+                            )
+                    ); // End ... Add action to fade in the actor.
+                    
+                } // End ... If rendering current gold actor.
+                
+                else
+                {
+                    
+                    // NOT rendering current gold actor.
+                    
+                    // Add an empty entry to maintain proper positioning.
+                    goldActions.add(null);
+                    
+                }
+                
+            } // End ... If actor not visible.
             
-        }
+            // Increment counter.
+            counter++;
+            
+        } // Loop through actors.
+        
+        // 4.  Clear and add actions related to fading to the actors.
+        
+        // Reset counter.
+        counter = 0;
+        
+        // Clear and add actions.
+        
+        // Loop through actors.
+        for (BaseActor actor : goldPile)
+        {
+            
+            // Clear actions from actor.
+            actor.clearActions();
+            
+            // If new action exist for actor, then...
+            if (goldActions.get(counter) != null)
+            {
+                // New action exist for actor.
+                
+                // Add action to actor.
+                actor.addAction(goldActions.get(counter));
+            }
+            
+            // Increment counter.
+            counter++;
+            
+        } // End ... Loop through actors.
         
     }
     
     // itemEnum = Enumerated value for the item to render the associated treasure image.
-    // chestActor = Reference to BaseActor for the chest tile.
-    // treasureActor = Reference to BaseActor for the treasure tile.
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
     // viewWidth = Width of the stage.
     // treasureLabel = Reference to label with the treasure description.
     // quantity = Number of items to render.
-    private boolean render_treasure(HeroineEnum.ItemEnum itemEnum, BaseActor chestActor, 
-      BaseActor treasureActor, BaseActor treasureGroup, int viewWidth, CustomLabel treasureLabel, 
-      int quantity)
+    private boolean render_treasure_first(HeroineEnum.ItemEnum itemEnum, ArrayList<BaseActor> tiles, 
+      ArrayList<BaseActor> goldPile, int viewWidth, CustomLabel treasureLabel, int quantity)
     {
         
         // The function updates the image and placement for the treasure actor based on the passed item.
@@ -3065,8 +3102,31 @@ public class MazeMap
             
             // Item represents gold.
             
-            // Populate actor information for gold pile and treasure group.
-            render_gold(chestActor, treasureGroup, viewWidth, quantity);
+            // Set vertical position of treasure group.
+            
+            // If chest actor active, then...
+            if (tileActiveInd.get(TILE_POS_CHEST))
+            {
+
+                // Chest actor active.
+
+                // Position treasure actor (group) at center of chest vertically.
+                tiles.get(TILE_POS_TREASURE_GROUP).setY( tiles.get(TILE_POS_CHEST).getOriginY() );
+
+            }
+
+            else
+            {
+
+                // Chest actor NOT active.
+
+                // Position treasure actor (group) vertically slightly above the bottom.
+                tiles.get(TILE_POS_TREASURE_GROUP).setY( TREASURE_POS_Y * gameHD.getConfig().getScale() );
+
+            }
+            
+            // Redraw / update gold pile and treasure group.
+            render_gold(tiles, goldPile, viewWidth, quantity);
             
             // Flag treasure image as existing.
             treasureImageInd = true;
@@ -3093,58 +3153,60 @@ public class MazeMap
                 treasureKey = imgTreasureEnum.getValue_AtlasKey();
 
                 // Update image for treasure actor.
-                treasureActor.setTextureRegion( gameHD.getAssetMgr().getTextureRegion(treasureKey) );
+                tiles.get(TILE_POS_TREASURE).setTextureRegion( 
+                  gameHD.getAssetMgr().getTextureRegion(treasureKey) );
                 
                 // Determine width and height to resize treasure.
                 
                 // Magnify by scale factor.
-                treasureWidth = gameHD.getConfig().getScale() * treasureActor.getWidth();
-                treasureHeight = gameHD.getConfig().getScale() * treasureActor.getHeight();
+                treasureWidth = gameHD.getConfig().getScale() * tiles.get(TILE_POS_TREASURE).getWidth();
+                treasureHeight = gameHD.getConfig().getScale() * tiles.get(TILE_POS_TREASURE).getHeight();
 
-                // If chest actor "passed" (not null), then...
-                if (chestActor != null)
+                // If chest actor active, then...
+                if (tileActiveInd.get(TILE_POS_CHEST))
                 {
                     
-                    // Chest actor "passed" (not null).
+                    // Chest actor active.
                     
                     // Constrain treasure dimensions to those of chest.
                     
                     // If treasure width greater than chest, then... > Limit to chest width.
-                    if (treasureWidth > chestActor.getWidth())
-                        treasureWidth = chestActor.getWidth();
+                    if (treasureWidth > tiles.get(TILE_POS_CHEST).getWidth())
+                        treasureWidth = tiles.get(TILE_POS_CHEST).getWidth();
 
                     // If treasure height greater than chest, then... > Limit to chest height.
-                    if (treasureHeight > chestActor.getHeight())
-                        treasureHeight = chestActor.getHeight();
+                    if (treasureHeight > tiles.get(TILE_POS_CHEST).getHeight())
+                        treasureHeight = tiles.get(TILE_POS_CHEST).getHeight();
 
                     // Take the lower of the treasure width and height.
                     treasureWidth = Math.min(treasureWidth, treasureHeight);
                     treasureHeight = treasureWidth;
                     
                     // Position treasure actor at center of stage horizontally and chest vertically.
-                    treasureActor.setPosition( (viewWidth - treasureWidth) / 2, chestActor.getOriginY() );
+                    tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
+                      tiles.get(TILE_POS_CHEST).getOriginY() );
                     
                 }
                 
                 else
                 {
                     
-                    // Chest actor NOT "passed" (null).
+                    // Chest actor active.
                     
                     // Position treasure actor at center of stage horizontally and vertically slightly above 
                     // the bottom.
-                    treasureActor.setPosition( (viewWidth - treasureWidth) / 2, 
+                    tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
                       TREASURE_POS_Y * gameHD.getConfig().getScale() );
                     
                 }
                     
                 
                 // Resize treasure actor based on scale.
-                treasureActor.setWidth( treasureWidth );
-                treasureActor.setHeight( treasureHeight );
+                tiles.get(TILE_POS_TREASURE).setWidth( treasureWidth );
+                tiles.get(TILE_POS_TREASURE).setHeight( treasureHeight );
 
                 // Set treasure origin to center to allow for proper rotation.
-                treasureActor.setOriginCenter();
+                tiles.get(TILE_POS_TREASURE).setOriginCenter();
                 
             } // End ... If enumeration value points at an image.
 
@@ -3171,11 +3233,9 @@ public class MazeMap
     
     // treasureLabel = Reference to label with the treasure description.
     // treasureImageInd = Whether treasure image exists for current item.
-    // chestActor = Reference to BaseActor for the chest tile.
-    // treasureActor = Reference to BaseActor for the treasure tile.
-    // treasureGroup = Reference to BaseActor for the treasure group tile.  Used for groups, like with gold.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
     private void render_treasure_label(CustomLabel treasureLabel, boolean treasureImageInd, 
-      BaseActor chestActor, BaseActor treasureActor, BaseActor treasureGroup)
+      ArrayList<BaseActor> tiles)
     {
     
         // The function updates the treasure description and position in the associated label.
@@ -3194,8 +3254,7 @@ public class MazeMap
           otherItemsText + "!";
         
         // Determine vertical placement of treasure label.
-        pos_y = determine_treasure_label_pos_y(treasureImageInd, chestActor, treasureActor, treasureGroup, 
-          treasureLabel);
+        pos_y = determine_treasure_label_pos_y(treasureImageInd, tiles, treasureLabel);
         
         // Remove actions from label.
         treasureLabel.removeActions();
@@ -3449,14 +3508,8 @@ public class MazeMap
         return regionWidth;
     }
     
-    public HashMap<Integer, Integer> getTileMap() {
-        return tileMap;
-    }
-    
-    public Integer getTileMap_Value(HeroineEnum.TileMapKeyEnum tileMapKeyEnum) {
-        // The function returns the value from the tile map hash map related to the passed key.
-        // The key is limited to one of the values in the enumerated list -- chest, treasure, ...
-        return tileMap.get(tileMapKeyEnum.getValue());
+    public boolean getTileActiveInd(int tile) {
+        return tileActiveInd.get(tile);
     }
     
 }
