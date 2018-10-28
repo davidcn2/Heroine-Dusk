@@ -117,18 +117,10 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 
     LibGDX methods for ControllerListener include:
 
-    connected:  Called when the gamepad connects.
-    disconnected:  Called when gamepad disconnects.
-    xSliderMoved:  An x-slider on the controller moved.  The sliderCode is controller specific. The
-                   com.badlogic.gdx.controllers.mapping package hosts slider constants for known controllers.
-    ySliderMoved:  A y-slider on the controller moved.  The sliderCode is controller specific. The
-                   com.badlogic.gdx.controllers.mapping package hosts slider constants for known controllers.
     accelerometerMoved:  An accelerometer value on the controller changed.  The accelerometerCode is controller
                          specific.  The com.badlogic.gdx.controllers.mapping package hosts slider constants for
                          known controllers.  The value is a Vector3 representing the acceleration on a 3-axis
                          accelerometer in m/s^2.
-    povMoved:  A POV on the controller moved. The povCode is controller specific.  The
-               com.badlogic.gdx.controllers.mapping package hosts POV constants for known controllers.
     axisMoved:  An axis on the controller moved.  The axisCode is controller specific.  The axis value is in the
                 range [-1, 1].  The com.badlogic.gdx.controllers.mapping package hosts axes constants for known
                 controllers.
@@ -138,7 +130,15 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
 	             com.badlogic.gdx.controllers.mapping package hosts button constants for known controllers.
     buttonUp:  A button on the controller was released.  The buttonCode is controller specific.  The
 	           com.badlogic.gdx.controllers.mapping package hosts button constants for known controllers.
-
+    connected:  Called when the gamepad connects.
+    disconnected:  Called when gamepad disconnects.
+    povMoved:  A POV on the controller moved. The povCode is controller specific.  The
+               com.badlogic.gdx.controllers.mapping package hosts POV constants for known controllers.
+    xSliderMoved:  An x-slider on the controller moved.  The sliderCode is controller specific. The
+                   com.badlogic.gdx.controllers.mapping package hosts slider constants for known controllers.
+    ySliderMoved:  A y-slider on the controller moved.  The sliderCode is controller specific. The
+                   com.badlogic.gdx.controllers.mapping package hosts slider constants for known controllers.
+    
     Custom methods include:
 
     centerLabelUI:  Centers the label in the specified stage.
@@ -147,6 +147,7 @@ public abstract class BaseScreen implements Screen, InputProcessor, ControllerLi
     drawBatch:  Uses the batch to draw the passed texture / texture region at the specified coordinates.
     finishBatch:  Finalizes batch drawing process.
     isPaused:  Returns the pause state of the game (true or false).
+    queueDrawBatch:  Queues the batch to draw a texture / texture region at the specified coordinates.
     setPaused:  Sets the pause state of the game to the passed value.
     startBatch:  Sets up the batch for drawing.
     togglePaused:  Reverses the pause state of the game (true to false, false to true).

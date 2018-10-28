@@ -22,6 +22,7 @@ public class Avatar
     avatar_turn_left:  Handles the player turning left.
     avatar_turn_right:  Handles the player turning right.
     decrement_mp:  Decreases the magic points of the player by one (used when casting a spell, for example).
+    takeItem:  Handles giving an item to the player.
     */
     
     // Declare object variables.
@@ -59,17 +60,17 @@ public class Avatar
         spellList = new HashMap<>();
         
         // Set starting values for the player.
-        x = 1;
-        y = 1;
-        facing = HeroineEnum.FacingEnum.SOUTH;
+        x = 1; //3; //1; //2; //1;
+        y = 1; //2; //1; //1;
+        facing = HeroineEnum.FacingEnum.SOUTH; //HeroineEnum.FacingEnum.EAST; // HeroineEnum.FacingEnum.SOUTH;
         moved = false;
-        map_id = 0;
+        map_id = 0; //10; //0;
         weapon = HeroineEnum.WeaponEnum.WEAPON_BARE_FISTS;
         armor = HeroineEnum.ArmorEnum.ARMOR_SERF_RAGS;
         hp = 5; //25;
         max_hp = 25;
-        mp = 4;
-        max_mp = 4;
+        mp = 14;
+        max_mp = 14;
         gold = 80000; // 0;
         bonus_atk = 0;
         bonus_def = 0;
@@ -132,9 +133,15 @@ public class Avatar
         {
         
             // Proposed position within current region / map bounds.
-        
+            
+            //System.out.println("Proposed tile (" + (mazemap.getImgTileEnum(newX, newY).getValue_Walkable() ? "Y" : "N") + "): " + mazemap.getImgTileEnum(newX, newY));
+            //System.out.println("Proposed side tile (" + (mazemap.getImgTileEnum_Side(this, forwardInd).getValue_Walkable() ? "Y" : "N") + "): " + mazemap.getImgTileEnum_Side(this, forwardInd));
+            
             // If proposed position walkable, then...
-            if (mazemap.getImgTileEnum(newX, newY).getValue_Walkable())
+            if ( (mazemap.getImgTileEnum(newX, newY).getValue_Walkable() && 
+                  mazemap.getImgTileEnum_Side(this, forwardInd) == 
+                  HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE) || 
+                mazemap.getImgTileEnum_Side(this, forwardInd).getValue_Walkable() )
             {
 
                 // Proposed position walkable.
@@ -552,6 +559,16 @@ public class Avatar
         // Return location in front of player.
         return mapLocationForward;
         
+    }
+    
+    public int getMaxDamage() {
+        // The function returns the maximum damage caused by the player.
+        return weapon.getValue_Atk_Max() + bonus_atk;
+    }
+    
+    public int getMinDamage() {
+        // The function returns the minimum damage caused by the player.
+        return weapon.getValue_Atk_Min() + bonus_atk;
     }
     
     public boolean getMovedInd() {

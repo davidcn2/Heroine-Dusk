@@ -20,6 +20,7 @@ public class Sounds
     disposeAudio:  Clears the memory related to LibGDX objects for sound.
     mapAudioHashMaps:  Populates the hash maps pointed at the sounds and music objects.
     playMusic:  Plays the passed music.
+    playMusicDirect:  Plays the passed music directly via referencing the asset manager.
     playSound:  Plays the passed sound.
     */
     

@@ -56,25 +56,42 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
     act:  Overrides the parent / super class act method.  Calls the act method of the
           Actor (parent / super) class.  Updates Actor position based on time.
+    addActionCustom:  Adds a custom action to the hash map that changes the texture of the actor.
     addAction_FadeIn:  Sets up a fade in effect for the actor.
     addAction_FadeOut:  Sets up a fade out effect for the actor.
-    cloneActor:  Returns a BaseActor with the same properties as the current.
+    clone:  Returns a BaseActor with the same properties as the current.
     copy:  Copies properties from the passed to the current BaseActor.
     destroy:  Removes the BaseActor from its Stage and parent list (as necessary).
     draw:  Sets the tinting color of and draws the Actor.
-    getBoundingPolygon:  Sets the position and rotation of the bounding polygon to that of the Actor.
-    getBoundingRectangle:  Sets the properties of the bounding rectangle related to the texture region.
+    getActionMapCount:  Gets the number of actions related to the actor.
+    getActionMapKeyInd:  Returns whether the action map hash map contains the passed key.
+    getActorName:  Returns the (base) actor name.
+    getBoundingPolygon:  Sets the position and rotation of the bounding polygon to that of the Actor and returns the result.
+    getBoundingRectangle:  Sets the properties of the bounding rectangle related to the texture region and returns the result.
+    getGroupHeight:  Returns the height of the group (set manually).
+    getGroupWidth:  Returns the width of the group (set manually).
+    getRegion:  Returns the texture region associated with the actor.
     getTintColor:  Gets the tint color of the Actor.
+    getVirtualInt:  Gets the value of the virtual integer field.
+    getVirtualString:  Gets the value of the virtual string field.
+    isGroupOnlyInd:  Gets whether actor is operating only as a group (set manually).
     moveToOrigin:  Centers a small within a larger rectangle, using the borders of the current and target BaseActor objects.
     overlaps:  Determines whether the bounding polygon for the passed Actor intersects (significantly)
                with that of the current.  Moves current Actor minimum amount to avoid intersection.
-    setActorName:  Sets the Actor name to the passed value.
+    removeActions:  Removes all actions from the actor.
+    setActorName:  Sets the (base) Actor name to the passed value.
     setAdditionalDetails:  Performs additional operations for the constructor that would cause
                            overridable method call errors.
     setEllipseBoundary:  Sets the properties of the bounding polygon related to the texture region.
                          The polygon uses an ellipse with the dimensions of the texture region as
                          the drivers for the width and height.
-    setOriginCenter:  Sets the origin of BaseActor to center of associated image, in order for rotations to appear correctly.
+    setGroupHeight:  Sets the height of the group.
+    setGroupOnlyInd:  Sets whether actor is operating only as a group.
+    setGroupWidth:  Sets the width of the group.
+    setOriginCenter:  Sets the origin of BaseActor to center of associated image, in order for rotations
+                      to appear correctly.
+    setOriginCenter_Group:  Sets the origin of the BaseActor to the center of its associated group 
+                            (based on the manually set width and height).
     setParentList:  Sets reference to an ArrayList to which the Actor has been added.
     setPosition:  Sets the position of the lower left corner of the actor.  Used with constructor.
     setRandomTintColor:  Sets the tint color of the Actor to a random color.
@@ -85,6 +102,8 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     setTextureRegion:  Sets the properties of a texture region.
     setTintColor:  Sets the tint color of the Actor.
     setTintColorToDefault:  Sets the tint color of the Actor to the default.
+    setVirtualInt:  Sets the value of the virtual integer field.
+    setVirtualString:  Sets the value of the virtual string field.
     */
     
     // Declare object variables.
@@ -164,6 +183,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
         // Name actor.
         this.actorName = actorName;
+        super.setName(actorName);
         
         // Assign texture to actor.
         setTexture( new Texture(Gdx.files.internal(filename)) );
@@ -187,6 +207,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
         // Name actor.
         this.actorName = actorName;
+        super.setName(actorName);
         
         // Assign texture to actor.
         setTexture( texture );
@@ -210,6 +231,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
         // Name actor.
         this.actorName = actorName;
+        super.setName(actorName);
         
         // Assign texture region to actor.
         setTextureRegion( textureRegion );
@@ -235,6 +257,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
         // Name actor.
         this.actorName = actorName;
+        super.setName(actorName);
         
         // Assign texture region to actor.
         setTextureRegion( assetMgr.getTextureRegion(regionKey) );
@@ -304,6 +327,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
         // Name actor.
         this.actorName = actorName;
+        super.setName(actorName);
         
         // If working with a texture, then...
         if (assetKeyType == CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE)
@@ -340,7 +364,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
         // The function calls the act method of the Actor, which performs
         // a time based positional update.
-
+        System.out.println("Time: " + dt);
         // Calls the act method of the Actor (parent / super) class.
         // Updates the actor based on time.
         super.act ( dt );

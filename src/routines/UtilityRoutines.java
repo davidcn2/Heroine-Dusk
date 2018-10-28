@@ -34,6 +34,7 @@ public class UtilityRoutines
     Methods include:
     
     bitwiseList:  Returns a list of numbers that add up to the passed value, based on bitwise operations.
+    generateStandardRnd:  Returns a random number in the passed range.
     toRGB:  Converts the passed combination of red, green, and blue values from RGB to LibGDX format.
     */
     

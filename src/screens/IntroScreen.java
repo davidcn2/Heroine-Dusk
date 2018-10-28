@@ -49,7 +49,8 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
 
     /*
     The class extends the basic functionality of a BaseScreen class and sets up the introduction screen.
-
+    The application displays the introduction, followed by the title, screen.
+    
     Methods include:
 
     addEvent:  Adds events to the passed button (BaseActor).  Used with the start button.
@@ -157,7 +158,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         // 2B.  Configure and add the label with the title.
         
         // Initialize label with title text.
-        titleLabel = new CustomLabel(game.skin, "THE PERILS OF GRIZHAWK", "uiLabelStyle", 1.25f, 
+        titleLabel = new CustomLabel(game.skin, "THE PERILS OF GRIZHAWK", "title label", "uiLabelStyle", 1.25f, 
           gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         
         // Add label to scene graph.
@@ -183,8 +184,9 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         // 5.  Configure and add the labels with the created by text.
         
         // Initialize label with first line of created by text.
-        createdByLabel1 = new CustomLabel(game.skin, "BASED ON - HEROINE DUSK", "uiLabelStyle", 0.8f, 
-          gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key());
+        createdByLabel1 = new CustomLabel(game.skin, "BASED ON - HEROINE DUSK", "created by label - 1", 
+          "uiLabelStyle", 0.8f, gameHD.getConfig().getTextLineHeight(), 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         
         // Apply medium shade to label.
         createdByLabel1.colorLabelMedium();
@@ -193,8 +195,9 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         mainStage.addActor(createdByLabel1.displayLabelCenterX(310, viewWidthMain));
         
         // Initialize label with second line of created by text.
-        createdByLabel2 = new CustomLabel(game.skin, "(CREATED BY CLINT BELLANGER)", "uiLabelStyle", 0.8f, 
-          gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key());
+        createdByLabel2 = new CustomLabel(game.skin, "(CREATED BY CLINT BELLANGER)", "created by label - 2", 
+          "uiLabelStyle", 0.8f, gameHD.getConfig().getTextLineHeight(), 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         
         // Apply medium shade to label.
         createdByLabel2.colorLabelMedium();
@@ -205,8 +208,9 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         // 6.  Configure and add the label with the music by text.
         
         // Initialize label with first line of created by text.
-        musicByLabel = new CustomLabel(game.skin, "FEATURES MUSIC BY YUBATAKE", "uiLabelStyle", 0.8f, 
-          gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key());
+        musicByLabel = new CustomLabel(game.skin, "FEATURES MUSIC BY YUBATAKE", "music by label", 
+          "uiLabelStyle", 0.8f, gameHD.getConfig().getTextLineHeight(), 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         
         // Apply medium shade to label.
         musicByLabel.colorLabelMedium();
@@ -421,7 +425,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         // 4.  Configure and add the label next to the start button.
         
         // Initialize label with start text.
-        startLabel = new CustomLabel(game.skin, "START", "uiLabelStyle", 1.0f, 
+        startLabel = new CustomLabel(game.skin, "START", "start label", "uiLabelStyle", 1.0f, 
           gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         
         // Add effect to label.
@@ -445,8 +449,9 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
             // Reset counter.
             counter = 0;
             
-            // If NOT the placeholder, then...
-            if (imgTileEnum != HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE)
+            // If NOT the placeholders, then...
+            if (imgTileEnum != HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE && 
+                imgTileEnum != HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE)
             {
                 
                 // NOT the placeholder.
@@ -562,10 +567,13 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 imagePathList.add(imagePath);
                 }
             
-            // Remove placeholder related to tile image enumerations.
+            // Remove placeholders related to tile image enumerations.
             imageMapList.remove("assets/tiles/" + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_File());
             imageMapList.remove(HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_Key());
             imagePathList.remove("assets/tiles/" + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_File());
+            imageMapList.remove("assets/tiles/" + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE.getValue_File());
+            imageMapList.remove(HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE.getValue_Key());
+            imagePathList.remove("assets/tiles/" + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE.getValue_File());
             
             // Loop through interface image enumerations.
             for (HeroineEnum.ImgInterfaceEnum imgEnum : HeroineEnum.ImgInterfaceEnum.values())
@@ -675,10 +683,13 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 imagePathList.add(imagePath);
                 }
             
-            // Remove placeholder related to tile image enumerations.
+            // Remove placeholders related to tile image enumerations.
             imageMapList.remove(gameHD.getConfig().getPrescaleFolder_Tiles() + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_File());
             imageMapList.remove(HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_Key());
             imagePathList.remove(gameHD.getConfig().getPrescaleFolder_Tiles() + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue_File());
+            imageMapList.remove(gameHD.getConfig().getPrescaleFolder_Tiles() + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE.getValue_File());
+            imageMapList.remove(HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE.getValue_Key());
+            imagePathList.remove(gameHD.getConfig().getPrescaleFolder_Tiles() + HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE.getValue_File());
             
             // Loop through interface image enumerations.
             for (HeroineEnum.ImgInterfaceEnum imgEnum : HeroineEnum.ImgInterfaceEnum.values())

@@ -67,17 +67,34 @@ public class AssetMgr
     Methods include:
     
     disposeAssetMgr:  Clears the asset manager from memory.
+    getAtlas:  Returns the Atlas from the asset manager with the passed key.
+    getAtlas_xRef:  Returns the Atlas from the asset manager based on the name in the cross reference.
     getImage:  Returns the Texture from the asset manager with the passed key.
     getImage_xRef:  Returns the Texture from the asset manager based on the name in the cross reference.
     getMusicMp3:  Returns the requested music in mp3 format.
     getMusicOgg:  Returns the requested music in ogg format.
+    getPixmap:  Returns the pixel map from the hash map with the passed key.
+    getPixmapTransparentInd:  Returns whether the specified location within the pixel map with the passed 
+      key is transparent.
     getSound:  Returns the requested sound.
+    getTextureRegion:  Returns the texture region in the hash map with the passed key.
+    getTextureRegionRect:  Returns the rect structure related to the texture region in the hash map with 
+      the passed key.
+    getTextureRegionRects:  Returns map with rect structures related to texture regions.
+    getTextureRegions:  Returns map with texture regions.
+    loadPixelMaps:  Loads the pixel maps based on the queued resouces in the hash map, pixelMapXRef.
     loadResources:  Loads the current resources in the asset manager queue.
     loadTextureRegions:  loads all texture regions associated with the passed atlases.
     loadTextureRegionsDynamic:  Splits the texture with the passed key into regions.
+    mapAtlases:  adds cross reference (hash mapping) values to provide a simpler way of referencing
+      (atlas-related) items in the asset manager.
     mapImages:  Adds cross reference (hash mapping) values to provide a simpler way of referencing
       (texture-related) items in the asset manager.
+    queueAtlases: Aadds the passed atlases to the asset manager for future loading.
     queueImages:  Adds the passed images to the asset manager for future loading.
+    queueMusic:  Adds the passed music to the asset manager for future loading.
+    queuePixmaps:  Adds the passed images to the pixel map hash map for future loading.
+    queueSounds:  Adds the passed sounds to the asset manager for future loading.
     */
     
     // Declare object variables.
@@ -93,8 +110,11 @@ public class AssetMgr
       // Key = Enumerated value.  Value = Path to image file.
     private Map<String, Pixmap> texturePixmaps; // Contains pixel maps for images.
     private Map<String, Integer> texturePixmapHeights; // Contains pixel map heights for images.
-    private final Map<String, Rectangle2D.Float> textureRegionRects; // Contains rects related to texture regions in atlases.  Keys same as in atlas files.
-    private final Map<String, TextureRegion> textureRegions; // Contains texture regions related to atlases (same keys as in the atlas files).
+    private final Map<String, Rectangle2D.Float> textureRegionRects; // Contains rects related to texture 
+      // regions (usually in atlases).  Keys same as in atlas files or based on those in asset manager, but 
+      // with suffixes.
+    private final Map<String, TextureRegion> textureRegions; // Contains texture regions (usually in atlases).
+      // Keys same as in atlas files or based on those in asset manager, but with suffixes.
     
     // Declare constants.
     private final String decFormatText000 = "000"; // Text used for decimal style used to format numbers as 000.
@@ -610,7 +630,7 @@ public class AssetMgr
     // key = Key in hash map, texturePixmaps, for pixel map to return.
     public Pixmap getPixmap(String key)
     {
-        // Return pixel map.
+        // The function returns the pixel map from the hash map with the passed key.
         return texturePixmaps.get(key);
     }
     
@@ -619,7 +639,8 @@ public class AssetMgr
     // y = Y-coordinate within pixel map to check, considering 0 as the bottom.
     public boolean getPixmapTransparentInd(String key, float x, float y) {
         
-        // The function returns whether the specified location within the pixel map is transparent.
+        // The function returns whether the specified location within the pixel map with the passed key 
+        // is transparent.
         
         int pixel; // 32-bit RGBA8888 value of the pixel at the specified location.
         int posX; // X-cooridnate within pixel map to check, converted from float to nearest integer.

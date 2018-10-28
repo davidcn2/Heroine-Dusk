@@ -47,6 +47,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     
     /*
     The class extends the basic functionality of a BaseScreen class and sets up the main menu screen.
+    The application displays the introduction, followed by the title, screen.
 
     Methods include:
 
@@ -174,7 +175,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // 4.  Configure and add the label with the title.
         
         // Initialize label with title text.
-        titleLabel = new CustomLabel(game.skin, "THE PERILS OF GRIZHAWK", "uiLabelStyle", 1.25f, 
+        titleLabel = new CustomLabel(game.skin, "THE PERILS OF GRIZHAWK", "title label", "uiLabelStyle", 1.25f, 
           gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         
         // Add label to scene graph.
@@ -340,8 +341,9 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             
             // Initialize label with text from current menu item.
             //menuLabels[counter] = new CustomLabel(game.skin, menuItem, "uiLabelStyle", 1.25f);
-            menuLabels[counter] = new CustomLabel(game.skin, menuItemAdj, "uiLabelStyle", 1.0f, 
-              gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key());
+            menuLabels[counter] = new CustomLabel(game.skin, menuItemAdj, "menu label - " + 
+              Integer.toString(counter), "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), 
+              HeroineEnum.FontEnum.FONT_UI.getValue_Key());
             
             // Get height of current label.
             labelHeight = menuLabels[counter].getLabelHeight();
@@ -719,16 +721,6 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         // Depending on key pressed, ...
         switch (keycode)
         {
-            // If the user pressed the S key, then...
-            case Keys.S:
-                
-                // The user pressed the S key.
-            
-                // Switch to the game screen.
-                gameHD.setGameScreen(false);
-                
-                // Exit checks.
-                break;
                 
             // If the user pressed the up arrow key, then...
             case Keys.UP:
@@ -811,18 +803,6 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Exit checks.
                 break;
                 
-        }
-        
-        // If the user pressed the S key, then...
-        if (keycode == Keys.S)
-        {
-            // The user pressed the S key.
-            
-            // Play coin sound.
-            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
-            
-            // Switch to the game screen.
-            gameHD.setGameScreen(false);
         }
         
         // Return a value.

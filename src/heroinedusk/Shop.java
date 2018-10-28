@@ -22,6 +22,7 @@ public class Shop
     addMessageMap:  Adds an item to the messaging-information list -- msgList -- copying from and to a hash map.
     addTypeValue:  Adds a type / value pair.
     getBackground:  Gets the background value associated with the shop / location / other messaging element.
+    getMessageText:  Returns the messages (text) related to the specified item as a standard array.
     getMessages:  Gets the specified messaging-information item from the list -- msgList.
     getMessagesList:  Gets the entire list of messaging-information items.
     getMsgGroupName:  Gets the messaging group name.  Usually identifies the shop or location.
@@ -29,6 +30,7 @@ public class Shop
     getTypeValueList:  Gets all of the type / value pairs.
     setBackground:  Sets the background value associated with the shop / location / other messaging element.
     setMsgGroupName:  Sets the messaging group name.  Usually identifies the shop or location.
+    setShopType:  Sets the overall shop / location / message type.
     setValue_TypeValueList:  Updates the value for the specified type / value pair.
     */
     

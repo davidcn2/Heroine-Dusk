@@ -84,11 +84,11 @@ public class AnimatedActor extends BaseActor { // Extends the BaseActor class.
     // objects and associated keys.
     
     // Declare regular variables.
-    private boolean pauseAnim; // Whether animation currently paused.
     private float elapsedTime; // Total elapsed time the animation has been playing.
     private int frameCount; // Number of frames in animation.
     private float frameDuration; // Duration (in seconds) between each animation frame.
     private float framePassRate; // Duration to run all frames in animation.
+    private boolean pauseAnim; // Whether animation currently paused.
     
     public AnimatedActor()
     {

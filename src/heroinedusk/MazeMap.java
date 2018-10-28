@@ -53,10 +53,40 @@ public class MazeMap
     
     Methods include:
     
+    acquireChestContents:  Gives the contents of the chest(s) at the passed location to the player.
+    addEvent_BonePileActor:  Adds events to the passed bone pile related tile (BaseActor).
+    addEvent_ChestActor:  Adds events to the passed chest-related tile (BaseActor).
+    addEvent_LockActor:  Adds events to the passed lock related tile (BaseActor).
+    addEvent_TreasureActor:  Adds events to the passed treasure actor and label.
+    check_random_encounter:  Checks and returns whether a random encounter occurs.  Performs
+	  initialization related to any random encounter that occurs.
+    determine_treasure_label_pos_y:  Places the treasure label.
+    display_gold:  Encapsulates logic related to drawing a gold pile and the related label,
+	  including fade effects.
+    draw_treasure_first:  (Conditionally) displays the treasure and always shows the associated
+	  label.
+    draw_treasure_next:  Displays the treasure and always shows the associated label.
+    draw_treasure_no_image:  Displays the treasure description when no image exists.
+    eventExitMagic:  Encapsulates exit event logic related to items with associated action buttons.
+    eventMouseMoveAction:  Encapsulates mouse move event logic related to items with associated
+	  action buttons.
+    fade_gold_pile:  Fades out the treasure group and gold pile, including associated actors.
+    fade_treasure:  Fades all treasure / gold actors (including the label) and is called when 
+      clicking on the last item.
     mazemap_bounds_check:  Checks to see if the passed location exists in the current region.
     mazemap_render:  Returns the tiles used to render the passed location.
     mazemap_render_tile:  Returns a base actor representing the passed tile in the passed location.
+    mazemap_render_tile_side:  Returns an enumerated value (integer) representing the (side) tile 
+      in the passed location.  Actually shows the side of the adjacent tile facing the player.
     minimap_render:  Returns the icons used to render the minimap for the current map / region.
+    prepareSpecialTiles:  Configures properties for the special tile actors, such as the chest, 
+	  bone pile, and lock.
+    render_gold:  Displays the current gold pile (only the actors necessary to add up to the 
+	  desired quantity).
+    render_treasure_first:  Updates the image and placement for the treasure actor and label.
+    render_treasure_label:  Updates the treasure description and position in the associated label.
+    transformChestTile:  Transforms the tile associated with the chest at the passed location.
+      Effectively replaces the tile with its equivalent in the background -- removing the chest.
     */
     
     // Declare object variables.
@@ -64,7 +94,6 @@ public class MazeMap
     private final AtlasItems atlasItems; // Reference to the atlas items information.
     private ArrayList<HeroineEnum.ItemEnum> chestOtherItems; // Additional items in chest(s).
     private ArrayList<Integer> chestOtherItemsQty; // Quantity of each additional item in chest(s).
-    private final Combat combat; // Reference to the combat engine.
     private final RegionMap currentRegion; // Reference to current region / map.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
     private final ArrayList<Action> goldActions; // List of actions to apply to gold actors.
@@ -92,7 +121,7 @@ public class MazeMap
       // tile texture region in stage -- adjusted by scale factor.  Excludes render offset.
     private int encounter_chance; // Current encounter chance -- increases (to a point) until combat occurs.
     private boolean goldPileActiveInd; // Whether gold pile active.
-    private final boolean[] goldVisibleList =  new boolean[]{false, false, false, false, false, false, false, false, false, false};
+    private final boolean[] goldVisibleList; // Whether each gold actor visible.
     private boolean lockedDoorActiveInd; // Whether locked door in square in front of (NOT UNDER) player enabled.
     private final int map_id; // Current region / map location (number).
     private final float minimapIconSize; // Size of an icon in minimap (width and height match).
@@ -165,6 +194,7 @@ public class MazeMap
         // Set basic defaults.
         encounter_chance = 0;
         goldPileActiveInd = false;
+        goldVisibleList =  new boolean[]{false, false, false, false, false, false, false, false, false, false};
         
         // Start random number generator.
         number = new SecureRandom();
@@ -192,13 +222,10 @@ public class MazeMap
         dest_x = new float[HeroineEnum.TileRegionEnum.values().length];
         dest_y = new float[HeroineEnum.TileRegionEnum.values().length];
         
-        // 2.  Initialize combat engine.
-        combat = new Combat(hdg.getAvatar(), hdg.getConfig().getScale());
-        
-        // 3.  Store reference to main game class.
+        // 2.  Store reference to main game class.
         gameHD = hdg;
         
-        // 4.  Populate hash map with gold pile cross reference.
+        // 3.  Populate hash map with gold pile cross reference.
         goldXRef.put(1, 0);
         goldXRef.put(2, 1);
         goldXRef.put(4, 2);
@@ -210,7 +237,7 @@ public class MazeMap
         goldXRef.put(256, 8);
         goldXRef.put(512, 9);
         
-        // 5.  Store reference to atlas region and items information.
+        // 4.  Store reference to atlas region and items information.
         
         // Store reference to the atlas region information.
         this.atlas = gameHD.getAtlas();
@@ -218,27 +245,27 @@ public class MazeMap
         // Store reference to the atlas items information.
         this.atlasItems = gameHD.getAtlasItems();
         
-        // 6.  Set starting region / map location.
+        // 5.  Set starting region / map location.
         this.map_id = map_id; // 0;
         
-        // 7.  Get region name.
+        // 6.  Get region name.
         regionName = atlas.mapIdentifiersRev.get(this.map_id);
         
-        // 8.  Store reference to current region / map.
+        // 7.  Store reference to current region / map.
         this.currentRegion = atlas.maps.get(regionName);
         
         System.out.println("Current region: " + regionName);
         
-        // 9.  Copy tiles for current region. -- Actually, stores references.
+        // 8.  Copy tiles for current region. -- Actually, stores references.
         regionTiles.addAll(currentRegion.getRegionTiles());
         
-        // 10.  Copy current region width and height -- in tiles.
+        // 9.  Copy current region width and height -- in tiles.
         regionWidth = currentRegion.getRegionWidth();
         regionHeight = currentRegion.getRegionHeight();
         
         System.out.println("Region size: " + regionWidth + " by " + regionHeight);
         
-        // 11.  Calculate and store destinations for tiles.
+        // 10.  Calculate and store destinations for tiles.
         
         // Set starting value for counter.
         counter = 0;
@@ -256,7 +283,7 @@ public class MazeMap
             
         }
         
-        // 12.  Populate hash maps with unique texture regions used with minimap.
+        // 11.  Populate hash maps with unique texture regions used with minimap.
         
         // Loop through minimap enumerated values.
         for (HeroineEnum.MinimapEnum minimapEnum : HeroineEnum.MinimapEnum.values())
@@ -277,14 +304,14 @@ public class MazeMap
             
         }
         
-        // 13.  Store minimap icon size.
+        // 12.  Store minimap icon size.
         minimapIconSize = minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLACK).getRegionWidth();
         
-        // 14.  Calculate minimap offset (lower left corner) based on scale.
+        // 13.  Calculate minimap offset (lower left corner) based on scale.
         minimapOffsetX = 2f * gameHD.getConfig().getScale();
         minimapOffsetY = viewHeight - (regionHeight * minimapIconSize) - (2f * gameHD.getConfig().getScale()); // 106f * gameHD.getConfig().getScale();
         
-        // 15.  Calculate destination coordinates for minimap icons.
+        // 14.  Calculate destination coordinates for minimap icons.
         
         // Set starting y-coordinate at which to place minimap icon (bottom of lowest icon).
         minimapDestPosY = 0f; // minimapOffsetY;
@@ -326,7 +353,7 @@ public class MazeMap
         Collections.reverse(minimapDestX);
         Collections.reverse(minimapDestY);
         
-        // 16.  Add elements to active tile list.
+        // 15.  Add elements to active tile list.
         
         // Loop through and add elements to active tile list, defaulting to false.
         for (int tileCounter = 0; tileCounter <= TILE_COUNT_BASE_0; tileCounter++)
@@ -391,7 +418,7 @@ public class MazeMap
             }
 
             // Give additional items to the player.
-
+            
             // Loop through additional items in chest.
             for (HeroineEnum.ItemEnum itemEnum : chest.getAddlItemList())
             {
@@ -630,19 +657,11 @@ public class MazeMap
                            
                             // Clicking on a non-transparent pixel in the image.
                             
-                            // 1.  Perform preliminary actions.
-
-                            // Play coin sound.
-                            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
-
-                            // 2.  Perform actions on chest actor.
-
-                            // Set up an action to fade out the chest.
-                            tiles.get(TILE_POS_CHEST).addAction_FadeOut(0.25f, 0.75f);
-                            
                             System.out.println("Chest metadata: " + 
                               tiles.get(TILE_POS_CHEST).getVirtualString());
-
+                            
+                            // 1.  Get virtual information related to chest.
+                            
                             // Get position of first comma in virtual text.
                             index1 = tiles.get(TILE_POS_CHEST).getVirtualString().indexOf(",");
 
@@ -654,35 +673,69 @@ public class MazeMap
                               index2) );
                             posY = Integer.valueOf( tiles.get(TILE_POS_CHEST).getVirtualString().substring(index2 + 1, 
                               tiles.get(TILE_POS_CHEST).getVirtualString().length()) );
+                            
+                            // 2.  Check whether chest or mimic.
+                            
+                            // If mimic, then...
+                            if ( gameHD.getAtlasItems().getSpecificEnemyInd( map_id, posX, posY ) )
+                            {
+                                
+                                // Encountered mimic(s).
+                                
+                                // 3.  Fade out the chest.
+                            
+                                // Set up an action to fade out the chest.
+                                tiles.get(TILE_POS_CHEST).addAction_FadeOut(0.25f, 0.25f);
+                                
+                                System.out.println("Encountered mimic!");
+                                
+                            } // End ... If encountered mimic.
+                            
+                            else
+                            {
+                            
+                                // Encountered chest(s).
+                                
+                                // 3.  Play sound.
+                                
+                                // Play coin sound.
+                                gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_COIN);
 
-                            // 3.  Give chest contents to the player.
+                                // 4.  Fade out the chest.
+                            
+                                // Set up an action to fade out the chest.
+                                tiles.get(TILE_POS_CHEST).addAction_FadeOut(0.25f, 0.75f);
+                                
+                                // 5.  Give chest contents to the player.
 
-                            // Take chest contents.
-                            chestList = acquireChestContents(posX, posY, heroineWeapon, weaponLabel, 
-                              heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel);
+                                // Take chest contents.
+                                chestList = acquireChestContents(posX, posY, heroineWeapon, weaponLabel, 
+                                  heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel);
 
-                            // 4.  Perform actions on treasure actor and label.
+                                // 6.  Perform actions on treasure actor and label.
 
-                            // Display the first chest / item.
-                            treasureImageInd = render_treasure_first( chestList.get(0).getPrimaryItem(), tiles, 
-                              goldPile, viewWidth, treasureLabel, chestList.get(0).getPrimaryItemCount() );
+                                // Display the first chest / item.
+                                treasureImageInd = render_treasure_first( chestList.get(0).getPrimaryItem(), tiles, 
+                                  goldPile, viewWidth, treasureLabel, chestList.get(0).getPrimaryItemCount() );
 
-                            // If image available, draw treasure.
-                            // Always show associated label.
-                            draw_treasure_first(treasureImageInd, tiles, goldPile, treasureLabel, viewWidth, 1.00f, 
-                              regionLabel );
+                                // If image available, draw treasure.
+                                // Always show associated label.
+                                draw_treasure_first(treasureImageInd, tiles, goldPile, treasureLabel, viewWidth, 1.00f, 
+                                  regionLabel );
 
-                            // 5.  Remove chests from array list and hash map in atlas items.
+                                // 7.  Remove chests from array list and hash map in atlas items.
 
-                            // Set chests in array list inactive and remove entry hash map associated with
-                            // current location.
-                            gameHD.getAtlasItems().removeChests(chestList, map_id, posX, posY);
+                                // Set chests in array list inactive and remove entry hash map associated with
+                                // current location.
+                                gameHD.getAtlasItems().removeChests(chestList, map_id, posX, posY);
 
-                            // 6.  Transform tile associated with chest.
+                                // 8.  Transform tile associated with chest.
 
-                            // Transform tile with chest to show similar image to background -- removing chest.
-                            transformChestTile(posX, posY);
-                        
+                                // Transform tile with chest to show similar image to background -- removing chest.
+                                transformChestTile(posX, posY);
+                                
+                            } // End ... If encountered chest(s).
+                            
                         } // End ... If clicking on a non-transparent pixel in the image.
                         
                     } // End ... If chest active.
@@ -1095,6 +1148,7 @@ public class MazeMap
         
     }
     
+    // combat = Reference to combat engine.
     // enemyLabel = Reference to label showing enemy type.
     // infoButtonSelector = BaseActor object that acts as the selector for the current action button.
     // hpLabel = Label showing player hit points.
@@ -1108,7 +1162,7 @@ public class MazeMap
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapActionButtonPosX = X-coordinate of each action button.
     // mapActionButtonPosY = Y-coordinate of bottom of each action button.
-    public boolean check_random_encounter(CustomLabel enemyLabel, BaseActor infoButtonSelector, 
+    public boolean check_random_encounter(Combat combat, CustomLabel enemyLabel, BaseActor infoButtonSelector, 
       CustomLabel hpLabel, CustomLabel mpLabel, BaseActor infoButton, CustomLabel facingLabel, 
       CustomLabel regionLabel, ShakyActor enemy, AssetMgr assetMgr, 
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
@@ -1118,6 +1172,7 @@ public class MazeMap
     {
         
         // The function checks and returns whether a random encounter occurs.
+        // The function performs initialization related to any random encounter that occurs.
         
         boolean encounterInd; // Whether encounter occurs.
         HeroineEnum.EnemyEnum enemyEnum; // Enemy type encountered.
@@ -1127,7 +1182,7 @@ public class MazeMap
         encounterInd = false;
         
         // If one or more enemies exist in current region, then...
-        if ( currentRegion.getEnemyCount() > 99990 )
+        if ( currentRegion.getEnemyCount() > 990 ) // 99990 )
         {
             
             // One or more enemies exist in current region.
@@ -1162,7 +1217,7 @@ public class MazeMap
                   mapActionButtonEnabled, mapActionButtonPosX, mapActionButtonPosY);
                 
                 // Temp.
-                gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+                //gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
                 
             } // End ... If random number in range of encounter.
             
@@ -1614,7 +1669,7 @@ public class MazeMap
     {
         
         // The function displays the treasure description when no image exists.
-        // Fade out any active treasure / gold.
+        // Fades out any active treasure / gold.
         // The function always displays the label associated with the treasure.
         // NOTE:  The function is only called when rendering the second or later item in the chest.
         
@@ -1901,14 +1956,14 @@ public class MazeMap
     // statusLabel = General status label.
     // turnInd = Whether movement involved turning.
     // redrawInd = Whether redrawing screen -- like when waking screen or loading game.
-    // mapActionButton = Hash map containing BaseActor objects that act as the action buttons.
+    // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     public ArrayList<BaseActor> mazemap_render(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
       int x, int y, HeroineEnum.FacingEnum facing, int viewWidth, CustomLabel treasureLabel, 
       BaseActor heroineWeapon, CustomLabel weaponLabel, BaseActor heroineArmor, CustomLabel armorLabel, 
       CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel, CustomLabel regionLabel, 
       CustomLabel statusLabel, boolean turnInd, boolean redrawInd, 
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButton, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled)
     {
         
@@ -1942,6 +1997,7 @@ public class MazeMap
         .........
         */
         
+        boolean adjInd; // Whether position adjustment occurred.
         boolean bonePileInd; // Whether bone pile exists immediately in front of player.
         boolean chestInd; // Whether chest exists immediately in front of player.
         ArrayList<AtlasItems.Chest> chestList; // List of chests at the passed position.
@@ -1954,6 +2010,7 @@ public class MazeMap
         String virtualStringObjType; // Object type parsed from virtual field (string).
         
         // 1.  Set defaults.
+        adjInd = false;
         chestInd = false;
         bonePileInd = false;
         lockedDoorInd = false;
@@ -1994,7 +2051,7 @@ public class MazeMap
         
         // 4.  Prepare tiles for rendering.
         
-        System.out.println("X: " + x + ", Y: " + y + ", Facing: " + facing);
+        System.out.println("\nX: " + x + ", Y: " + y + ", Facing: " + facing);
         
         // Depending on direction facing, ...
         switch (facing) {
@@ -2002,24 +2059,23 @@ public class MazeMap
             case NORTH:
                 
                 // Render back row.
-                mazemap_render_tile( x - 2, y - 2, 0, -2,  0, tiles );
-                mazemap_render_tile( x + 2, y - 2, 1, +2, -2, tiles );
-                mazemap_render_tile( x - 1, y - 2, 2, -1, -2, tiles );
-                mazemap_render_tile( x + 1, y - 2, 3, +1, -2, tiles );
-                mazemap_render_tile( x    , y - 2, 4,  0, -2, tiles );
+                mazemap_render_tile( x - 2, y - 2, 0, -2, -2, tiles, x, y, facing );
+                mazemap_render_tile( x + 2, y - 2, 1, +2, -2, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y - 2, 2, -1, -2, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y - 2, 3, +1, -2, tiles, x, y, facing );
+                mazemap_render_tile( x    , y - 2, 4,  0, -2, tiles, x, y, facing );
                 
                 // Render middle row.
-                mazemap_render_tile( x - 2, y - 1, 5, -2, -1, tiles );
-                mazemap_render_tile( x + 2, y - 1, 6, +2, -1, tiles );
-                mazemap_render_tile( x - 1, y - 1, 7, -1, -1, tiles );
-                mazemap_render_tile( x + 1, y - 1, 8, +1, -1, tiles );
-                mazemap_render_tile( x    , y - 1, 9,  0, -1, tiles );
+                mazemap_render_tile( x - 2, y - 1, 5, -2, -1, tiles, x, y, facing );
+                mazemap_render_tile( x + 2, y - 1, 6, +2, -1, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y - 1, 7, -1, -1, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y - 1, 8, +1, -1, tiles, x, y, facing );
+                mazemap_render_tile( x    , y - 1, 9,  0, -1, tiles, x, y, facing );
                 
                 // Render front row.
-                
-                mazemap_render_tile( x - 1, y, 10, -1, 0, tiles );
-                mazemap_render_tile( x + 1, y, 11, +1, 0, tiles );
-                mazemap_render_tile( x    , y, 12,  0, 0, tiles );
+                mazemap_render_tile( x - 1, y, 10, -1, 0, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y, 11, +1, 0, tiles, x, y, facing );
+                mazemap_render_tile( x    , y, 12,  0, 0, tiles, x, y, facing );
                 
                 // Exit selector.
                 break;
@@ -2027,23 +2083,84 @@ public class MazeMap
             case SOUTH: // Starting direction.
                 
                 // Render back row.
-                mazemap_render_tile( x + 2, y + 2, 0, +2, +2, tiles );
-                mazemap_render_tile( x - 2, y + 2, 1, -2, +2, tiles );
-                mazemap_render_tile( x + 1, y + 2, 2, +1, +2, tiles );
-                mazemap_render_tile( x - 1, y + 2, 3, -1, +2, tiles );
-                mazemap_render_tile( x    , y + 2, 4,  0, +2, tiles );
+                mazemap_render_tile( x + 2, y + 2, 0, +2, +2, tiles, x, y, facing );
+                mazemap_render_tile( x - 2, y + 2, 1, -2, +2, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y + 2, 2, +1, +2, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y + 2, 3, -1, +2, tiles, x, y, facing );
+                mazemap_render_tile( x    , y + 2, 4,  0, +2, tiles, x, y, facing );
                 
                 // Render middle row.
-                mazemap_render_tile( x + 2, y + 1, 5, +2, +1, tiles );
-                mazemap_render_tile( x - 2, y + 1, 6, -2, +1, tiles );
-                mazemap_render_tile( x + 1, y + 1, 7, +1, +1, tiles );
-                mazemap_render_tile( x - 1, y + 1, 8, -1, +1, tiles );
-                mazemap_render_tile( x    , y + 1, 9,  0, +1, tiles );
+                mazemap_render_tile( x + 2, y + 1, 5, +2, +1, tiles, x, y, facing );
+                mazemap_render_tile( x - 2, y + 1, 6, -2, +1, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y + 1, 7, +1, +1, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y + 1, 8, -1, +1, tiles, x, y, facing );
+                mazemap_render_tile( x    , y + 1, 9,  0, +1, tiles, x, y, facing );
                 
                 // Render front row.
-                mazemap_render_tile( x + 1, y, 10, +1, 0, tiles );
-                mazemap_render_tile( x - 1, y, 11, -1, 0, tiles );
-                mazemap_render_tile( x    , y, 12,  0, 0, tiles );
+                mazemap_render_tile( x + 1, y, 10, +1, 0, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y, 11, -1, 0, tiles, x, y, facing );
+                mazemap_render_tile( x    , y, 12,  0, 0, tiles, x, y, facing );
+                
+                /*
+                
+                // Check for rendering portal in position 12, then...
+                
+                // If tile (in position 12) exists in current region, then...
+                if (mazemap_bounds_check(x, y))
+                {
+
+                    // Tile exists in current region.
+                    
+                    // If current location contains portal, then...
+                    if ( HeroineEnum.ImgTileEnum.valueOf(regionTiles.get(y).get(x)) == 
+                      HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_DOOR )
+                    {
+                        
+                        // Current location contains portal.
+                        
+                        // Switch positions 9 and 12.
+                        mazemap_render_tile( x, y    ,  9, 0,  0, tiles ); // Middle row.
+                        mazemap_render_tile( x, y + 1, 12, 0, +1, tiles ); // Front row.
+                        
+                        // Flag adjustment as occurring.
+                        adjInd = true;
+                        
+                    }
+                    
+                } // End ... If tile (in position 12) exists in current region.
+                
+                // If no adjustments yet and tiles (in positions 9, 10, and 11) exist in current region, then...
+                if (!adjInd && mazemap_bounds_check(x, y + 1) && mazemap_bounds_check(x - 1, y) && 
+                    mazemap_bounds_check(x + 1, y))
+                {
+                    
+                    // No adjustments yet and tiles (in positions 9, 10, and 11) exist in current region.
+                    
+                    // If position one square ahead is a door and those to left and right are walls, then...
+                    if (HeroineEnum.ImgTileEnum.valueOf(regionTiles.get(y + 1).get(x)) == 
+                      HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_DOOR && 
+                      HeroineEnum.ImgTileEnum.valueOf(regionTiles.get(y).get(x - 1)) == 
+                      HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_WALL &&
+                      HeroineEnum.ImgTileEnum.valueOf(regionTiles.get(y).get(x + 1)) == 
+                      HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_WALL) 
+                    {
+                        
+                        // Position one square ahead of current location contains portal and those to left and
+                        // right are walls.
+                        
+                        // Adjust positions 4 and 9.
+                        mazemap_render_tile( x, y + 1, 4, 0, +1, tiles ); // Switch to show position 9.
+                        mazemap_render_tile( x, y    , 9, 0, +0, tiles ); // Switch to show position 12.
+                        
+                        // Flag adjustment as occurring.
+                        adjInd = true;
+                        
+                    } // End ... If position one square ahead of current location contains portal and those to 
+                    // left and right are walls.
+                    
+                } // End ... No adjustments yet and tiles (in positions 9, 10, and 11) exist in current region.
+                
+                */
                 
                 // Exit selector.
                 break;
@@ -2051,23 +2168,23 @@ public class MazeMap
             case EAST:
                 
                 // Render back row.
-                mazemap_render_tile( x + 2, y - 2, 0, +2, -2, tiles );
-                mazemap_render_tile( x + 2, y + 2, 1, +2, +2, tiles );
-                mazemap_render_tile( x + 2, y - 1, 2, +2, -1, tiles );
-                mazemap_render_tile( x + 2, y + 1, 3, +2, +1, tiles );
-                mazemap_render_tile( x + 2, y    , 4, +2,  0, tiles );
+                mazemap_render_tile( x + 2, y - 2, 0, +2, -2, tiles, x, y, facing );
+                mazemap_render_tile( x + 2, y + 2, 1, +2, +2, tiles, x, y, facing );
+                mazemap_render_tile( x + 2, y - 1, 2, +2, -1, tiles, x, y, facing );
+                mazemap_render_tile( x + 2, y + 1, 3, +2, +1, tiles, x, y, facing );
+                mazemap_render_tile( x + 2, y    , 4, +2,  0, tiles, x, y, facing );
                 
                 // Render middle row.
-                mazemap_render_tile( x + 1, y - 2, 5, +1, -2, tiles );
-                mazemap_render_tile( x + 1, y + 2, 6, +1, +2, tiles );
-                mazemap_render_tile( x + 1, y - 1, 7, +1, -1, tiles );
-                mazemap_render_tile( x + 1, y + 1, 8, +1, +1, tiles );
-                mazemap_render_tile( x + 1, y    , 9, +1,  0, tiles );
+                mazemap_render_tile( x + 1, y - 2, 5, +1, -2, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y + 2, 6, +1, +2, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y - 1, 7, +1, -1, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y + 1, 8, +1, +1, tiles, x, y, facing );
+                mazemap_render_tile( x + 1, y    , 9, +1,  0, tiles, x, y, facing );
                 
                 // Render front row.
-                mazemap_render_tile( x, y - 1, 10, 0, -1, tiles );
-                mazemap_render_tile( x, y + 1, 11, 0, +1, tiles );
-                mazemap_render_tile( x,     y, 12, 0,  0, tiles );
+                mazemap_render_tile( x, y - 1, 10, 0, -1, tiles, x, y, facing );
+                mazemap_render_tile( x, y + 1, 11, 0, +1, tiles, x, y, facing );
+                mazemap_render_tile( x,     y, 12, 0,  0, tiles, x, y, facing );
                 
                 // Exit selector.
                 break;
@@ -2075,23 +2192,23 @@ public class MazeMap
             case WEST:
                 
                 // Render back row.
-                mazemap_render_tile( x - 2, y + 2, 0, -2, +2, tiles );
-                mazemap_render_tile( x - 2, y - 2, 1, -2, -2, tiles );
-                mazemap_render_tile( x - 2, y + 1, 2, -2, +1, tiles );
-                mazemap_render_tile( x - 2, y - 1, 3, -2, -1, tiles );
-                mazemap_render_tile( x - 2, y    , 4, -2,  0, tiles );
+                mazemap_render_tile( x - 2, y + 2, 0, -2, +2, tiles, x, y, facing );
+                mazemap_render_tile( x - 2, y - 2, 1, -2, -2, tiles, x, y, facing );
+                mazemap_render_tile( x - 2, y + 1, 2, -2, +1, tiles, x, y, facing );
+                mazemap_render_tile( x - 2, y - 1, 3, -2, -1, tiles, x, y, facing );
+                mazemap_render_tile( x - 2, y    , 4, -2,  0, tiles, x, y, facing );
                 
                 // Render middle row.
-                mazemap_render_tile( x - 1, y + 2, 5, -1, +2, tiles );
-                mazemap_render_tile( x - 1, y - 2, 6, -1, -2, tiles );
-                mazemap_render_tile( x - 1, y + 1, 7, -1, +1, tiles );
-                mazemap_render_tile( x - 1, y - 1, 8, -1, -1, tiles );
-                mazemap_render_tile( x - 1, y    , 9, -1,  0, tiles );
+                mazemap_render_tile( x - 1, y + 2, 5, -1, +2, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y - 2, 6, -1, -2, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y + 1, 7, -1, +1, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y - 1, 8, -1, -1, tiles, x, y, facing );
+                mazemap_render_tile( x - 1, y    , 9, -1,  0, tiles, x, y, facing );
                 
                 // Render front row.
-                mazemap_render_tile( x, y + 1, 10, 0, +1, tiles );
-                mazemap_render_tile( x, y - 1, 11, 0, -1, tiles );
-                mazemap_render_tile( x, y    , 12, 0,  0, tiles );  
+                mazemap_render_tile( x, y + 1, 10, 0, +1, tiles, x, y, facing );
+                mazemap_render_tile( x, y - 1, 11, 0, -1, tiles, x, y, facing );
+                mazemap_render_tile( x, y    , 12, 0,  0, tiles, x, y, facing );  
                 
                 // Exit selector.
                 break;
@@ -2262,12 +2379,24 @@ public class MazeMap
                 // Player knows burn spell and has sufficient magic points for casting.
             
                 // Add events to actor.
-                addEvent_BonePileActor(tiles, mapActionButton );
+                addEvent_BonePileActor(tiles, mapActionButtons );
                 
             }
             
             // Set bone pile actor as visible.
             tiles.get(TILE_POS_BONE_PILE).setVisible(true);
+            
+            // If sufficient magic points, set burn button shading to indicate enabled.
+            if (gameHD.getAvatar().getMp() > 0 && mapActionButtons.size() > 0)
+            {
+                
+                // Player has sufficient magic points to cast burn spell.
+                // Include check for elements in hash map (empty when application starts).
+                
+                // Shade burn button to indicate enabled.
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( Color.WHITE );
+                
+            }
             
             // Enable burn button.
             mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, true);
@@ -2278,6 +2407,15 @@ public class MazeMap
         {
             
             // Bone pile DOES NOT exist immediately in front of player.
+            
+            // If elements exist in hash map (empty when application starts), then...
+            if (mapActionButtons.size() > 0)
+            {
+                
+                // Shade burn button to indicate disabled.
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( Color.DARK_GRAY );
+                
+            }
             
             // Disable burn button.
             mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, false);
@@ -2302,12 +2440,24 @@ public class MazeMap
                 // Player knows unlock spell and has sufficient magic points for casting.
                 
                 // Add events to actor.
-                addEvent_LockActor(tiles, mapActionButton );
+                addEvent_LockActor(tiles, mapActionButtons );
                 
             }
             
             // Set lock actor as visible.
             tiles.get(TILE_POS_LOCK).setVisible(true);
+            
+            // If sufficient magic points, set unlock button shading to indicate enabled.
+            // Include check for elements in hash map (empty when application starts).
+            if (gameHD.getAvatar().getMp() > 0 && mapActionButtons.size() > 0)
+            {
+                
+                // Player has sufficient magic points to cast unlock spell.
+                
+                // Shade unlock button to indicate enabled.
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( Color.WHITE );
+                
+            }
             
             // Enable unlock button.
             mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, true);
@@ -2318,6 +2468,15 @@ public class MazeMap
         {
             
             // Locked door DOES NOT exist immediately in front of player.
+            
+            // If elements exist in hash map (empty when application starts), then...
+            if (mapActionButtons.size() > 0)
+            {
+                
+                // Shade unlock button to indicate disabled.
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( Color.DARK_GRAY );
+                
+            }
             
             // Disable unlock button.
             mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, false);
@@ -2343,29 +2502,46 @@ public class MazeMap
                     // Disable chest events -- related to square in front of player (not current location).
                     chestActiveInd = false;
                     
-                    // Play coin sound.
-                    gameHD.getSounds().playSound( HeroineEnum.SoundEnum.SOUND_COIN );
-
-                    // Take chest contents.
-                    chestList = acquireChestContents( x, y, heroineWeapon, weaponLabel, heroineArmor, 
-                      armorLabel, hpLabel, mpLabel, goldLabel );
-
-                    // Display the first chest / item.
-                    treasureImageInd = render_treasure_first( chestList.get(0).getPrimaryItem(), tiles, goldPile,
-                      viewWidth, treasureLabel, chestList.get(0).getPrimaryItemCount() );
-
-                    // If image available, draw treasure.
-                    // Always show associated label.
-                    draw_treasure_first( treasureImageInd, tiles, goldPile, treasureLabel, viewWidth, 0.00f, 
-                      regionLabel );
+                    // If player encountered mimic(s), then...
+                    if ( gameHD.getAtlasItems().getSpecificEnemyInd( map_id, x, y ) )
+                    {
+                        
+                        // Player encountered mimic(s).
+                        
+                        System.out.println("Encountered mimic!");
+                        
+                    }
                     
-                    // Set chests in array list inactive and remove entry from hash map associated with 
-                    // current location.
-                    gameHD.getAtlasItems().removeChests( chestList, map_id, x, y );
+                    else
+                    {
+                        
+                        // Player encounter regular chest(s).
+                        
+                        // Play coin sound.
+                        gameHD.getSounds().playSound( HeroineEnum.SoundEnum.SOUND_COIN );
 
-                    // Transform tile with chest to show similar image to background -- removing chest.
-                    transformChestTile( x, y );
+                        // Take chest contents.
+                        chestList = acquireChestContents( x, y, heroineWeapon, weaponLabel, heroineArmor, 
+                          armorLabel, hpLabel, mpLabel, goldLabel );
 
+                        // Display the first chest / item.
+                        treasureImageInd = render_treasure_first( chestList.get(0).getPrimaryItem(), tiles, 
+                          goldPile, viewWidth, treasureLabel, chestList.get(0).getPrimaryItemCount() );
+
+                        // If image available, draw treasure.
+                        // Always show associated label.
+                        draw_treasure_first( treasureImageInd, tiles, goldPile, treasureLabel, viewWidth, 
+                          0.00f, regionLabel );
+
+                        // Set chests in array list inactive and remove entry from hash map associated with 
+                        // current location.
+                        gameHD.getAtlasItems().removeChests( chestList, map_id, x, y );
+
+                        // Transform tile with chest to show similar image to background -- removing chest.
+                        transformChestTile( x, y );
+                        
+                    }
+                    
                     // Exit selector.
                     break;
 
@@ -2375,6 +2551,9 @@ public class MazeMap
 
                     // Play coin sound.
                     gameHD.getSounds().playSound( HeroineEnum.SoundEnum.SOUND_COIN );
+                    
+                    // Hide region name label.
+                    regionLabel.applyVisible(false);
                     
                     // Display the "rest" text.
                     statusLabel.setLabelText_Center( "YOU REST FOR AWHILE." );
@@ -2416,14 +2595,19 @@ public class MazeMap
     // position = Position information for tile to render (offset within source graphic).
     // adj_x = Adjustment to X-coordinate used to reach rendering location.
     // adj_y = Adjustment to Y-coordinate used to reach rendering location.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // x = X-coordinate within current region to render.  Usually x-coordinate of player position.
+    // y = Y-coordinate within current region to render.  Usually y-coordinate of player position.
+    // facing = Direction the player is facing.
     public BaseActor mazemap_render_tile(int pos_x, int pos_y, int position, int adj_x, int adj_y,
-      ArrayList<BaseActor> tiles)
+      ArrayList<BaseActor> tiles, int x, int y, HeroineEnum.FacingEnum facing)
     {
-        // The function returns a base actor representing the passed tile in the passed location.
+        // The function returns a base actor representing the tile in the passed location.
         // Note: x, y flipped to ease map making.
         
         BaseActor temp; // Holder for the BaseActor to return.
         int tileNbr; // Tile number to render.
+        Integer tileNbr_Side; // Tile number coming from side-related override.
         String key; // Key for the tile to display -- in the asset manager.
         String virtualString; // Virtual text to associate with BaseActor.
         
@@ -2431,14 +2615,37 @@ public class MazeMap
         temp = tiles.get(position);
         virtualString = "";
         
-        // If tile exists in current region, then...
-        if (mazemap_bounds_check(pos_x, pos_y))
+        // Check for side-related tile override.
+        tileNbr_Side = mazemap_render_tile_side(pos_x, pos_y, x, y, facing, true);
+        
+        // If tile exists in current region (or override exists), then...
+        if (mazemap_bounds_check(pos_x, pos_y) || tileNbr_Side != null)
         {
             
-            // Tile exists in current region.
+            // Tile exists in current region or override exists.
             
-            // Determine tile number ot render.
-            tileNbr = regionTiles.get(pos_y).get(pos_x);
+            // If override exists, then...
+            if (tileNbr_Side != null)
+            {
+                
+                // Override exists.
+                
+                // Copy overriden tile.
+                tileNbr = tileNbr_Side;
+                
+            }
+            
+            else
+            {
+                
+                // No override.
+                
+                // Determine tile number to render.
+                tileNbr = regionTiles.get(pos_y).get(pos_x);
+                
+            }
+            
+            //System.out.println("Y: " + pos_y + ", X: " + pos_x + ", pos: " + position + " -- " + tileNbr);
             
             // If tile represents a placeholder, then...
             if (tileNbr == HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE.getValue())
@@ -2610,6 +2817,217 @@ public class MazeMap
         
         // Return the base actor for the tile.
         return temp;
+        
+    }
+    
+    // pos_x = Y-coordinate of tile to render.
+    // pos_y = X-coordinate of tile to render.
+    // x = X-coordinate within current region to render.  Usually x-coordinate of player position.
+    // y = Y-coordinate within current region to render.  Usually y-coordinate of player position.
+    // facing = Direction the player is facing.
+    // sideInd = Whether to look at sides of player, in addition to straight ahead.
+    public Integer mazemap_render_tile_side(int pos_x, int pos_y, int x, int y, 
+      HeroineEnum.FacingEnum facing, boolean sideInd)
+    {
+        // The function returns an enumerated value (integer) representing the (side) tile in the 
+        // passed location.
+        // The function actually shows the side of the adjacent tile facing the player.
+        // Note: x, y flipped to ease map making.
+        
+        Integer tileSide; // Tile number to render for side adjustment.
+        String key; // Key for the tile to display -- in the asset manager.
+        
+        // Set defaults.
+        tileSide = null;
+        
+        // Specify key to use when checking hash maps.
+        key = Integer.toString(pos_x) + ", " + Integer.toString(pos_y);
+        
+        // Depending on direction player is facing, ...
+        switch (facing) {
+            
+            case NORTH:
+                
+                // Player facing north.
+                
+                // If tile north of player, then...
+                if (y > pos_y)
+                {
+                    
+                    // Tile north of player.  Store south side.
+                    tileSide = currentRegion.getSideTilesSouth(key);
+                    
+                }
+                
+                // If side tile not found yet and looking at sides of player, then...
+                if (tileSide == null && sideInd)
+                {
+                    
+                    // Side tile not found yet and looking at sides of player.
+                    
+                    // If tile east of player, then...
+                    if (x < pos_x)
+                    {
+                        
+                        // Tile east of player.  Store west side.
+                        tileSide = currentRegion.getSideTilesWest(key);
+
+                    }
+
+                    // Otherwise, if tile west of player, then...
+                    else if (x > pos_x)
+                    {
+                        
+                        // Tile west of player.  Store east side.
+                        tileSide = currentRegion.getSideTilesEast(key);
+
+                    }
+                    
+                } // End ... If side tile not found yet and looking at sides of player.
+                
+                // Exit processing.
+                break;
+                
+            case SOUTH:
+                
+                // Player facing south.
+                
+                // If tile south of player, then...
+                if (y < pos_y)
+                {
+                    
+                    // Tile south of player.  Store north side.
+                    tileSide = currentRegion.getSideTilesNorth(key);
+                    
+                }
+                
+                // If side tile not found yet and looking at sides of player, then...
+                if (tileSide == null && sideInd)
+                {
+                    
+                    // Side tile not found yet and looking at sides of player.
+                    
+                    // If tile east of player, then...
+                    if (x < pos_x)
+                    {
+                        
+                        // Tile east of player.  Store west side.
+                        tileSide = currentRegion.getSideTilesWest(key);
+
+                    }
+
+                    // Otherwise, if tile west of player, then...
+                    else if (x > pos_x)
+                    {
+                        
+                        // Tile west of player.  Store east side.
+                        tileSide = currentRegion.getSideTilesEast(key);
+
+                    }
+                    
+                } // End ... If side tile not found yet and looking at sides of player.
+                
+                // Exit processing.
+                break;
+                
+            case EAST:
+                
+                // Player facing east.
+                
+                // If tile east of player, then...
+                if (x < pos_x)
+                {
+                    
+                    // Tile east of player.  Store west side.
+                    tileSide = currentRegion.getSideTilesWest(key);
+                    
+                }
+                
+                // If side tile not found yet and looking at sides of player, then...
+                if (tileSide == null && sideInd)
+                {
+                    
+                    // Side tile not found yet and looking at sides of player.
+                    
+                    // If tile north of player, then...
+                    if (y > pos_y)
+                    {
+                        
+                        // Tile north of player.  Store south side.
+                        tileSide = currentRegion.getSideTilesSouth(key);
+
+                    }
+
+                    // Otherwise, if tile south of player, then...
+                    else if (y < pos_y)
+                    {
+                        
+                        // Tile south of player.  Store north side.
+                        tileSide = currentRegion.getSideTilesNorth(key);
+
+                    }
+                    
+                } // End ... If side tile not found yet and looking at sides of player.
+                
+                // Exit processing.
+                break;
+                
+            case WEST:
+                
+                // Player facing west.
+                
+                // If tile west of player, then...
+                if (x > pos_x)
+                {
+                    
+                    // Tile west of player.  Store east side.
+                    tileSide = currentRegion.getSideTilesEast(key);
+                    
+                }
+                
+                // If side tile not found yet and looking at sides of player, then...
+                if (tileSide == null && sideInd)
+                {
+                
+                    // Side tile not found yet and looking at sides of player.
+                    
+                    // If tile north of player, then...
+                    if (y > pos_y)
+                    {
+                        
+                        // Tile north of player.  Store south side.
+                        tileSide = currentRegion.getSideTilesSouth(key);
+
+                    }
+
+                    // Otherwise, if tile south of player, then...
+                    else if (y < pos_y)
+                    {
+                        
+                        // Tile south of player.  Store north side.
+                        tileSide = currentRegion.getSideTilesNorth(key);
+
+                    }
+                    
+                } // End ... If side tile not found yet and looking at sides of player.
+                
+                // Exit processing.
+                break;
+                
+            default:
+                
+                // Unknown direction.
+                
+                // Display warning.
+                System.out.println("Warning:  Player is facing in unknown direction.");
+                
+                // Exit processing.
+                break;
+            
+        }
+        
+        // Return the side tile.
+        return tileSide;
         
     }
     
@@ -3302,12 +3720,85 @@ public class MazeMap
     
     // Getters and setters below...
     
+    public boolean isBonePileActiveInd() {
+        return bonePileActiveInd;
+    }
+    
     public void setBonePileActiveInd(boolean bonePileActiveInd) {
         this.bonePileActiveInd = bonePileActiveInd;
     }
     
     public RegionMap getCurrentRegion() {
         return currentRegion;
+    }
+    
+    // posX = X-coordinate of location at which to get forward position (key).
+    // posY = Y-coordinate of location at which to get forward position (key).
+    // facingEnum = Enumerated value related to current direction player is facing.
+    public String getForwardPosKey(int posX, int posY, HeroineEnum.FacingEnum facingEnum) {
+        // Returns the location of the tile in passed location / facing direction in the form of a key (x, y).
+        // Example:  10, 5.
+        
+        String key; // Key value related to location to return.
+        
+        // Set defaults.
+        key = null;
+        
+        // Depending on direction player facing, ...
+        switch (facingEnum) {
+            
+            case NORTH:
+                
+                // Facing north.
+                
+                // Return key for tile one square north of the one passed.
+                key = Integer.toString(posX) + ", " + Integer.toString(posY - 1);
+                
+                // Exit selector.
+                break;
+                
+            case SOUTH:
+                
+                // Facing south.
+                
+                // Return key for tile one square south of the one passed.
+                key = Integer.toString(posX) + ", " + Integer.toString(posY + 1);
+                
+                // Exit selector.
+                break;
+                
+            case EAST:
+                
+                // Facing east.
+                
+                // Return key for tile one square east of the one passed.
+                key = Integer.toString(posX + 1) + ", " + Integer.toString(posY);
+                
+                // Exit selector.
+                break;
+                
+            case WEST:
+                
+                // Facing west.
+                
+                // Return key for tile one square west of the one passed.
+                key = Integer.toString(posX - 1) + ", " + Integer.toString(posY);
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Unknown direction.
+                
+                // Display warning.
+                System.out.println("Warning:  Player is facing in unknown direction when getting forward position.");
+                
+        }
+        
+        // Return location key.
+        return key;
+        
     }
     
     // posX = X-coordinate at which to get tile information.
@@ -3413,6 +3904,210 @@ public class MazeMap
     }
     
     // avatar = Reference to player information.
+    // forwardInd = Whether moving (or looking) foward.  true = Forward, false = Backward.  Examples:  true, false.
+    public HeroineEnum.ImgTileEnum getImgTileEnum_Side(Avatar avatar, boolean forwardInd) {
+        
+        // Returns the enumerated value for the tile facing (or immediately behind) the player.
+        // Refers actually to the side tile in the adjacent location.
+        // Eases moving through and working with portals.
+        // Reverses y and x to ease working with tiles.
+        
+        Integer tileNbr; // Number of tile at side facing (or immediately behind) current player location (or null).
+        HeroineEnum.ImgTileEnum imgTileEnum; // Tile at side facing (or immediately behind) current player location.
+        
+        // Depending on direction player facing, ...
+        switch (avatar.getFacing()) {
+            
+            case NORTH:
+                
+                // Facing north.
+                
+                // If moving forward, then...
+                if (forwardInd)
+                {
+                    
+                    // Moving forward.
+                    
+                    // Store side tile (possibly none -- null).
+                    tileNbr = currentRegion.getSideTilesSouth( avatar.getX(), avatar.getY() - 1 );
+                    
+                    /*
+                    System.out.println("Trying to move forward (" + avatar.getX() + ", " +
+                      (avatar.getY() - 1) + ") - south: " + tileNbr);
+                    */
+                    
+                }
+                
+                else
+                {
+                    
+                    // Moving backward.
+                    
+                    // Store side tile (possibly none -- null).
+                    tileNbr = currentRegion.getSideTilesNorth( avatar.getX(), avatar.getY() + 1 );
+                    
+                    /*
+                    System.out.println("Trying to move backward (" + avatar.getX() + ", " +
+                      (avatar.getY() + 1) + ") - north: " + tileNbr);
+                    */
+
+                }
+                
+                // Exit selector.
+                break;
+                
+            case SOUTH:
+                
+                // Facing south.
+                
+                // If moving forward, then...
+                if (forwardInd)
+                {
+                    
+                    // Moving forward.
+                    
+                    // Store side tile (possibly none -- null).
+                    tileNbr = currentRegion.getSideTilesNorth( avatar.getX(), avatar.getY() + 1 );
+                    
+                    /*
+                    System.out.println("Trying to move forward (" + avatar.getX() + ", " +
+                      (avatar.getY() + 1) + ") - north: " + tileNbr);
+                    */
+                    
+                }
+                
+                else
+                {
+                    
+                    // Moving backward.
+                    
+                    // Store side tile (possibly none -- null).
+                    tileNbr = currentRegion.getSideTilesSouth( avatar.getX(), avatar.getY() - 1 );
+                    
+                    /*
+                    System.out.println("Trying to move backward (" + avatar.getX() + ", " +
+                      (avatar.getY() - 1) + ") - south: " + tileNbr);
+                    */
+                    
+                }
+                
+                // Exit selector.
+                break;
+                
+            case EAST:
+                
+                // Facing east.
+                
+                // If moving forward, then...
+                if (forwardInd)
+                {
+                    
+                    // Moving forward.
+                    
+                    // Store side tile (possibly none -- null).
+                    tileNbr = currentRegion.getSideTilesWest( avatar.getX() + 1, avatar.getY() );
+                    
+                    /*
+                    System.out.println("Trying to move forward (" + (avatar.getX() + 1) + ", " +
+                      avatar.getY() + ") - west: " + tileNbr);
+                    */
+                    
+                }
+                
+                else
+                {
+                    
+                    // Moving backward.
+                    
+                    // Store side tile (possibly none -- null).
+                    tileNbr = currentRegion.getSideTilesEast( avatar.getX() - 1, avatar.getY() );
+                    
+                    /*
+                    System.out.println("Trying to move backward (" + (avatar.getX() - 1) + ", " +
+                      avatar.getY() + ") - east: " + tileNbr);
+                    */
+                    
+                }
+                
+                // Exit selector.
+                break;
+                
+            case WEST:
+                
+                // Facing west.
+                
+                // If moving forward, then...
+                if (forwardInd)
+                {
+                    
+                    // Moving forward.
+                    
+                    // Store side tile (possibly none -- null).
+                    tileNbr = currentRegion.getSideTilesEast( avatar.getX() - 1, avatar.getY() );
+                    
+                    /*
+                    System.out.println("Trying to move forward (" + (avatar.getX() - 1) + ", " +
+                      avatar.getY() + ") - east: " + tileNbr);
+                    */
+                    
+                }
+                
+                else
+                {
+                    
+                    // Moving backward.
+                    
+                    // Store side tile (possibly none -- null).
+                    tileNbr = currentRegion.getSideTilesWest( avatar.getX() + 1, avatar.getY() );
+                    
+                    /*
+                    System.out.println("Trying to move backward (" + (avatar.getX() + 1) + ", " +
+                      avatar.getY() + ") - west: " + tileNbr);
+                    */
+                    
+                }
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Facing invalid direction.
+            
+                // Set value to return to null.
+                tileNbr = null;
+                
+                // Display warning.
+                System.out.println("Warning:  Player facing invalid direction while trying to display side tile at current location.");
+                
+                // Exit selector.
+                break;
+                
+        }
+        
+        // If side tile not null, then...
+        if (tileNbr != null)
+        {
+
+            // Side tile not null.
+            imgTileEnum = HeroineEnum.ImgTileEnum.valueOf( tileNbr );
+
+        }
+        
+        else
+        {
+            
+            // Side tile is null.
+            imgTileEnum = HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE;
+            
+        }
+        
+        // Return tile at side facing current player location (or ignore when none present).
+        return imgTileEnum;
+        
+    }
+    
+    // avatar = Reference to player information.
     // imgTileEnum = Enumerated value to which to set tile.
     public void setImgTileEnum_ForwardLoc(Avatar avatar, HeroineEnum.ImgTileEnum imgTileEnum) {
         
@@ -3476,6 +4171,142 @@ public class MazeMap
     
     }
     
+    // avatar = Reference to player information.
+    // imgTileEnum = Enumerated value to which to set tile.
+    public void setImgTileEnum_SideLoc(Avatar avatar, HeroineEnum.ImgTileEnum imgTileEnum) {
+        
+        // Sets the enumerated value for the side tile in front of the current player location to the
+        // passed value.
+        
+        // Depending on direction player facing, ...
+        switch (avatar.getFacing()) {
+            
+            case NORTH:
+                
+                // Facing north.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbrNorth( avatar.getX(), avatar.getY(), imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case SOUTH:
+                
+                // Facing south.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbrSouth( avatar.getX(), avatar.getY(), imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case EAST:
+                
+                // Facing east.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbrEast( avatar.getX(), avatar.getY(), imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case WEST:
+                
+                // Facing west.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbrWest( avatar.getX(), avatar.getY(), imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Facing invalid direction.
+                
+                // Display warning.
+                System.out.println("Warning:  Player facing invalid direction while setting side tile at current location.");
+                
+                // Exit selector.
+                break;
+                
+        }
+    
+    }
+    
+    // avatar = Reference to player information.
+    // imgTileEnum = Enumerated value to which to set tile.
+    public void setImgTileEnum_SideLoc_Forward(Avatar avatar, HeroineEnum.ImgTileEnum imgTileEnum) {
+        
+        // Sets the enumerated value for the side in the tile in front of (adjacent to) the current 
+        // player location to the passed value.
+        
+        // Depending on direction player facing, ...
+        switch (avatar.getFacing()) {
+            
+            case NORTH:
+                
+                // Facing north.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbrSouth( avatar.getX(), (avatar.getY() - 1), 
+                  imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case SOUTH:
+                
+                // Facing south.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbrNorth( avatar.getX(), (avatar.getY() + 1), 
+                  imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case EAST:
+                
+                // Facing east.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbrWest( (avatar.getX() + 1), avatar.getY(), 
+                  imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            case WEST:
+                
+                // Facing west.
+                
+                // Alter tile.
+                currentRegion.setRegionTileNbrEast( (avatar.getX() - 1), avatar.getY(), 
+                  imgTileEnum.getValue() );
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Facing invalid direction.
+                
+                // Display warning.
+                System.out.println("Warning:  Player facing invalid direction while setting side tile at current location.");
+                
+                // Exit selector.
+                break;
+                
+        }
+    
+    }
+    
+    public boolean isLockedDoorActiveInd() {
+        return lockedDoorActiveInd;
+    }
+    
     public void setLockedDoorActiveInd(boolean lockedDoorActiveInd) {
         this.lockedDoorActiveInd = lockedDoorActiveInd;
     }
@@ -3509,6 +4340,7 @@ public class MazeMap
     }
     
     public boolean getTileActiveInd(int tile) {
+        // Return whether passed tile active.  Only active tiles are rendered.
         return tileActiveInd.get(tile);
     }
     

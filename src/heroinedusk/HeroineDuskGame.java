@@ -19,7 +19,6 @@ import core.AssetMgr;
 import core.BaseGame;
 import screens.DialogScreen;
 import screens.ExploreScreen;
-import screens.GameScreen;
 import screens.IntroScreen;
 import screens.TitleScreen;
 
@@ -38,23 +37,22 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
     disposeScreens:  Disposes of LibGDX objects in screens.
     renderDialogScreen:  Renders the dialog screen, incorporating any necessary updates.
     setDialogScreen:  Switches to (displays) the dialog screen and hides the current.
-    setGameScreen:  Switches to (displays) the main game screen and hides the current.
+    setExploreScreen:  Switches to (displays) the map explore screen and hides the current.
     setIntroScreen:  Switches to (displays) the introduction screen and hides the current.
     setTitleScreen:  Switches to (displays) the title screen and hides the current.
     */
     
     // Declare object variables.
-    private AssetMgr assetMgr; // Enhanced asset manager.
+    private final AssetMgr assetMgr; // Enhanced asset manager.
     private Atlas atlas; // Atlas containing all map / region information.
     private AtlasItems atlasItems; // Atlas item information.
-    private Avatar avatar; // Player information.
+    private final Avatar avatar; // Player information.
     private final Config config; // Configuration information, including options.
-    private Dialog dialog; // Contains information related to current dialog window.
+    private final Dialog dialog; // Contains information related to current dialog window.
     private static DialogScreen dsMain; // Reference to dialog screen.
     private static ExploreScreen esMain; // Reference to explore screen.
-    private static GameScreen gsMain; // Reference to main game screen.
     private static IntroScreen isMain; // Reference to introduction screen.
-    private Shops shopInfo; // Contains message-related information, mostly used for shops.
+    private final Shops shopInfo; // Contains message-related information, mostly used for shops.
     private Sounds sounds; // Contains logic related to playing sounds and music.
     private static TitleScreen tsMain; // Reference to title screen.
     
@@ -109,7 +107,6 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         createSkin();
         
         // Initialize and display the introduction screen.
-        //setTitleScreen();
         setIntroScreen();
         
     }
@@ -261,13 +258,6 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         if (esMain != null)
             esMain.dispose();
         
-        // If main game screen initialized, then...
-        if (gsMain != null)
-            
-            // Main game screen initialized.
-            // Dispose of LibGDX objects related to main game screen.
-            gsMain.dispose();
-        
         // If initialized, dispose of LibGDX objects related to title screen.
         if (tsMain != null)
             tsMain.dispose();
@@ -347,31 +337,6 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         
         // Launch introduction screen.
         setScreen(isMain);
-        
-    }
-    
-    // resetGame = Whether to reset game.
-    public void setGameScreen(boolean resetGame)
-    {
-        
-        // The function switches to (displays) the main game screen and hides the current.
-        
-        // If main game screen object initialized, then...
-        if (gsMain == null)
-            {
-            // Main game screen object not initialized yet.
-            // Initialize main game screen object.
-            gsMain = new GameScreen(this, windowWidth, windowHeight, this);
-            }
-        else
-            {
-            // Main game screen object initialized already.
-            // Update multiplexer and display.
-            gsMain.wakeScreen();
-            }
-        
-        // Launch main game screen.
-        setScreen(gsMain);
         
     }
     

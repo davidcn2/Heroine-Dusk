@@ -15,12 +15,16 @@ import core.BaseScreen;
 import core.CoreEnum;
 import core.ShakyActor;
 import gui.CustomLabel;
+import heroinedusk.Combat;
 import heroinedusk.HeroineDuskGame;
 import heroinedusk.HeroineEnum;
 import heroinedusk.MazeMap;
 import heroinedusk.RegionMap;
+import heroinedusk.Sounds;
+import heroinedusk.Spells;
 
 // Java imports.
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,25 +61,34 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
 
     action_render:  Configures and adds the actors for the action buttons (excluding information).
     addEventBasics:  Adds basic events to the passed action button / BaseActor.
+    addEvent_Attack:  Adds events to the passed button (BaseActor) -- used for attacking in combat.
     addEvent_Information:  Adds events to the passed (information) button (BaseActor).
     addEvent_Minimap:  Adds events related to dragging the minimap.
+    addEvent_Run:  Adds events to the passed button (BaseActor) -- used for running in combat.
     addEvent_Touch_Burn:  Adds events to the passed button (BaseActor) -- used for the burn (spell).
     addEvent_Touch_Freeze:  Adds events to the passed button (BaseActor) -- used for the freeze (spell).
     addEvent_Touch_Heal:  Adds events to the passed button (BaseActor) -- used for the heal (spell).
     addEvent_Touch_Light:  Adds events to the passed button (BaseActor) -- used for the light (spell).
     addEvent_Touch_Reflect:  Adds events to the passed button (BaseActor) -- used for the reflect (spell).
     addEvent_Touch_Unlock:  Adds events to the passed button (BaseActor) -- used for the unlock (spell).
+    create:  Calls constructor for BaseScreen and configures and adds objects in the explore screen.
+    disableButton:  Disables a button based on the passed parameters.
     dispose:  Called when removing the screen and allows for clearing of related resources from memory.
     info_clear_messages:  Clears the text and actions from the power action and result lines.
     info_render:  Handles displaying the information view or switching back to the standard display.
+    info_render_background:  Configures and add the actor for the background.
     info_render_equipment:  Configures and adds the actors for the player, including the weapon and armor.
     info_render_gold:  Configures and adds the label for the current player gold.
     info_render_hpmp:  Configures and adds the labels for the player hit and magic points.
+    info_render_insufficient_mp:  Updates power action label to display "INSUFFICIENT MP!)" message.
     info_render_itemlist:  Configures and adds the labels for the current player armor and weapon.
+    info_render_minimap:  Encapsulates logic used to render the minimap.
     info_render_no_target:  Updates the power action and result labels to display the "(NO TARGET)" message.
     info_render_powerResponseLines:  Configures and adds the labels for the power action and result lines.
+    prepareGoldPile:  Configures properties for gold pile (array list of actors) and related treasure group.
     processExit:  Encapsulates logic related to the player moving to an exit.
     processShop:  Encapsulates logic related to the player entering a shop.
+    renderCurrentView:  Renders the current exploration view.
     update:  Occurs during the update phase (render method) and contains code related to game logic.
     wakeScreen:  Called when redisplaying the already initialized screen.
     */
@@ -83,6 +96,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     // Declare object variables.
     private CustomLabel armorLabel; // Label showing current player armor.
     private BaseActor background; // BaseActor object that will act as the background.
+    private Combat combat; // Reference to the combat engine.
     private ShakyActor enemy; // ShakyActor object that will act as the enemy.
     private CustomLabel enemyLabel; // Label showing enemy type.
     private CustomLabel facingLabel; // Label showing direction player is facing.
@@ -115,6 +129,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel regionLabel; // Label showing the current region name.
     private CustomLabel spellsLabel; // Label showing "SPELLS" text.
     private CustomLabel statusLabel; // General status label.
+    private ShakyActor tileGroup; // ShakyActor object that will act as the group containing the tiles.
     private ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
       // 0 to 12 = Background tiles.  13 = Treasure.  14 = Treasure group.  15 = Chest.  16 = Bone pile.
       // 17 = Lock.
@@ -125,17 +140,18 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     // Declare regular variables.
     private HeroineEnum.SelectPosEnum buttonSelected; // Selected button.
     private boolean infoButtonSelected; // Whether information button selected and clicked.
-    private int gold_value; // Amount of gold found by player in current location.
     private float minimapOffsetX; // X-coordinate of the point where the player first touched the minimap.
     private float minimapOffsetY; // Y-coordinate of the point where the player first touched the minimap.
     private float minimapOriginalX; // Original position (x-coordinate) of the minimap on the stage before drag operation.
     private float minimapOriginalY; // Original position (y-coordinate) of the minimap on the stage before drag operation.
     private boolean minimapRenderInd; // Whether minimap rendered for current location yet.
+    private final SecureRandom number; // Used for generating random numbers.
     
     // Declare constants.
     private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1); // Disabled color.
-    private static final Integer[] GOLD_BASE_POS_X_LIST =  new Integer[]{36, 27, 45, 45, 21, 34, 12, 61, 58, 0};
-    private static final Integer[] GOLD_BASE_POS_Y_LIST =  new Integer[]{17, 20, 19, 10, 4, 2, 16, 0, 18, 1};
+    private static final Integer[] GOLD_BASE_POS_X_LIST = new Integer[]{36, 27, 45, 45, 21, 34, 12, 61, 58, 0};
+    private static final Integer[] GOLD_BASE_POS_Y_LIST = new Integer[]{17, 20, 19, 10, 4, 2, 16, 0, 18, 1};
+    private final int SPELL_SUCCESSFUL = 1;
     private final int TILE_COUNT = 25; // Number of tile actors.
     private final int TILE_POS_TREASURE = 13; // Tile position of treasure (actor).
     private final int TILE_POS_TREASURE_GROUP = 14; // Tile position of treasure (group).
@@ -153,13 +169,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 1.  Calls the constructor for the BaseScreen (parent / super) class.
         // 2.  Stores reference to main game class.
-        // 3.  Calls the create() function to perform remaining startup logic.
+        // 3.  Start random number generator.
+        // 4.  Calls the create() function to perform remaining startup logic.
         
         // Call the constructor for the BaseScreen (parent / super) class.
         super(hdg, windowWidth, windowHeight);
         
         // Store reference to main game class.
         gameHD = hdg;
+        
+        // Start random number generator.
+        number = new SecureRandom();
         
         // Perform additional logic related to startup / create phase, including configuration and addition
         // of actors to stage.
@@ -179,27 +199,36 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         4.  Configure and add the background Actor.
         5.  Configure and add the label showing the general status.  Hidden at start.
         6.  Configure and add the labels for the player hit and magic points.  Hidden at start.
-        7.  Add unconfigured tiles to array -- creating actors.
-        8.  Configure special tiles -- chest, bone pile, lock, ...
-        9.  Add and configure the actors for the gold pile.
-        10.  Render current map location / tiles.
-        11.  Configure and add the label with the direction the player is facing.
-        12.  Configure and add the information button Actor.
-        13.  Configure and add the label with the "INFO" text.  Hidden at start.
-        14.  Configure and add the selector actor for the information button.  Hidden at start.
-        15.  Configure and add the label with the "SPELLS" text.  Hidden at start.
-        16.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
-        17.  Configure and add the labels for the current player armor and weapon.  Hidden at start.
-        18.  Configure and add the label for the current player gold.  Hidden at start.
-        19.  Populate hash map with starting enabled statuses for action buttons.
-        20.  Populate hash map with starting ignore next exit event flags for action buttons.
-        21.  Configure and add the actors for the action buttons (excluding information).  Hidden at start.
-        22.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+        7.  Configure and add shaky actor (group) that will contain tiles.
+        8.  Add unconfigured tiles to array -- creating actors.
+        9.  Configure special tiles -- chest, bone pile, lock, ...
+        10.  Add and configure the actors for the gold pile.
+        11.  Render current map location / tiles.
+        12.  Configure and add the label with the direction the player is facing.
+        13.  Configure and add the information button Actor.
+        14.  Configure and add the label with the "INFO" text.  Hidden at start.
+        15.  Configure and add the selector actor for the information button.  Hidden at start.
+        16.  Configure and add the label with the "SPELLS" text.  Hidden at start.
+        17.  Configure and add the actors for the action buttons (excluding information).  Hidden at start.
+        18.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
+        19.  Configure and add the labels for the current player armor and weapon.  Hidden at start.
+        20.  Configure and add the label for the current player gold.  Hidden at start.
+        21.  Populate hash map with starting enabled statuses for action buttons.
+        22.  Populate hash map with starting ignore next exit event flags for action buttons. 
+        23.  Configure and add the labels for the two lines for responses to spells / powers / actions.
             Hidden at start.
-        23.  Configure and add the label showing the current region name.  Hidden at start.
-        24.  Configure and add the label showing the treasure description.  Hidden at start.
-        25.  Configure and add the label showing the enemy type.  Hidden at start.
-        26.  Configure and add the enemy actor to the middle stage.  Hidden at start.
+        24.  Configure and add the label showing the current region name.  Hidden at start.
+        25.  Configure and add the label showing the treasure description.  Hidden at start.
+        26.  Configure and add the label showing the enemy type.  Hidden at start.
+        27.  Configure and add the enemy actor to the middle stage.  Hidden at start.
+        28.  Initialize combat engine.
+        
+        Notes:
+        
+        A.  Labels use only the name property, while actors use actorName and name.
+        B.  Main stage contains background and tiles.
+        C.  Middle stage contains enemies.
+        D.  UI stage contains additional actors.
         */
         
         // 1.  Set defaults.
@@ -222,14 +251,18 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mazemap = new MazeMap(gameHD, gameHD.getAvatar().getMap_id(), viewHeightMain);
         
         // 4.  Configure and add the background Actor.
-        // Note:  The application uses a starting background of tempest, which the foreground objects completely hide.
+        // Note:  The application uses a starting background of tempest, which the foreground objects completely 
+        // hide.
         info_render_background();
         
         // 5.  Configure and add the label showing the general status.  Hidden at start.
-        statusLabel = new CustomLabel(game.skin, "NO STATUS HERE", "uiLabelStyle", 
+        statusLabel = new CustomLabel(game.skin, "NO STATUS HERE", "status label", "uiLabelStyle", 
           1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, 0f, 
           (float)(gameHD.getConfig().getScale() * 12), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( statusLabel.getLabel() );
         
         // 6.  Configure and add the labels for the player hit and magic points.  Hidden at start.
         info_render_hpmp();
@@ -237,7 +270,25 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the general status label.
         statusLabel.applyVisible(false);
         
-        // 7.  Add unconfigured tiles to array list -- creating actors.
+        // 7.  Configure and add shaky actor (group) that will contain tiles.
+        // The group allows for shaking the tiles when the player is hit by the enemy in combat.
+        
+        // Initialize tile group.
+        tileGroup = new ShakyActor(viewWidthMain, viewHeightMain);
+        
+        // Set position of tile group -- to lower left corner of stage.
+        tileGroup.setPosition(0f, 0f);
+        
+        // Set name of tile group.
+        tileGroup.setActorName("Tile Group");
+        
+        // Set as group.
+        tileGroup.setGroupOnlyInd(true);
+        
+        // Add tile group to stage.
+        mainStage.addActor(tileGroup);
+        
+        // 8.  Add unconfigured tiles to array list -- creating actors.
         for (int tileCounter = 1; tileCounter <= TILE_COUNT; tileCounter++)
         {
             
@@ -245,34 +296,35 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             tiles.add( new BaseActor() );
             
             // Add the tile Actor to the scene graph.
-            mainStage.addActor( tiles.get(tileCounter - 1) );
+            //mainStage.addActor( tiles.get(tileCounter - 1) );
+            tileGroup.addActor( tiles.get(tileCounter - 1) );
             
         }
         
-        // 8.  Configure special tiles -- chest, bone pile, lock, ...
+        // 9.  Configure special tiles -- chest, bone pile, lock, ...
         mazemap.prepareSpecialTiles( tiles, viewWidthMain );
         
-        // 9.  Add and configure the actors for the gold pile.
+        // 10.  Add and configure the actors for the gold pile.
         prepareGoldPile(tiles);
         
-        // 10.  Render current map location / tiles.
+        // 11.  Render current map location / tiles.
         mazemap.mazemap_render(tiles, goldPile, gameHD.getAvatar().getX(), gameHD.getAvatar().getY(), 
           gameHD.getAvatar().getFacing(), viewWidthMain, treasureLabel, heroineWeapon, weaponLabel,
           heroineArmor, armorLabel, hpLabel, mpLabel, goldLabel, regionLabel, statusLabel, false, false,
           mapActionButtons, mapActionButtonEnabled);
         
-        // 11.  Configure and add the label with the direction the player is facing.
+        // 12.  Configure and add the label with the direction the player is facing.
         
         // Initialize and add label with facing text.
-        facingLabel = new CustomLabel(game.skin, gameHD.getAvatar().getFacing().toString(), "uiLabelStyle", 
-          1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
-          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, null, 
+        facingLabel = new CustomLabel(game.skin, gameHD.getAvatar().getFacing().toString(), 
+          "player facing label", "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), 
+          CoreEnum.AlignEnum.ALIGN_CENTER, CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, null, 
           (float)(gameHD.getConfig().getScale() * -2), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
         
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( facingLabel.getLabel() );
         
-        // 12.  Configure and add the information button Actor.
+        // 13.  Configure and add the information button Actor.
         
         // Create and configure new BaseActor for the information button.
         
@@ -292,10 +344,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoButton );
         
-        // 13.  Configure and add the label with the "INFO" text.
+        // 14.  Configure and add the label with the "INFO" text.
         
         // Initialize and add label with the "INFO" text.
-        infoLabel = new CustomLabel(game.skin, "INFO", "uiLabelStyle", 1.0f, 
+        infoLabel = new CustomLabel(game.skin, "INFO", "info label", "uiLabelStyle", 1.0f, 
           gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, null, 
           (float)(gameHD.getConfig().getScale() * -2), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -306,7 +358,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoLabel.getLabel() );
         
-        // 14.  Configure and add the selector Actor for the selector for the information button.
+        // 15.  Configure and add the selector Actor for the selector for the information button.
         
         // Create and configure new BaseActor for the selector for the information button.
         
@@ -330,10 +382,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( infoButtonSelector );
         
-        // 15.  Configure and add the label with the "SPELLS" text.  Hidden at start.
+        // 16.  Configure and add the label with the "SPELLS" text.  Hidden at start.
         
         // Initialize and add label with the "SPELLS" text.
-        spellsLabel = new CustomLabel(game.skin, "SPELLS", "uiLabelStyle", 1.0f, 
+        spellsLabel = new CustomLabel(game.skin, "SPELLS", "spells label", "uiLabelStyle", 1.0f, 
           gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_RIGHT, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_RIGHT, uiStage, (float)(gameHD.getConfig().getScale() * -2), 
           (float)(gameHD.getConfig().getScale() * -30), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -344,17 +396,20 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( spellsLabel.getLabel() );
         
-        // 16.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
+        // 17.  Configure and add the actors for the action buttons (excluding information).
+        action_render();
+        
+        // 18.  Configure and add the actors for the base player, weapon, and armor.  Hidden at start.
         info_render_equipment();
         
-        // 17.  Configure and adds the labels for the player armor and weapon.  Hidden at start.
+        // 19.  Configure and adds the labels for the player armor and weapon.  Hidden at start.
         info_render_itemlist();
         
-        // 18.  Configure and add the label for the current player gold.  Hidden at start.
+        // 20.  Configure and add the label for the current player gold.  Hidden at start.
         info_render_gold();
-    
-        // 19.  Populate hash map with starting enabled statuses for action buttons.
-        // 20.  Populate hash map with starting ignore next exit event flags for action buttons.
+        
+        // 21.  Populate hash map with starting enabled statuses for action buttons.
+        // 22.  Populate hash map with starting ignore next exit event flags for action buttons.
         
         // Loop through action button enumerations.
         for (HeroineEnum.ActionButtonEnum actionButtonEnum : HeroineEnum.ActionButtonEnum.values())
@@ -381,26 +436,26 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         }
         
-        // 21.  Configure and add the actors for the action buttons (excluding information).
-        action_render();
-        
-        // 22.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+        // 23.  Configure and add the labels for the two lines for responses to spells / powers / actions.
         //      Hidden at start.
         info_render_powerResponseLines();
         
-        // 23.  Configure and add the label showing the current region name.  Hidden at start.
+        // 24.  Configure and add the label showing the current region name.  Hidden at start.
         
         // Initialize and add label with the "SPELLS" text.
-        regionLabel = new CustomLabel(game.skin, mazemap.getCurrentRegion().getRegionName(), "uiLabelStyle", 
-          1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
-          CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage, 0f, 
+        regionLabel = new CustomLabel(game.skin, mazemap.getCurrentRegion().getRegionName(), 
+          "region name label", "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), 
+          CoreEnum.AlignEnum.ALIGN_CENTER, CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage, 0f, 
           (float)(gameHD.getConfig().getScale() * 12), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
         
         // Hide the label.
         regionLabel.applyVisible(false);
         
-        // 24.  Configure and add the label showing the treasure description.  Hidden at start.
-        treasureLabel = new CustomLabel(game.skin, "NO TREASURE HERE", "uiLabelStyle", 
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( regionLabel.getLabel() );
+        
+        // 25.  Configure and add the label showing the treasure description.  Hidden at start.
+        treasureLabel = new CustomLabel(game.skin, "NO TREASURE HERE", "treasure label", "uiLabelStyle", 
           0.8f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, 0f, 
           (float)(gameHD.getConfig().getScale() * 12), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -408,8 +463,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         treasureLabel.applyVisible(false);
         
-        // 25.  Configure and add the label showing the enemy type.  Hidden at start.
-        enemyLabel = new CustomLabel(game.skin, "NO ENEMY HERE", "uiLabelStyle", 
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( treasureLabel.getLabel() );
+        
+        // 26.  Configure and add the label showing the enemy type.  Hidden at start.
+        enemyLabel = new CustomLabel(game.skin, "NO ENEMY HERE", "enemy name label", "uiLabelStyle", 
           1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, 0f, 
           (float)(gameHD.getConfig().getScale() * -2), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -417,8 +475,14 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Hide the label.
         enemyLabel.applyVisible(false);
         
-        // 26.  Configure and add the enemy actor to the middle stage.  Hidden at start.
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( enemyLabel.getLabel() );
+        
+        // 27.  Configure and add the enemy actor to the middle stage.  Hidden at start.
         enemy = new ShakyActor(viewWidthMain, viewHeightMain);
+        
+        // Name the actor.
+        enemy.setName("enemy actor");
         
         // Hide the actor.
         enemy.setVisible(false);
@@ -428,6 +492,49 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Add the actor to the list for use when waking the screen.
         middleStageActors.add(enemy);
+        
+        // 28.  Initialize combat engine.
+        combat = new Combat(gameHD.getAvatar(), gameHD.getConfig().getScale());
+        
+        // 29.  As necessary, shade action buttons to indicate enabled.
+        
+        // If bone pile in front of player, then...
+        if (mazemap.isBonePileActiveInd())
+        {
+            
+            // Bone pile exists in front of player.
+            
+            // If sufficient magic points, set burn button shading to indicate enabled.
+            if (gameHD.getAvatar().getMp() > 0)
+            {
+                
+                // Player has sufficient magic points to cast burn spell.
+                
+                // Shade burn button to indicate enabled.
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( Color.WHITE );
+                
+            }
+            
+        } // End ... If bone pile in front of player.
+        
+        // If lock in front of player, then...
+        if (mazemap.isLockedDoorActiveInd())
+        {
+            
+            // Lock exists in front of player.
+            
+            // If sufficient magic points, set unlock button shading to indicate enabled.
+            if (gameHD.getAvatar().getMp() > 0)
+            {
+                
+                // Player has sufficient magic points to cast unlock spell.
+                
+                // Shade unlock button to indicate enabled.
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( Color.WHITE );
+                
+            }
+            
+        } // End ... If lock in front of player.
         
     }
     
@@ -795,7 +902,78 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         minimapGroup.addListener(minimapEvent);
         
     }
-            
+    
+    // buttonActor = Reference to BaseActor for the button.
+    private void addEvent_Attack(BaseActor buttonActor)
+    {
+        
+        // The function adds events to the passed button (BaseActor).
+        // Provides functionality for the attack (combat) button.
+        // Events include touchDown and touchUp.
+        
+        InputListener buttonEvent; // Events to add to passed button (BaseActor).
+        
+        // Craft event logic to add to passed button (BaseActor).
+        buttonEvent = new InputListener()
+            {
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user touches the screen or presses a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS. 
+                    // Notes:  Occurs when user press down mouse on button.
+                    // Notes:  Event (touchDown) necessary to reach touchUp.
+                    
+                    // Return a value.
+                    return true;
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public void touchUp(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user lifts a finger or released a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
+                    // Notes:  Occurs when user releases mouse on button.
+                    
+                    // Flag to ignore next exit event.
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, 
+                      true);
+                    
+                    // Remove any existing text and actions on the power action and result labels.
+                    info_clear_messages();
+                    
+                    System.out.println("Attack!");
+                    
+                    // Perform attack action using combat engine.
+                    combat.fight(HeroineEnum.FightEnum.FIGHT_ATTACK, gameHD.getSounds(), gameHD.getAvatar(),
+                      powerActionLabel, powerResultLabel, hpLabel, mpLabel, buttonActor, 
+                      mapActionButtonEnabled, null);
+                    
+                } // End ... touchUp.
+                
+            }; // End ... InputListener.
+        
+        // Add event to button.
+        buttonActor.addListener(buttonEvent);
+        
+    }
+    
     // buttonActor = Reference to BaseActor for the button.
     private void addEvent_Touch_Burn(BaseActor buttonActor)
     {
@@ -844,7 +1022,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
                     // Notes:  Occurs when user releases mouse on button.
                     
-                    String mpText; // Text to display for magic points.
+                    int burn_amount; // Either amount of damage to enemy, -1 when unable to cast spell, or 
+                      // 1 when succesfully burning an object.
+                    HeroineEnum.ImgTileEnum imgTileNumForward; // Tile image enumeration value for location
+                      // in front of player.  Null in combat.
                     
                     // Flag to ignore next exit event.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, 
@@ -853,107 +1034,56 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
                     
-                    // If minimap group initialized, then...
-                    if (minimapGroup != null)
+                    // If player in combat, then...
+                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)
                     {
                         
-                        // Minimap group initialized.
+                        // Player in combat.
                         
-                        // Hide the minimap.
-                        minimapGroup.setVisible(false);
+                        // Cast burn spell and return base damage.
+                        burn_amount = Spells.cast_burn(gameHD.getAvatar(), gameHD.getAtlasItems(), true, false, 
+                          null, powerActionLabel, powerResultLabel, mpLabel, tiles, mazemap, buttonActor, 
+                          mapActionButtonEnabled, number, gameHD.getSounds());
                         
-                    }
-                    
-                    // If player lacks sufficient magic points, then...
-                    if (gameHD.getAvatar().getMp() == 0)
-                    {
-                        
-                        // Player lacks sufficient magic points.
-                        
-                        // If square in front of player NOT a skull pile and NOT in combat mode, then...
-                        if (mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()) != 
-                          HeroineEnum.ImgTileEnum.IMG_TILE_SKULL_PILE && 
-                          gameHD.getGameState() != HeroineEnum.GameState.STATE_COMBAT)
-                        {
-                            
-                            // Square in front of player NOT a skull pile and NOT in combat mode.
-                            
-                            // Render "(NO TARGET)" message.
-                            info_render_no_target(null);
-                            
-                        }
-                        
-                        else
-                        {
-                            
-                            // Square in front of player is a skull pile and NOT in combat mode.
-                            
-                            // Update power action labels.
-                            powerActionLabel.setLabelText("INSUFFICIENT MP!");
-                            
-                            // Display power action  labels.
-                            powerActionLabel.applyVisible(true);
-
-                            // Set up fade effect for power action label.
-                            powerActionLabel.addAction_Fade();
-
-                            // Play error sound.
-                            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
-                            
-                        }
-                        
-                    } // End ... If player lacks sufficient magic points.
-                    
-                    // Otherwise, if player in combat, then...
-                    else if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
-                    {
-                        
-                        // Player in combat and has sufficient magic points.
-                        
-                        System.out.println("Burn!");
-                        
-                        // Play fire sound.
-                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_FIRE);
+                        // Perform burn action using combat engine.
+                        combat.fight(HeroineEnum.FightEnum.FIGHT_BURN, gameHD.getSounds(), gameHD.getAvatar(),
+                          powerActionLabel, powerResultLabel, hpLabel, mpLabel, buttonActor, 
+                          mapActionButtonEnabled, burn_amount);
                         
                     }
                     
                     else
                     {
                         
-                        // Player NOT in combat and has sufficient magic points.
+                        // Player NOT in combat.
                         
-                        // System.out.println("Tile: " + mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()));
-                        
-                        // If tile in front of player is a skull pile, then...
-                        if (mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar()) == 
-                          HeroineEnum.ImgTileEnum.IMG_TILE_SKULL_PILE)
+                        // If minimap group initialized, then...
+                        if (minimapGroup != null)
                         {
-                            
-                            // Burn the skull pile in the tile in front of the player.
-                            
-                            // Play fire sound.
-                            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_FIRE);
-                            
-                            // Set up an action to fade out the skull pile.
-                            tiles.get(TILE_POS_BONE_PILE).addAction_FadeOut(0.25f, 0.75f);
-                            
-                            // Disable skull pile events.
-                            mazemap.setBonePileActiveInd(false);
-                            
-                            // Set skull piles in array list inactive and remove from hash map entry associated 
-                            // with current location.
-                            gameHD.getAtlasItems().removeBonePileFirst(
-                              gameHD.getAvatar().getMapLocation_ForwardLoc());
-                            
-                            // Remove tile showing skull pile.
-                            //mazemap.removeTileMap_Value(HeroineEnum.TileMapKeyEnum.TILE_MAP_KEY_BONE_PILE);
-                            
-                            // Change tile in front of player to dungeon floor.
-                            mazemap.setImgTileEnum_ForwardLoc(gameHD.getAvatar(), 
-                              HeroineEnum.ImgTileEnum.IMG_TILE_DUNGEON_CEILING);
-                            
+
+                            // Minimap group initialized.
+
+                            // Hide the minimap.
+                            minimapGroup.setVisible(false);
+
+                        }
+                        
+                        // Store tile image enumeration value for location in front of player.
+                        imgTileNumForward = mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar());
+                        
+                        // Cast burn spell.
+                        burn_amount = Spells.cast_burn(gameHD.getAvatar(), gameHD.getAtlasItems(), false, 
+                          infoButtonSelected, imgTileNumForward, powerActionLabel, powerResultLabel, mpLabel, tiles, 
+                          mazemap, buttonActor, mapActionButtonEnabled, number, gameHD.getSounds());
+                        
+                        // If player successfully cast burn spell, then...
+                        if (burn_amount == SPELL_SUCCESSFUL)
+                        {
+
+                            // Player successfully cast burn spell.
+                        
                             // Move burn button to original location (in spell list / area).
-                
+
                             // Pos X = -18 * scale factor.  -- Relative to right of screen.
                             // Pos Y = +62 * scale factor.  -- Relative to bottom of screen.
                             mapActionButtons.get( 
@@ -962,45 +1092,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                               uiStage.getHeight(), -18f * gameHD.getConfig().getScale(), 
                               62f * gameHD.getConfig().getScale() );
                             
-                            // Decrement player magic points.
-                            gameHD.getAvatar().decrement_mp();
+                            // Reset flag for minimap rendering, indicating regeneration necessary.
+                            minimapRenderInd = false;
                             
-                            // Store text to display for magic points.
-                            mpText = "MP " + Integer.toString(gameHD.getAvatar().getMp()) + "/" +
-                              Integer.toString(gameHD.getAvatar().getMax_mp());
-
-                            // Update magic points label.
-                            mpLabel.setLabelText(mpText);
-                            
-                            // Display action-related text.
-                            info_update_powerResponseLines("BURN!", "CLEARED PATH!");
-                            
-                            // Set the burn button to not visible.
-                            mapActionButtons.get(
-                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setVisible(false);
-                            
-                            // Apply a dark shade to the burn button to signify not currently enabled.
-                            mapActionButtons.get(
-                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( COLOR_MED_GRAY );
-                            
-                            // Disable burn button.
-                            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, false);
-                            
-                            // TO DO:  Add avatar save.
-                            
-                        } // End ... If tile in front of player is a skull pile.
+                        } // End ... If player successfully cast burn spell.
                         
-                        else
-                        {
-                            
-                            // Tile in front of player not a burnable object.
-                            
-                            // Render "(NO TARGET)" message.
-                            info_render_no_target(null);
-                            
-                        }
-                        
-                    } // End ... If NOT in combat.
+                    } // End ... If player NOT in combat.
                     
                 } // End ... touchUp.
                 
@@ -1149,10 +1246,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
                     // Notes:  Occurs when user releases mouse on button.
                     
-                    int heal_amount; // Number of hit points to heal.
-                    String hpText; // Text to display for hit points.
-                    String mpText; // Text to display for magic points.
-                    
                     // Flag to ignore next exit event.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, 
                       true);
@@ -1160,113 +1253,34 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Remove any existing text and actions on the power action and result labels.
                     info_clear_messages();
                     
-                    // Hide the minimap.
-                    minimapGroup.setVisible(false);
+                    System.out.println("Heal!");
                     
-                    // If player at maximum hit points, then...
-                    if (gameHD.getAvatar().getHp_AtMax())    
+                    // If player in combat, then...
+                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)
                     {
                         
-                        // Player at maximum hit points.
+                        // Player in combat.
                         
-                        // Update power action labels.
-                        powerActionLabel.setLabelText("HP AT MAX!");
-                        
-                        // Display power action  labels.
-                        powerActionLabel.applyVisible(true);
-                        
-                        // Set up fade effect for power action label.
-                        powerActionLabel.addAction_Fade();
-                        
-                        // Play error sound.
-                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+                        // Perform heal action using combat engine.
+                        combat.fight(HeroineEnum.FightEnum.FIGHT_HEAL, gameHD.getSounds(), gameHD.getAvatar(),
+                          powerActionLabel, powerResultLabel, hpLabel, mpLabel, buttonActor, 
+                          mapActionButtonEnabled, null);
                         
                     }
                     
-                    // Otherwise, if player lacks sufficient magic points, then...
-                    else if (gameHD.getAvatar().getMp() == 0)
-                    {
-                        
-                        // Player lacks sufficient magic points.
-                        
-                        // Update power action labels.
-                        powerActionLabel.setLabelText("INSUFFICIENT MP!");
-                        
-                        // Display power action  labels.
-                        powerActionLabel.applyVisible(true);
-                        
-                        // Set up fade effect for power action label.
-                        powerActionLabel.addAction_Fade();
-                        
-                        // Play error sound.
-                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
-                        
-                    }
-                        
                     else
                     {
                         
-                        // Player below maximum hit points.
+                        // Player NOT in combat.
                         
-                        // Play heal sound.
-                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_HEAL);
+                        // Hide the minimap.
+                        minimapGroup.setVisible(false);
                         
-                        // Calculate number of hit points to heal.
-                        heal_amount = (int)Math.floor(gameHD.getAvatar().getMax_hp() / 2) +
-                          (int)Math.floor(Math.random() * gameHD.getAvatar().getMax_hp() / 2);
-                        heal_amount = Math.min(heal_amount, gameHD.getAvatar().getMax_hp() - 
-                          gameHD.getAvatar().getHp());
+                        // Cast heal spell.
+                        Spells.cast_heal(gameHD.getAvatar(), powerActionLabel, powerResultLabel, hpLabel, 
+                          mpLabel, buttonActor, mapActionButtonEnabled, gameHD.getSounds());
                         
-                        // Reduce magic points by one.
-                        gameHD.getAvatar().decrement_mp();
-                        
-                        // Increase player hit points by calculated amount.
-                        gameHD.getAvatar().setHp(gameHD.getAvatar().getHp() + heal_amount);
-                        
-                        // Store text to display for hit points.
-                        hpText = "HP " + Integer.toString(gameHD.getAvatar().getHp()) + "/" + 
-                          Integer.toString(gameHD.getAvatar().getMax_hp());
-                        
-                        // Update hit points label.
-                        hpLabel.setLabelText(hpText);
-                        
-                        // Store text to display for magic points.
-                        mpText = "MP " + Integer.toString(gameHD.getAvatar().getMp()) + "/" +
-                          Integer.toString(gameHD.getAvatar().getMax_mp());
-                        
-                        // Update magic points label.
-                        mpLabel.setLabelText(mpText);
-                        
-                        // If player now at maximum hit points or no magic points, then...
-                        if (gameHD.getAvatar().getHp_AtMax() || gameHD.getAvatar().getMp() == 0)
-                        {
-                            
-                            // Player now at maximum hit points or no magic points.
-                            
-                            // Apply a dark shade to the button to signify not currently enabled.
-                            buttonActor.setColor( Color.DARK_GRAY );
-                            
-                            // Disable heal button.
-                            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, 
-                              false);
-                            
-                        }
-                        
-                        System.out.println("Heal - " + heal_amount + " hp!");
-                        
-                        // Update power action and result labels.
-                        powerActionLabel.setLabelText("HEAL!");
-                        powerResultLabel.setLabelText("+" + Integer.toString(heal_amount) + " HP");
-                        
-                        // Display power action and result labels.
-                        powerActionLabel.applyVisible(true);
-                        powerResultLabel.applyVisible(true);
-                        
-                        // Set up fade effects for power action and result labels.
-                        powerActionLabel.addAction_Fade();
-                        powerResultLabel.addAction_Fade();
-                        
-                    } // End ... If player at maximum hit points.
+                    }
                     
                 } // End ... touchUp.
                 
@@ -1367,6 +1381,198 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    // buttonActor = Reference to BaseActor for the button.
+    private void addEvent_Run(BaseActor buttonActor)
+    {
+        
+        // The function adds events to the passed button (BaseActor).
+        // Provides functionality for the run (combat) button.
+        // Events include touchDown and touchUp.
+        
+        InputListener buttonEvent; // Events to add to passed button (BaseActor).
+        
+        // Craft event logic to add to passed button (BaseActor).
+        buttonEvent = new InputListener()
+            {
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user touches the screen or presses a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS. 
+                    // Notes:  Occurs when user press down mouse on button.
+                    // Notes:  Event (touchDown) necessary to reach touchUp.
+                    
+                    // Return a value.
+                    return true;
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public void touchUp(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user lifts a finger or released a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
+                    // Notes:  Occurs when user releases mouse on button.
+                    
+                    // Flag to ignore next exit event.
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, 
+                      true);
+                    
+                    // Remove any existing text and actions on the power action and result labels.
+                    info_clear_messages();
+                    
+                    System.out.println("Run!");
+                    
+                } // End ... touchUp.
+                
+            }; // End ... InputListener.
+        
+        // Add event to button.
+        buttonActor.addListener(buttonEvent);
+        
+    }
+    
+    // buttonActor = Reference to BaseActor for the button.
+    private void addEvent_Touch_Unlock(BaseActor buttonActor)
+    {
+        
+        // The function adds events to the passed button (BaseActor).
+        // Provides functionality for the unlock (spell) button.
+        // Events include touchDown and touchUp.
+        
+        InputListener buttonEvent; // Events to add to passed button (BaseActor).
+        
+        // Craft event logic to add to passed button (BaseActor).
+        buttonEvent = new InputListener()
+            {
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user touches the screen or presses a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS. 
+                    // Notes:  Occurs when user press down mouse on button.
+                    // Notes:  Event (touchDown) necessary to reach touchUp.
+                    
+                    // Return a value.
+                    return true;
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public void touchUp(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user lifts a finger or released a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
+                    // Notes:  Occurs when user releases mouse on button.
+                    
+                    int unlock_amount; // Either amount of damage to enemy, -1 when unable to cast spell, or 
+                      // 1 when succesfully unlocking an object.
+                    HeroineEnum.ImgTileEnum imgTileNumForward; // Tile image enumeration value for location
+                      // in front of player.  Null in combat.
+                    
+                    // Flag to ignore next exit event.
+                    mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, 
+                      true);
+                    
+                    // Remove any existing text and actions on the power action and result labels.
+                    info_clear_messages();
+                    
+                    // If player in combat, then...
+                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)
+                    {
+                        
+                        // Player in combat.
+                        
+                    }
+                    
+                    else
+                    {
+                        
+                        // Player NOT in combat.
+                        
+                        // If minimap group initialized, then...
+                        if (minimapGroup != null)
+                        {
+
+                            // Minimap group initialized.
+
+                            // Hide the minimap.
+                            minimapGroup.setVisible(false);
+                            
+                        }
+                        
+                        // Store tile image enumeration value for location in front of player.
+                        //imgTileNumForward = mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar());
+                        imgTileNumForward = mazemap.getImgTileEnum_Side(gameHD.getAvatar(), true);
+                        
+                        // Cast unlock spell.
+                        unlock_amount = Spells.cast_unlock(gameHD.getAvatar(), gameHD.getAtlasItems(), false, 
+                          infoButtonSelected, imgTileNumForward, powerActionLabel, powerResultLabel, mpLabel, 
+                          tiles, mazemap, buttonActor, mapActionButtonEnabled, number, gameHD.getSounds());
+                        
+                        // If player successfully cast unlock spell, then...
+                        if (unlock_amount == SPELL_SUCCESSFUL)
+                        {
+                            
+                            // Player successfully cast unlock spell.
+                            
+                            // Move unlock button to original location (in spell list / area).
+                            
+                            // Pos X = -38 * scale factor.  -- Relative to right of screen.
+                            // Pos Y = +42 * scale factor.  -- Relative to bottom of screen.
+                            mapActionButtons.get( 
+                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setRelativePosition(null, 
+                              CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
+                              uiStage.getHeight(), -38f * gameHD.getConfig().getScale(), 
+                              42f * gameHD.getConfig().getScale() );
+                            
+                            // Reset flag for minimap rendering, indicating regeneration necessary.
+                            minimapRenderInd = false;
+                            
+                        } // End ... If player successfully cast unlock spell.
+                        
+                    } // End ... If player NOT in combat.
+                    
+                } // End ... touchUp.
+                
+            }; // End ... InputListener.
+        
+        // Add event to button.
+        buttonActor.addListener(buttonEvent);
+        
+    }
+    
+    /*
     // buttonActor = Reference to BaseActor for the button.
     private void addEvent_Touch_Unlock(BaseActor buttonActor)
     {
@@ -1581,6 +1787,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         buttonActor.addListener(buttonEvent);
         
     }
+    */
     
     // buttonActor = Reference to BaseActor for the button.
     private void addEvent_Touch_Light(BaseActor buttonActor)
@@ -1657,9 +1864,22 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private void action_render()
     {
         
-        // The function configures and adds the actors for the action buttons (excluding information).
-        // The function only displays available actions.
-        // Note:  Actor hidden at start.
+        /*
+        The function configures and adds the actors for the action buttons (excluding information).
+        
+        Note:  Actors hidden at start.
+        
+        Action buttons include:
+        
+        1.  Heal (spell)
+        2.  Burn (spell)
+        3.  Unlock (spell)
+        4.  Light (spell)
+        5.  Freeze (spell)
+        6.  Reflect (spell)
+        7.  Attack (combat)
+        8.  Run (combat)
+        */
         
         BaseActor temp; // Used as placeholder for actor for an action button, for adding to hash map.
         
@@ -1909,7 +2129,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         addEventBasics( temp );
         
         // Add click-related events to button.
-        //addEvent_Touch_Reflect( temp );
+        addEvent_Attack( temp );
         
         // Hide the button.
         temp.setVisible( false );
@@ -1943,7 +2163,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         addEventBasics( temp );
         
         // Add click-related events to button.
-        //addEvent_Touch_Reflect( temp );
+        addEvent_Run( temp );
         
         // Hide the button.
         temp.setVisible( false );
@@ -1960,6 +2180,31 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Store stage location of button.
         mapActionButtonPosX.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, temp.getX());
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, temp.getY());
+        
+    }
+    
+    // buttonActor = Reference to BaseActor for the button to disable.
+    // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
+    public static void disableButton(BaseActor buttonActor, HeroineEnum.ActionButtonEnum actionButtonEnum,
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled)
+    {
+        
+        // The function disables a button based on the passed parameters.
+        // The function is commonly called when running out of magic points due to casting a spell.
+        
+        // Disable button with passed enumeration value.
+        mapActionButtonEnabled.put(actionButtonEnum, false);
+        
+        // If button (actor) passed, then...
+        if (buttonActor != null)
+        {
+
+            // Button (actor) passed.
+
+            // Apply a dark shade to the button to signify not currently enabled.
+            buttonActor.setColor( Color.DARK_GRAY );
+
+        }
         
     }
     
@@ -2139,6 +2384,26 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 mazemap.setBonePileActiveInd(false);
                 
             }
+            
+            // If lock actor active, then...
+            if (mazemap.getTileActiveInd(TILE_POS_LOCK))   
+            {
+                // Lock actor active.
+                
+                // Move unlock button to original location (in spell list / area).
+                
+                // Pos X = -38 * scale factor.  -- Relative to right of screen.
+                // Pos Y = +42 * scale factor.  -- Relative to bottom of screen.
+                mapActionButtons.get( 
+                  HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setRelativePosition(null, 
+                  CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
+                  uiStage.getHeight(), -38f * gameHD.getConfig().getScale(), 
+                  42f * gameHD.getConfig().getScale() );
+                
+                // Disable lock actor events.
+                mazemap.setLockedDoorActiveInd(false);
+                
+            }
                 
         } // End ... If information view selected.
         
@@ -2218,6 +2483,16 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
                 // Enable bone pile actor events.
                 mazemap.setBonePileActiveInd(true);
+                
+            }
+            
+            // If lock actor active, then...
+            if (mazemap.getTileActiveInd(TILE_POS_LOCK))   
+            {
+                // Lock actor active.
+                
+                // Enable lock actor events.
+                mazemap.setLockedDoorActiveInd(true);
                 
             }
             
@@ -2345,7 +2620,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         goldText = Integer.toString(gameHD.getAvatar().getGold()) + " GOLD";
         
         // Initialize and add label with the player gold.
-        goldLabel = new CustomLabel(game.skin, goldText, "uiLabelStyle", 1.0f, 
+        goldLabel = new CustomLabel(game.skin, goldText, "player gold label", "uiLabelStyle", 1.0f, 
           gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_RIGHT, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage, 
           (float)(gameHD.getConfig().getScale() * -2), (float)(gameHD.getConfig().getScale() * 2), 
@@ -2374,7 +2649,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         hpText = gameHD.getAvatar().getHpText();
         
         // Initialize and add label with the player hit points.
-        hpLabel = new CustomLabel(game.skin, hpText, "uiLabelStyle", 1.0f, 
+        hpLabel = new CustomLabel(game.skin, hpText, "player hp label", "uiLabelStyle", 1.0f, 
           gameHD.getConfig().getTextLineHeight(), null, CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, 
           uiStage, (float)(gameHD.getConfig().getScale() * 2), (float)(gameHD.getConfig().getScale() * 12), 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -2391,7 +2666,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mpText = gameHD.getAvatar().getMpText();
         
         // Initialize and add label with the player magic points.
-        mpLabel = new CustomLabel(game.skin, mpText, "uiLabelStyle", 1.0f, 
+        mpLabel = new CustomLabel(game.skin, mpText, "player mp label" , "uiLabelStyle", 1.0f, 
           gameHD.getConfig().getTextLineHeight(), null, CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, 
           uiStage, (float)(gameHD.getConfig().getScale() * 2), (float)(gameHD.getConfig().getScale() * 2), 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -2404,6 +2679,29 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    // soundEnum = Sound to play.
+    // powerActionLabel = Label showing the first line -- power action.
+    // sounds = Reference to the sounds class.
+    public static void info_render_insufficient_mp(CustomLabel powerActionLabel, Sounds sounds)
+    {
+        
+        // The function updates the power action label to display the "INSUFFICIENT MP!)" message.
+        // Associated with attempting to execute a spell action with insufficient magic points.
+        
+        // Update power action labels.
+        powerActionLabel.setLabelText("INSUFFICIENT MP!");
+
+        // Display power action  labels.
+        powerActionLabel.applyVisible(true);
+
+        // Set up fade effect for power action label.
+        powerActionLabel.addAction_Fade();
+
+        // Play error sound.
+        sounds.playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+        
+    }
+    
     private void info_render_itemlist()
     {
         
@@ -2413,7 +2711,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 1.  Configure and add the label with the current player armor.  Hidden at start.
         
         // Initialize and add the label with the current player armor.
-        armorLabel = new CustomLabel(game.skin, gameHD.getAvatar().getArmorText(), 
+        armorLabel = new CustomLabel(game.skin, gameHD.getAvatar().getArmorText(), "player armor label",
           "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
           (float)(gameHD.getConfig().getScale() * 47), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -2427,7 +2725,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 2.  Configure and add the label with the current player weapon.  Hidden at start.
         
         // Initialize and add label with the current player armor.
-        weaponLabel = new CustomLabel(game.skin, gameHD.getAvatar().getWeaponText(), 
+        weaponLabel = new CustomLabel(game.skin, gameHD.getAvatar().getWeaponText(), "player weapon label",
           "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
           (float)(gameHD.getConfig().getScale() * 37), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -2486,10 +2784,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     }
     
     // soundEnum = Sound to play.
-    private void info_render_no_target(HeroineEnum.SoundEnum soundEnum)
+    public void info_render_no_target(HeroineEnum.SoundEnum soundEnum)
     {
         
-        // The function updates the power action and result labels to display the "(NO TARGET)" message.
+        // The function updates the power action label to display the "(NO TARGET)" message.
         // Associated with attempting to execute an action at an invalid time.
         
         HeroineEnum.SoundEnum sound; // Sound to play.
@@ -2517,6 +2815,41 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    // soundEnum = Sound to play.
+    // powerActionLabel = Label showing the first line -- power action.
+    // sounds = Reference to the sounds class.
+    public static void info_render_no_target(HeroineEnum.SoundEnum soundEnum, CustomLabel powerActionLabel,
+      Sounds sounds)
+    {
+        
+        // The function updates the power action and result labels to display the "(NO TARGET)" message.
+        // Associated with attempting to execute an action at an invalid time.
+        
+        HeroineEnum.SoundEnum sound; // Sound to play.
+        
+        // Update power action labels.
+        powerActionLabel.setLabelText("(NO TARGET)");
+        
+        // Display power action labels.
+        powerActionLabel.applyVisible(true);
+        
+        // Set up fade effect for power action label.
+        powerActionLabel.addAction_Fade();
+
+        // If null passed for sound to play, then...
+        if (soundEnum == null)
+            // Null passed for sound to play.
+            // Default to error sound.
+            sound = HeroineEnum.SoundEnum.SOUND_ERROR;
+        else
+            // Use sound passed in parameter.
+            sound = soundEnum;
+        
+        // Play error sound.
+        sounds.playSound(sound);
+        
+    }
+    
     private void info_render_powerResponseLines()
     {
         
@@ -2526,7 +2859,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 1.  Configure and add the label with the power action text.  Hidden at start.
         
         // Initialize and add the label with the power action.
-        powerActionLabel = new CustomLabel(game.skin, "", 
+        powerActionLabel = new CustomLabel(game.skin, "", "power action label",
           "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
           (float)(gameHD.getConfig().getScale() * -30), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -2540,7 +2873,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 2.  Configure and add the label with the power result text.  Hidden at start.
         
         // Initialize and add label with the power result.
-        powerResultLabel = new CustomLabel(game.skin, "", 
+        powerResultLabel = new CustomLabel(game.skin, "", "power result label",
           "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
           (float)(gameHD.getConfig().getScale() * -40), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
@@ -2575,11 +2908,37 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    // powerAction = Text to show for the first line -- power action.
+    // powerResult = Text to show for the second line -- power result.
+    // powerActionLabel = Label showing the first line -- power action.
+    // powerResultLabel = Label showing the second line -- power result.
+    public static void info_update_powerResponseLines(String powerAction, String powerResult,
+      CustomLabel powerActionLabel, CustomLabel powerResultLabel)
+    {
+        
+        // The function updates the power action and result labels to display the passed messages.
+        // The function fades the messages after displaying them.
+        
+        // Update power action and result labels.
+        powerActionLabel.setLabelText(powerAction);
+        powerResultLabel.setLabelText(powerResult);
+        
+        // Display power action and result labels.
+        powerActionLabel.applyVisible(true);
+        powerResultLabel.applyVisible(true);
+        
+        // Set up fade effect for power action and result labels.
+        powerActionLabel.addAction_Fade();
+        powerResultLabel.addAction_Fade();
+        
+    }
+    
     // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
     private void prepareGoldPile(ArrayList<BaseActor> tiles)
     {
         
-        // The function configures properties for the gold pile (array list of actors) and related treasure group.
+        // The function configures properties for the gold pile (array list of actors) and related treasure 
+        // group.
         // The function supports displaying up to 1023 gold.
         
         ArrayList<Integer> bitwiseList; // List of numbers that add up to gold amount.
@@ -2804,11 +3163,19 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         1.  Wakes up the base screen.
         2.  Adds the background actor to the scene graph.
-        3.  Renders the current view -- tiles and minimap.
-        4.  Adds back the actors in the ui stage (based on the list, uiStageActors).
-        5.  Adds back the actors in the middle stage (based on the list, middleStageActors).
-        6.  Updates the text for the labels.
-        7.  Renders the updated armor and weapon.
+        3.  Adds the tile group actor to the scene graph.
+        4.  Renders the current view -- tiles and minimap.
+        5.  Adds back the actors in the ui stage (based on the list, uiStageActors).
+        6.  Adds back the actors in the middle stage (based on the list, middleStageActors).
+        7.  Updates the text for the labels.
+        8.  Renders the updated armor and weapon.
+        
+        Notes:
+        
+        A.  Labels use only the name property, while actors use actorName and name.
+        B.  Main stage contains background and tiles.
+        C.  Middle stage contains enemies.
+        D.  UI stage contains additional actors.
         */
         
         String armorKey; // Asset manager key related to armor texture region.
@@ -2820,6 +3187,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the background Actor to the scene graph.
         mainStage.addActor( background );
         
+        // Add the tile group Actor to the scene graph.
+        mainStage.addActor( tileGroup );
+        
         // Render updated view.
         // Note:  Causes a redrawing of the minimap.
         renderCurrentView( false, true );
@@ -2827,6 +3197,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Loop through actors required for ui stage.
         for (Actor actor : uiStageActors)
         {
+            System.out.println("Waking ui actor: " + actor.getName());
             // Add actor to ui stage.
             uiStage.addActor( actor );
         }
@@ -2834,6 +3205,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
          // Loop through actors required for middle stage.
         for (Actor actor : middleStageActors)
         {
+            System.out.println("Waking middle actor: " + actor.getName());
             // Add actor to ui stage.
             middleStage.addActor( actor );
         }
@@ -2893,22 +3265,42 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Start with player not moving.
         gameHD.getAvatar().setMoved(false);
         
+        // TESTING
+            
+        if (keycode == Input.Keys.S)
+        {
+            // Shake the enemy.
+            System.out.println("Shake the enemy");
+            enemy.startShake(5);
+        }
+
+        if (keycode == Input.Keys.T)
+        {
+            // Shake the tiles.
+            System.out.println("Shake the tiles");
+            tileGroup.startShake(5);
+        }
+        
+        if (keycode == Input.Keys.M)
+        {
+            // Display map / tile information.
+            System.out.println("Tiles: " + mazemap.getCurrentRegion().getRegionTiles());
+        }
+
+        if (keycode == Input.Keys.P)
+        {
+            // Display position.
+            System.out.println("Position: (" + gameHD.getAvatar().getX() + ", " + 
+              gameHD.getAvatar().getY() + ").");
+        }
+        
+        // TESTING
+        
         // If in explore mode, then...
         if (gameHD.getGameState() == HeroineEnum.GameState.STATE_EXPLORE)
         {
             
             // In explore mode.
-        
-            // TESTING
-            
-            if (keycode == Input.Keys.S)
-            {
-                // Shake the enemy.
-                System.out.println("Shake the enemy");
-                enemy.startShake(5);
-            }
-            
-            // TESTING
             
             // If the user pressed the up arrow key, then...
             if (keycode == Input.Keys.UP)
@@ -3039,8 +3431,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             renderCurrentView(turnInd, false);
                             
                             // Check for encounter.
-                            mazemap.check_random_encounter(enemyLabel, infoButtonSelector, hpLabel, mpLabel, 
-                              infoButton, facingLabel, regionLabel, enemy, gameHD.getAssetMgr(), 
+                            mazemap.check_random_encounter(combat, enemyLabel, infoButtonSelector, hpLabel, 
+                              mpLabel, infoButton, facingLabel, regionLabel, enemy, gameHD.getAssetMgr(), 
                               mapActionButtons, mapActionButtonEnabled, mapActionButtonPosX, 
                               mapActionButtonPosY);
                             

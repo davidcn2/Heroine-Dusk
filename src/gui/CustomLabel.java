@@ -52,16 +52,22 @@ public class CustomLabel
     mainMenu.addAction_FadePartial();
     mainStage.addActor(mainMenu.displayLabel(200, 200));
     
-    Enumerations referenced include:
-    
-    AlignEnum:  Enumerations related to text alignment -- horizontal.
-    PosRelativeEnum:  Enumerations related to relative positioning.
-    
     Methods include:
     
-    addAction_Fade:  Sets up a fade effect for the label, fading out over the course of 1.0 seconds after 2.0 elapse.
+    addActionCustom_Center:  Adds a custom action to the hash map that displays new text that centers
+      horizontally.
+    addActionCustom_Center_AdjY:  Adds a custom action to the hash map that displays new text that centers
+      horizontally and moves to the passed vertical position.
+    addAction_Fade:  Sets up a fade effect for the label, fading out over the course of 1.0 seconds after 
+      2.0 elapse.
     addAction_FadeIn:   Sets up a fade in effect for the label.
+    addAction_FadeIn_Center:  Sets up a fade in effect for the label that displays new text that centers
+      horizontally.
     addAction_FadeOut:  Sets up a fade out effect for the label.
+    addAction_FadeOutIn_Center:  Sets up a fade out / in effect for the label, which displays centered across 
+      the screen horizontally.
+    addAction_FadeOutIn_Center_AdjY:  Sets up a fade out / in effect for the label, which displays centered 
+      across the screen horizontally at the passed y-position.
     addAction_FadePartial:  Sets up a color fade effect for the label.
     addEvent:  Adds the passed event logic to the label.
     applyVisible:  Depending on the passed parameter, either instantly displays or hides the label.
@@ -76,9 +82,9 @@ public class CustomLabel
     removeActor:  Removes the actor associated with the label.
     setLabelText:  Updates the text of the label, using the existing bitmap font.
     setLabelTextCenter:  Updates the text of the label and centers the revised object across the screen.
-    setPosition:  Sets the position of the lower left corner of the label.
     setPosX:  Sets the x-position of the left edge of the label.
     setPosY:  Sets the y-position of the bottom edge of the label.
+    setPosition:  Sets the position of the lower left corner of the label.
     */
     
     // Declare object variables.
@@ -100,11 +106,12 @@ public class CustomLabel
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
+    // actorName = Actor name to use.
     // labelStyle = Name of the style to use.
     // labelScale = Scale to use when displaying label.
     // textLineHeight = Desired text line height.
     // fontSkinKey = Key to font in skin.
-    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
+    public CustomLabel(Skin gameSkin, String labelText, String actorName, String labelStyle, float labelScale, 
       float textLineHeight, String fontSkinKey)
     {
         
@@ -131,42 +138,49 @@ public class CustomLabel
         customLabel.setHeight(textLineHeight); // Set height of label.
         customLabel.layout(); // Computes and caches any information needed for drawing.
         
+        // Name the related actor.
+        customLabel.setName(actorName);
+        
     }
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
+    // actorName = Actor name to use.
     // labelStyle = Name of the style to use.
     // textLineHeight = Desired text line height.
     // fontSkinKey = Key to font in skin.
-    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float textLineHeight, 
-      String fontSkinKey)
+    public CustomLabel(Skin gameSkin, String labelText, String actorName, String labelStyle, 
+      float textLineHeight, String fontSkinKey)
     {
         
         // The constructor creates a label with basic settings -- essentially text and style.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Call original constructor using a scale of 1.0f.
-        this(gameSkin, labelText, labelStyle, 1.0f, textLineHeight, fontSkinKey);
+        this(gameSkin, labelText, actorName, labelStyle, 1.0f, textLineHeight, fontSkinKey);
         
     }
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
+    // actorName = Actor name to use.
     // textLineHeight = Desired text line height.
     // fontSkinKey = Key to font in skin.
-    public CustomLabel(Skin gameSkin, String labelText, float textLineHeight, String fontSkinKey)
+    public CustomLabel(Skin gameSkin, String labelText, String actorName, float textLineHeight, 
+      String fontSkinKey)
     {
         
         // The constructor creates a label with basic settings -- essentially text.
         // Example for use:  labelTitle = new CustomLabel(game.skin, "Main Menu", "uiLabelStyle", 2, 30.0f);
         
         // Call original constructor using a style of uiLabelStyle and scale of 1.0f.
-        this(gameSkin, labelText, "uiLabelStyle", 1.0f, textLineHeight, fontSkinKey);
+        this(gameSkin, labelText, actorName, "uiLabelStyle", 1.0f, textLineHeight, fontSkinKey);
         
     }
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
+    // actorName = Actor name to use.
     // labelStyle = Name of the style to use.
     // labelScale = Scale to use when displaying label.
     // textLineHeight = Desired text line height.
@@ -174,7 +188,7 @@ public class CustomLabel
     // whichStage = Reference to stage to which to add label.
     // fontSkinKey = Key to font in skin.
     // elements = Provides values for posX, posY, and stageWidth, as needed, based on alignment.
-    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
+    public CustomLabel(Skin gameSkin, String labelText, String actorName, String labelStyle, float labelScale, 
       float textLineHeight, CoreEnum.AlignEnum align, Stage whichStage, String fontSkinKey,
       float ... elements)
     {
@@ -195,7 +209,7 @@ public class CustomLabel
         */
 
         // Initialize label with passed properties.
-        this(gameSkin, labelText.toUpperCase(), labelStyle, labelScale, textLineHeight, fontSkinKey);
+        this(gameSkin, labelText.toUpperCase(), actorName, labelStyle, labelScale, textLineHeight, fontSkinKey);
         
         // Store stage width and height.
         this.stageWidth = whichStage.getWidth();
@@ -250,6 +264,8 @@ public class CustomLabel
     
     // gameSkin = Reference to skin used with the game.
     // labelText = Text to display in label.
+    // actorName = Actor name to use.
+    // actorName = Actor name to use.
     // labelStyle = Name of the style to use.
     // labelScale = Scale to use when displaying label.
     // textLineHeight = Desired text line height.
@@ -262,7 +278,7 @@ public class CustomLabel
     //   Null = No horizontal / relative positioning for y-coordinate.
     // fontSkinKey = Key to font in skin.
     // elements = Provides values for posX, posY, and stageWidth, as needed, based on enum values.
-    public CustomLabel(Skin gameSkin, String labelText, String labelStyle, float labelScale, 
+    public CustomLabel(Skin gameSkin, String labelText, String actorName, String labelStyle, float labelScale, 
       float textLineHeight, CoreEnum.AlignEnum align, CoreEnum.PosRelativeEnum posRelative, 
       Stage whichStage, Float adjPosX, Float adjPosY, String fontSkinKey, float ... elements)
     {
@@ -290,7 +306,7 @@ public class CustomLabel
         */
 
         // Initialize label with passed properties.
-        this(gameSkin, labelText.toUpperCase(), labelStyle, labelScale, textLineHeight, fontSkinKey);
+        this(gameSkin, labelText.toUpperCase(), actorName, labelStyle, labelScale, textLineHeight, fontSkinKey);
         
         // Declare variables -- must happen after calling other constructor.
         CoreEnum.AlignEnum alignHorz; // Horizontal alignment to use for label.
@@ -637,7 +653,8 @@ public class CustomLabel
     public void addAction_FadeIn_Center(float delay, float fadeIn, String labelText)
     {
         
-        // The function sets up a fade in effect for the label.
+        // The function sets up a fade in effect for the label that displays new text that centers
+        // horizontally.
         // Fade in over the course of "fadeIn" seconds after "delay" elapse.
         
         // Example for use:  To fade in over the course of 1.0 seconds after 
@@ -695,7 +712,7 @@ public class CustomLabel
     {
         
         // The function sets up a fade out / in effect for the label.
-        // The label appears centered across the screen horizontally.
+        // The label displays centered across the screen horizontally.
         // Fade in over the course of "fadeIn" seconds after "delay" elapse.
         
         // Example for use:  To fade out and in over the course of 1.0 seconds each after 

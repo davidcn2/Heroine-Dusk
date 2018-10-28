@@ -175,7 +175,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
             }
         
         // 4.  Render the title label.
-        titleLabel = new CustomLabel(game.skin, dialog.getTitle(), "uiLabelStyle", 1.0f, 
+        titleLabel = new CustomLabel(game.skin, dialog.getTitle(), "dialog title label", "uiLabelStyle", 1.0f, 
           gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, -12f, 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0, viewWidthMain);
@@ -189,8 +189,8 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         adjPosY = -(mainStage.getHeight() * 0.25f + gameHD.getConfig().getTextLineHeight());
         
         // Create and display label containing dialog message.
-        dialogMsgLabel = new CustomLabel(game.skin, dialog.getMessage(), "uiLabelStyle", 1.0f, 
-          gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
+        dialogMsgLabel = new CustomLabel(game.skin, dialog.getMessage(), "dialog message label", 
+          "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, adjPosY, 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0, viewWidthMain);
         
@@ -298,8 +298,8 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         // The function renders the player gold-related label.
         
         // Render the player gold-related label.
-        goldLabel = new CustomLabel(game.skin, gameHD.getAvatar().getGold() + " Gold", "uiLabelStyle", 1.0f, 
-          gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_RIGHT, 
+        goldLabel = new CustomLabel(game.skin, gameHD.getAvatar().getGold() + " Gold", "gold label", 
+          "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_RIGHT, 
           CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, mainStage, -12f, 12f, 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key());
         
@@ -492,8 +492,9 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                 // First of two possible messages exists for button.
 
                 // Create button label.
-                buttonLabelCurr.add(new CustomLabel(game.skin, option.msg1.toUpperCase(), "uiLabelStyle", 
-                  1.0f, gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key()));
+                buttonLabelCurr.add(new CustomLabel(game.skin, option.msg1.toUpperCase(), "option one label", 
+                  "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), 
+                  HeroineEnum.FontEnum.FONT_UI.getValue_Key()));
 
                 // Add height of current label.
                 labelHeight += buttonLabelCurr.get(0).getLabelHeight();
@@ -511,8 +512,9 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Second of two possible messages exists for button.
 
                 // Create button label.
-                buttonLabelCurr.add(new CustomLabel(game.skin, option.msg2.toUpperCase(), "uiLabelStyle", 
-                  1.0f, gameHD.getConfig().getTextLineHeight(), HeroineEnum.FontEnum.FONT_UI.getValue_Key()));
+                buttonLabelCurr.add(new CustomLabel(game.skin, option.msg2.toUpperCase(), "option two label", 
+                  "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), 
+                  HeroineEnum.FontEnum.FONT_UI.getValue_Key()));
 
                 // Add height of current label.
                 labelHeight += buttonLabelCurr.get(labelCountCurr).getLabelHeight();

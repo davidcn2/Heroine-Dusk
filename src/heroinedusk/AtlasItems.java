@@ -50,11 +50,30 @@ public class AtlasItems
     addAlterMap:  Adds a map alteration event (based on the passed information) to the list.
     addBonePile:  Adds a bone pile (based on the passed information) to the list.
     addChest:  Adds a chest (based on the passed information) to the list.
-    addEnemy:  Adds an enemy (based on the passed information) to the list.
     addHayBale:  Adds a hay bale (based on the passed information) to the list.
     addLockedDoor:  Adds a locked door (based on the passed information) to the list.
+    addSpecificEnemy:  Adds an enemy at a specific location (based on the passed information) to the list.
+    adjChestCount:  Adjusts chest quantity in variable, chestCount, by the passed parameter.
+    adjItemCountChest:  Adjusts chest quantity in list variable, itemCountList, by the passed parameter.
+    adjItemTotal:  Adjusts total item quantity in list variable, itemTotalList, by the passed parameter.
     populateHashMap:  Populates the hash map containing all region (specific location) information.
     readHashMap:  Builds the entire atlas using the passed hash map.
+    removeBonePile:  Encapsulates logic for setting a bone pile (based on map / region and index) as 
+      inactive in the array list.
+    removeBonePileEntry:  Removes the bone pile based on the passed information from the hash map,
+      mapRegionItems.
+    removeBonePileFirst:  Encapsulates logic for removing the first bone pile from the passed map location.
+    removeChest:  Encapsulates logic for setting a chest (based on map / region and index) as inactive in 
+      the array list.
+    removeChestEntry:  Removes the chest based on the passed information from the hash map, mapRegionItems.
+    removeChests:  Encapsulates logic for removing (setting as inactive) the passed chests from the 
+      specified region, including for the hash map.
+    removeLockedDoor:  Encapsulates logic for setting a locked door (based on map / region and index) as 
+      inactive in the array list.
+    removeLockedDoorEntry:  Removes the locked door based on the passed information from the hash map, 
+      mapRegionItems.
+    removeLockedDoorFirst:  Encapsulates logic for removing the first locked door from the passed map
+      location.
     storeRegionInfo:  Stores the hash maps and array lists with the information by region / location.
     */
     
@@ -1351,7 +1370,7 @@ public class AtlasItems
         ArrayList<Object> temp; // Used when first adding an array list to the hash map with items by location.
         String key; // Key value for populating hash map with items by location.
         
-        // First, Initialize hash maps.
+        // First, initialize hash maps.
         mapRegionItems = new HashMap<>();
         
         // Second, store item counts for each region.
@@ -1866,7 +1885,8 @@ public class AtlasItems
     public void removeLockedDoorEntry(int map_id, int posX, int posY)
     {
         
-        // The function removes the locked door based on the passed information from the hash map, mapRegionItems.
+        // The function removes the locked door based on the passed information from the hash map, 
+        // mapRegionItems.
         
         // Remove locked door from hash map.
         mapRegionItems.remove(getMapRegionItemKey(map_id, posX, posY, 
@@ -2069,6 +2089,74 @@ public class AtlasItems
     public SpecificEnemy getSpecifiedEnemy(int whichSpecificEnemy) {
         // The function returns information for the specific enemy.
         return specificEnemyList.get(whichSpecificEnemy);
+    }
+    
+    // map_id = Region / map location (number) for which to return chest(s).
+    // x = X-coordinate within map for which to return chest(s).
+    // y = Y-coordinate within map for which to return chest(s).
+    public boolean getSpecificEnemyInd(int map_id, int x, int y) {
+        
+        // The function returns whether specific enem(ies) exist at the passed location.
+        
+        String key; // Key to use when getting specific enemy list.
+        
+        // Determine key.
+        key = Integer.toString(map_id) + "," + Integer.toString(x) + "," + Integer.toString(y) + "," + 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_SPECIFIC_ENEMY;
+        
+        // Return whether speicifc enem(ies) exist at passed location.
+        return mapRegionItems.get(key) != null;
+        
+    }
+    
+    // map_id = Region / map location (number) for which to return chest(s).
+    // x = X-coordinate within map for which to return chest(s).
+    // y = Y-coordinate within map for which to return chest(s).
+    public ArrayList<SpecificEnemy> getSpecificEnemyList(int map_id, int x, int y) {
+        
+        /*
+        The function returns the list of specific enemies at the passed location.
+        
+        The function retrieves the specific enemy list from the hash map, mapRegionItems.
+        The hash map stores a list of objects, by type, at each location.
+        Keys in the hash map use the format, map_id,x,y,*ITEM CATEGORY*.
+        *ITEM CATEGORY* = One of the enumerated values in HeroineEnum.ItemCategoryEnum.
+        The "value" in the hash map contains an array list of the specified item category.
+        For example, the "value" would contain one to many specific enemies if 
+        category = ITEM_CTGY_SPECIFIC_ENEMY.
+        */
+        
+        int count; // Number of chests at passed location.
+        String key; // Key to use when getting specific enemy list.
+        ArrayList<SpecificEnemy> temp; // Holder for list of specific enemies at passed location.
+        
+        // Determine key.
+        key = Integer.toString(map_id) + "," + Integer.toString(x) + "," + Integer.toString(y) + "," + 
+          HeroineEnum.ItemCategoryEnum.ITEM_CTGY_SPECIFIC_ENEMY;
+        
+        // Initialize array list.
+        temp = new ArrayList<>();
+        
+        // If specific enemies exist at passed location, then...
+        if (mapRegionItems.get(key) != null)
+        {
+            
+            // Specific enemies exist at passed location.
+            
+            // Store number of specific enemies at passed location.
+            count = mapRegionItems.get(key).size();
+            
+            // Loop through specific enemies at passed location.
+            for (int counter = 0; counter < count; counter++)
+            {
+                // Add specific enemies to list to pass back.
+                temp.add((SpecificEnemy)mapRegionItems.get(key).get(counter));
+            }
+        }
+        
+        // Pass back list of specific enemies at specified location.
+        return temp;
+    
     }
     
     public ArrayList<SpecificEnemy> getSpecificEnemyList() {

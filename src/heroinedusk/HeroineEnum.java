@@ -26,31 +26,32 @@ public class HeroineEnum
     6.  EnemyEnum:  Enumerations related to enemies.
     7.  EnemyPowerEnum:  Enumerations realted to enemy powers.
     8.  FacingEnum:  Enumerations related to direction player is facing.
-    9.  FontEnum:  Enumerations related to fonts.
-    10.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
-    11.  HeroinePlayerEnum:  Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
-    12.  ImgBackgroundEnum:  Enumerations related to background images.
-    13.  ImgEnemyEnum:  Enumerations related to images of enemies.
-    14.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
-    15.  ImgOtherEnum:  Enumerations related to other images.
-    16.  ImgTileEnum:  Enumerations related to tile images.
-    17.  ImgTreasureEnum:  Enumerations related to treasure images.
-    18.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
-    19.  ItemCategoryEnum:  Enumerations related to item categories.
-    20.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
-    21.  ItemTypeEnum:  Enumerations related to item types.
-    22.  ListEnum:  Enumerations related to list types.
-    23.  MagicItemEnum:  Enumerations related to magic items.
-    24.  MusicEnum:  Enumerations related to music.
-    25.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
-    26.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
-    27.  SelectPosEnum:  Enumerations related to explore screen button selection.
-    28.  ShopEnum:  Enumerations related to shops / locations.
-    29.  ShopTypeEnum:  Enumerations related to shop / location types.
-    30.  SoundsEnum:  Enumerations related to sounds.
-    31.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    32.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
-    33:  WeaponEnum:  Enumerations related to weapons.
+    9.  FightEnum:  Enumerations related to fighting actions.
+    10.  FontEnum:  Enumerations related to fonts.
+    11.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
+    12.  HeroinePlayerEnum:  Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
+    13.  ImgBackgroundEnum:  Enumerations related to background images.
+    14.  ImgEnemyEnum:  Enumerations related to images of enemies.
+    15.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
+    16.  ImgOtherEnum:  Enumerations related to other images.
+    17.  ImgTileEnum:  Enumerations related to tile images.
+    18.  ImgTreasureEnum:  Enumerations related to treasure images.
+    19.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
+    20.  ItemCategoryEnum:  Enumerations related to item categories.
+    21.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
+    22.  ItemTypeEnum:  Enumerations related to item types.
+    23.  ListEnum:  Enumerations related to list types.
+    24.  MagicItemEnum:  Enumerations related to magic items.
+    25.  MusicEnum:  Enumerations related to music.
+    26.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
+    27.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
+    28.  SelectPosEnum:  Enumerations related to explore screen button selection.
+    29.  ShopEnum:  Enumerations related to shops / locations.
+    30.  ShopTypeEnum:  Enumerations related to shop / location types.
+    31.  SoundsEnum:  Enumerations related to sounds.
+    32.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    33.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
+    34:  WeaponEnum:  Enumerations related to weapons.
     */
     
     // Enumerations related to action buttons.  Helps with atlas keys.
@@ -631,13 +632,14 @@ public class HeroineEnum
     public enum FacingEnum 
     {
         
-        NORTH (0,  0, -1,  0,  1, 3, 2), // Player is facing north.
-        SOUTH (1,  0,  1,  0, -1, 2, 3), // Player is facing south.
-        EAST  (2,  1,  0, -1,  0, 0, 1), // Player is facing east.
-        WEST  (3, -1,  0,  1,  0, 1, 0) // Player is facing west.
+        NORTH (0,  0, -1,  0,  1, 3, 2, 1), // Player is facing north.
+        SOUTH (1,  0,  1,  0, -1, 2, 3, 0), // Player is facing south.
+        EAST  (2,  1,  0, -1,  0, 0, 1, 3), // Player is facing east.
+        WEST  (3, -1,  0,  1,  0, 1, 0, 2) // Player is facing west.
         ; // semicolon needed when fields / methods follow
         
         private final int facingEnum; // Enumerations related to direction player is facing.
+        private final int facingOpposite; // Numeric value for opposite direction.
         private static final Map facingMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         private final int moveDownDx; // Change in x-position related to moving down / backward.
         private final int moveDownDy; // Change in y-position related to moving down / backward.
@@ -653,8 +655,9 @@ public class HeroineEnum
         // moveDownDy = Change in y-position related to moving down / backward.
         // turnLeft = Value related to new direction upon turning left.
         // turnRight = Value related to new direction upon turning right.
+        // facingOpposite = Enumerated value for opposite direction.
         private FacingEnum(int facingEnum, int moveUpDx, int moveUpDy, int moveDownDx, int moveDownDy,
-          int turnLeft, int turnRight) 
+          int turnLeft, int turnRight, int facingOpposite) 
         {
             // The constructor sets the numeric values for each enumeration.
             this.facingEnum = facingEnum;
@@ -664,6 +667,7 @@ public class HeroineEnum
             this.moveDownDy = moveDownDy;
             this.turnLeft = turnLeft;
             this.turnRight = turnRight;
+            this.facingOpposite = facingOpposite;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -686,6 +690,15 @@ public class HeroineEnum
             
             // Return the numeric value for the enumeration.
             return facingEnum;
+        }
+        
+        public HeroineEnum.FacingEnum getValue_FacingOpposite() 
+        {
+            // The function returns the enumerated value for the opposite direction.
+            // Example for use:  HeroineEnum.FacingEnum x = HeroineEnum.FacingEnum.NORTH.getValue_FacingOpposite();
+            
+            // Return the opposite direction.
+            return valueOf(facingOpposite);
         }
         
         public int getValue_MoveDownDx() 
@@ -751,6 +764,73 @@ public class HeroineEnum
         
     }
     
+    // Enumerations related to fighting actions.
+    public enum FightEnum 
+    {
+        
+        FIGHT_ATTACK (0, "ATTACK!"), // Player hit attack button.
+        FIGHT_RUN (1, "RUN!"), // Player hit run button.
+        FIGHT_HEAL (2, "HEAL!"), // Player hit heal (spell) button.
+        FIGHT_BURN (3, "BURN!"), // Player hit burn (spell) button.
+        FIGHT_UNLOCK (4, "UNLOCK!"), // Player hit unlock (spell) button.
+        FIGHT_LIGHT (5, "LIGHT!"), // Player hit light (spell) button.
+        FIGHT_FREEZE (6, "FREEZE!"), // Player hit freeze (spell) button.
+        FIGHT_REFLECT (7, "REFLECT!") // Player hit reflect (spell) button.
+        ; // semicolon needed when fields / methods follow
+
+        private final int fightEnum; // Enumerations related to fighting actions.
+        private static final Map fightMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        private final String offenseAction; // Description of fighting action.
+        
+        // fightEnum = Value to associate.
+        // offenseAction = Description of fighting action.
+        private FightEnum(int fightEnum, String offenseAction) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.fightEnum = fightEnum;
+            this.offenseAction = offenseAction;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (FightEnum fightEnum : FightEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                fightMap.put(fightEnum.fightEnum, fightEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.FightEnum.FIGHT_BURN.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return fightEnum;
+        }
+        
+        public String getValue_Desc() 
+        {
+            // The function returns a description for the enumeration.
+            // Example for use:  int x = HeroineEnum.FightEnum.FIGHT_BURN.getValue_Desc();
+            
+            // Return the description for the enumeration.
+            return offenseAction;
+        }
+        
+        // fight = Numeric value to convert to text.
+        public static FightEnum valueOf(int fight) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (FightEnum) fightMap.get(fight);
+        }
+        
+    }
+    
     // Enumerations related to fonts.
     public enum FontEnum 
     {
@@ -759,7 +839,7 @@ public class HeroineEnum
         FONT_RED (1, "uiFontRed") // Red font.
         ; // semicolon needed when fields / methods follow
 
-        private final int fontEnum; // Enumerations related to dialog buttons.
+        private final int fontEnum; // Enumerations related to fonts.
         private final String fontSkinKey; // Key associated with font -- used with Skin.
         private static final Map fontMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
         
@@ -1307,7 +1387,8 @@ public class HeroineEnum
         IMG_TILE_SKULL_PILE (16, "skull_pile.png", "tile-skull pile", false), // Skull pile tiles.
         IMG_TILE_HAY_PILE (17, "hay_pile.png", "tile-hay pile", true), // Hay pile tiles.
         IMG_TILE_LOCKED_DOOR (18, "locked_door.png", "tile-locked door", false), // Locked door tiles.
-        IMG_TILE_DEATH_SPEAKER (19, "death_speaker.png", "tile-death speaker", true) // Death speaker tiles.
+        IMG_TILE_DEATH_SPEAKER (19, "death_speaker.png", "tile-death speaker", true), // Death speaker tiles.
+        IMG_TILE_IGNORE_SIDE (20, "ignore1", "ignore2", false) // Placeholder for side tile.
         ; // semicolon needed when fields / methods follow
         
         private final int imgTileEnum; // Enumerations related to tile images.

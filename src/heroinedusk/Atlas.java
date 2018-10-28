@@ -39,6 +39,10 @@ public class Atlas
     addMap:  Adds a region / map to the atlas.
     addRegionExit:  Adds a region exit (based on the passed information) to a region / map.
     addRegionShop:  Adds a shop (based on the passed information) to a region / map.
+    addTile_East:  Adds an element to the array list with details about the east sides of map locations.
+    addTile_North:  Adds an element to the array list with details about the north sides of map locations.
+    addTile_South:  Adds an element to the array list with details about the south sides of map locations.
+    addTile_West:  Adds an element to the array list with details about the west sides of map locations.
     addTiles:  Adds a horizontal set of tiles to a region / map.
     populateHashMap:  Populates the hash map containing all the atlas information.
     readHashMap:  Builds the entire atlas using the passed hash map.
@@ -159,8 +163,8 @@ public class Atlas
     // shop_id = Shop identifier.
     // dest_x = X-coordinate of the shop exit.
     // dest_y = Y-coordinate of the shop exit.
-    public void addRegionShop(String regionName, int exit_x, int exit_y, HeroineEnum.ShopEnum shop_id, int dest_x, 
-      int dest_y)
+    public void addRegionShop(String regionName, int exit_x, int exit_y, HeroineEnum.ShopEnum shop_id, 
+      int dest_x, int dest_y)
     {
         
         // The function adds a shop (based on the passed information) to the specified region / map.
@@ -182,6 +186,58 @@ public class Atlas
         
         // Add shop to current region / map.
         currRegion.addRegionShop(exit_x, exit_y, shop_id, dest_x, dest_y);
+        
+    }
+    
+    // x = X-coordinate.
+    // y = Y-coordinate.
+    // tile = Tile type to show on east side.
+    public void addTile_East(int x, int y, int tile)
+    {
+        
+        // The function adds an element to the array list with details about the east sides of map locations.
+        
+        // Add an element to the array list with details about the east sides of map locations.
+        currRegion.addTile_East(x, y, tile);
+        
+    }
+    
+    // x = X-coordinate.
+    // y = Y-coordinate.
+    // tile = Tile type to show on east side.
+    public void addTile_North(int x, int y, int tile)
+    {
+        
+        // The function adds an element to the array list with details about the north sides of map locations.
+        
+        // Add an element to the array list with details about the north sides of map locations.
+        currRegion.addTile_North(x, y, tile);
+        
+    }
+    
+    // x = X-coordinate.
+    // y = Y-coordinate.
+    // tile = Tile type to show on east side.
+    public void addTile_South(int x, int y, int tile)
+    {
+        
+        // The function adds an element to the array list with details about the south sides of map locations.
+        
+        // Add an element to the array list with details about the south sides of map locations.
+        currRegion.addTile_South(x, y, tile);
+        
+    }
+    
+    // x = X-coordinate.
+    // y = Y-coordinate.
+    // tile = Tile type to show on east side.
+    public void addTile_West(int x, int y, int tile)
+    {
+        
+        // The function adds an element to the array list with details about the west sides of map locations.
+        
+        // Add an element to the array list with details about the west sides of map locations.
+        currRegion.addTile_West(x, y, tile);
         
     }
     
@@ -264,11 +320,14 @@ public class Atlas
         Set<Map.Entry<String, String>> entrySetEnemies; // Set view of the enemy mappings in the hash map for current region in loop.
         Set<Map.Entry<String, Object>> entrySetExits; // Set view of the exit mappings in the hash map for current region in loop.
         Set<Map.Entry<String, Object>> entrySetShops; // Set view of the exit mappings in the hash map for current region in loop.
+        Set<Map.Entry<String, Object>> entrySetTileSides; // Set view of the mappings in a hash map with tile side information.
         HashMap<String, Integer> exitData; // Hash map containing information for a single exit.
         HashMap<String, Object> exitMap; // Hash map containing information for exits in current region in loop.
         HashMap<String, Object> shopData; // Hash map containing information for a single shop.
         HashMap<String, Object> shopMap; // Hash map containing information for shops in current region in loop.
         HashMap<String, Object> temp; // Hash map containing information for current region in loop.
+        HashMap<String, Object> tileSideData; // Hash map containing information for a single tile side.
+        HashMap<String, Object> tileSidesMap; // Hash map containing information for one direction of tile sides in current region in loop.
         ArrayList tileRow; // Array list containing information for all tiles in current row and region in loops.
         
         // Declare regular variables.
@@ -279,6 +338,10 @@ public class Atlas
         int regionHeight; // Region height, in tiles.  Same as tile row count.
         String regionName; // Name of current region in loop.
         int shopCount; // Number of shops in current region.
+        Integer sideTilesEastCount; // Number of locations with view on east side.
+        Integer sideTilesNorthCount; // Number of locations with view on north side.
+        Integer sideTilesSouthCount; // Number of locations with view on south side.
+        Integer sideTilesWestCount; // Number of locations with view on east side.
         String tileRowKey; // Key in hash map for current tile row in loop.
         
         // Reset defaults.
@@ -315,9 +378,40 @@ public class Atlas
             
             // Store name of current region in loop.
             regionName = (String)temp.get("regionName");
-            System.out.println("Loading information for region, " + regionName);
+            
+            System.out.println("\nLoading information for region, " + regionName);
+            
             // Store number of tile rows in current region in loop -- same as region height.
             regionHeight = (int)temp.get("regionHeight");
+            
+            // Store tile side counts in current region in loop.
+            sideTilesNorthCount = (Integer)temp.get("sideTileCountNorth");
+            sideTilesSouthCount = (Integer)temp.get("sideTileCountSouth");
+            sideTilesEastCount = (Integer)temp.get("sideTileCountEast");
+            sideTilesWestCount = (Integer)temp.get("sideTileCountWest");
+            
+            // Convert nulls in tile side counts from null to 0.
+            if (sideTilesNorthCount == null)
+            {
+                sideTilesNorthCount = 0;
+            }
+            if (sideTilesSouthCount == null)
+            {
+                sideTilesSouthCount = 0;
+            }
+            if (sideTilesEastCount == null)
+            {
+                sideTilesEastCount = 0;
+            }
+            if (sideTilesWestCount == null)
+            {
+                sideTilesWestCount = 0;
+            }
+            
+            System.out.println("Side Tile Count - North: " + sideTilesNorthCount);
+            System.out.println("Side Tile Count - South: " + sideTilesSouthCount);
+            System.out.println("Side Tile Count - East: " + sideTilesEastCount);
+            System.out.println("Side Tile Count - West: " + sideTilesWestCount);
             
             // Store number of enemies in current region in loop.
             enemyCount = (int)temp.get("enemyCount");
@@ -423,6 +517,138 @@ public class Atlas
                 }
                 
             } // End ... If one or more shops exist in current region.
+            
+            // If one or more north side tiles exist in current region, then...
+            if (sideTilesNorthCount > 0)
+            {
+                
+                // One or more north side tiles exist in current region.
+                
+                // Initialize tile side hash map.
+                tileSidesMap = new HashMap<>();
+                
+                // Copy all data for north side tiles in current region into hash map. 
+                tileSidesMap.putAll((HashMap)temp.get("north_side_tiles"));
+                
+                // Store a set view of the north side tile mappings for the hash map for the current regions.
+                entrySetTileSides = tileSidesMap.entrySet();
+                
+                // Loop through north tile sides in current region.
+                for (Entry entrySide : entrySetTileSides)
+                {
+                    
+                    // Reinitialize hash map for single tile side.
+                    tileSideData = new HashMap<>();
+                    
+                    // Copy all data for current tile side in loop to hash map.
+                    tileSideData.putAll((HashMap)entrySide.getValue());
+                    
+                    // Add the tile side to the region.
+                    addTile_North((int)tileSideData.get("X"), (int)tileSideData.get("Y"), 
+                      (int)tileSideData.get("TILE"));
+                    
+                }
+                
+            } // End ... If one or more north tile sides exist in current region.
+            
+            // If one or more south side tiles exist in current region, then...
+            if (sideTilesSouthCount > 0)
+            {
+                
+                // One or more south side tiles exist in current region.
+                
+                // Initialize tile side hash map.
+                tileSidesMap = new HashMap<>();
+                
+                // Copy all data for south side tiles in current region into hash map. 
+                tileSidesMap.putAll((HashMap)temp.get("south_side_tiles"));
+                
+                // Store a set view of the south side tile mappings for the hash map for the current regions.
+                entrySetTileSides = tileSidesMap.entrySet();
+                
+                // Loop through south tile sides in current region.
+                for (Entry entrySide : entrySetTileSides)
+                {
+                    
+                    // Reinitialize hash map for single tile side.
+                    tileSideData = new HashMap<>();
+                    
+                    // Copy all data for current tile side in loop to hash map.
+                    tileSideData.putAll((HashMap)entrySide.getValue());
+                    
+                    // Add the tile side to the region.
+                    addTile_South((int)tileSideData.get("X"), (int)tileSideData.get("Y"), 
+                      (int)tileSideData.get("TILE"));
+                    
+                }
+                
+            } // End ... If one or more south tile sides exist in current region.
+            
+            // If one or more east side tiles exist in current region, then...
+            if (sideTilesEastCount > 0)
+            {
+                
+                // One or more east side tiles exist in current region.
+                
+                // Initialize tile side hash map.
+                tileSidesMap = new HashMap<>();
+                
+                // Copy all data for east side tiles in current region into hash map. 
+                tileSidesMap.putAll((HashMap)temp.get("east_side_tiles"));
+                
+                // Store a set view of the east side tile mappings for the hash map for the current regions.
+                entrySetTileSides = tileSidesMap.entrySet();
+                
+                // Loop through east tile sides in current region.
+                for (Entry entrySide : entrySetTileSides)
+                {
+                    
+                    // Reinitialize hash map for single tile side.
+                    tileSideData = new HashMap<>();
+                    
+                    // Copy all data for current tile side in loop to hash map.
+                    tileSideData.putAll((HashMap)entrySide.getValue());
+                    
+                    // Add the tile side to the region.
+                    addTile_East((int)tileSideData.get("X"), (int)tileSideData.get("Y"), 
+                      (int)tileSideData.get("TILE"));
+                    
+                }
+                
+            } // End ... If one or more east tile sides exist in current region.
+            
+            // If one or more west side tiles exist in current region, then...
+            if (sideTilesWestCount > 0)
+            {
+                
+                // One or more west side tiles exist in current region.
+                
+                // Initialize tile side hash map.
+                tileSidesMap = new HashMap<>();
+                
+                // Copy all data for west side tiles in current region into hash map. 
+                tileSidesMap.putAll((HashMap)temp.get("west_side_tiles"));
+                
+                // Store a set view of the west side tile mappings for the hash map for the current regions.
+                entrySetTileSides = tileSidesMap.entrySet();
+                
+                // Loop through west tile sides in current region.
+                for (Entry entrySide : entrySetTileSides)
+                {
+                    
+                    // Reinitialize hash map for single tile side.
+                    tileSideData = new HashMap<>();
+                    
+                    // Copy all data for current tile side in loop to hash map.
+                    tileSideData.putAll((HashMap)entrySide.getValue());
+                    
+                    // Add the tile side to the region.
+                    addTile_West((int)tileSideData.get("X"), (int)tileSideData.get("Y"), 
+                      (int)tileSideData.get("TILE"));
+                    
+                }
+                
+            } // End ... If one or more west tile sides exist in current region.
             
             // Loop through tile rows in current region.
             for (int tileRowCounter = 1; tileRowCounter <= regionHeight; tileRowCounter++)

@@ -36,22 +36,34 @@ ArrayList supports dynamic arrays that can grow as needed.
 public class ShakyActor extends BaseActor { // Extends the BaseActor class.
     
     /*
-    The main purpose of the AnimatedActor class involves managing a set of animations,
-    and selecting the correct image from the active animation.  Active refers here
-    to the animation currently being rendered.
-
-    An Animation stores a list of TextureRegions representing an animated sequence,
-    e.g. for running or jumping.  Each region of an Animation is called a key frame,
-    multiple key frames make up the animation.
-
-    A HashMap data structure will get used to store animations associated with actors.
-    String objects will get used as keys, and Animation objects will be the associated
-    values.  For example, in a top-view adventure game, the main character might have
-    four animations named north, south, east, and west.
+    The main purpose of the ShakyActor class involves extending base actor
+    functionality to support "shaking" -- random movement to nearby locations and
+    then back to the point of origin.  Supports pausing.
 
     Methods include:
 
     act:  Performs a time based positional update and (if NOT paused) updates the elapsed time value.
+    distancePoints:  Returns the distance between the two passed points.
+    distanceToShakeOrigin:  Returns the distance between the passed point and the original location of 
+      the actor (before "shaking").
+    getBasePosX:  Returns the base x-position of the actor.
+    getBasePosY:  Returns the base y-position of the actor.
+    getShakeInd:  Returns whether to "shake" the actor.
+    getSlideToBasePosInd:  Returns whether to slide the actor to its base position.
+    nextShake:  Performs calculations for the next "shake" of the actor.
+    pauseMovement:  Pauses movement of the actor.
+    performInitialization:  Performs basic shared preparation steps.
+    resumeMovement:  Resumes movement of the actor.
+    setBasePosX:  Sets the base x-position of the actor.
+    setBasePosY:  Sets the base y-position of the actor.
+    setShakeInd:  Sets whether to "shake" the actor.
+    setSlideToBasePosInd:  Sets whether to slide the actor to its base position.
+    setViewHeight:  Sets value storing the height of the stage.  Does not impact the stage.
+    setViewWidth:  Sets value storing the width of the stage.  Does not impact the stage.
+    startShake:  Sets values for and initiates a "shake" operation.
+    updateShakyActor:  Used to update properties of the actor.  Eases reuse.
+    updateShakyActor_Center:  Used to update properties of the actor.  Uses center of stage 
+      as base position.  Eases reuse.
     */
     
     // Declare object variables.
@@ -64,6 +76,7 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
       // after "shaking".  Bottom of actor.
     private float elapsedTime; // Total elapsed time the actor has existed.
     private final SecureRandom number; // Used for generating random numbers.
+    private boolean pauseMovementInd; // Whether movement currently paused.
     private int shakeCount; // Number of animations to process related to "shaking" actor.
     private int shakeCounter; // Used to iterate through animations related to "shaking" actor.
     private double shakeDirectionX; // X-component of direction vector related to "shake" action.
@@ -270,6 +283,7 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // The function:
 
         // 1.  Performs a time based positional update.
+        // When movement NOT paused...
         // 2.  Updates the elapsed time value.
         // 3.  Conditionally slides the actor to base position.
         // 4.  Conditionally "shakes" the actor.
@@ -277,109 +291,117 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // Call the act method of the Actor, which performs a time based positional update.
         super.act(dt);
 
-        // Add seconds since last frame to elapsed time.
-        elapsedTime += dt;
-
-        // If sliding to base position, then...
-        if ( slideToBasePosInd )
+        // If movement NOT paused, then...
+        if (!pauseMovementInd)
         {
             
-            // Sliding to base position.
+            // Movement NOT paused.
             
-            // Moves current Actor (adds X and Y to current position) based on constant velocity (speed)
-            // and elapsed seconds since last frame.
-            moveBy( velocity.x * dt, velocity.y * dt );
-            
-            // If Actor at or past base position, then...
-            if ( getX() >= basePosX )
+            // Add seconds since last frame to elapsed time.
+            elapsedTime += dt;
+
+            // If sliding to base position, then...
+            if ( slideToBasePosInd )
             {
-                
-                // Actor at or past base position.
-                
-                // Move actor to base position.
-                setX( basePosX );
-                
-                // Flag to stop sliding.
-                slideToBasePosInd = false;
-                
-            } // End ... If Actor at or past base position.
+
+                // Sliding to base position.
+
+                // Moves current Actor (adds X and Y to current position) based on constant velocity (speed)
+                // and elapsed seconds since last frame.
+                moveBy( velocity.x * dt, velocity.y * dt );
+
+                // If Actor at or past base position, then...
+                if ( getX() >= basePosX )
+                {
+
+                    // Actor at or past base position.
+
+                    // Move actor to base position.
+                    setX( basePosX );
+
+                    // Flag to stop sliding.
+                    slideToBasePosInd = false;
+
+                } // End ... If Actor at or past base position.
+
+            } // End ... If sliding to base position.
+
+            // Otherwise, if "shaking" actor, then...
+            else if (shakeInd)
+            {
+
+                // "Shake" actor.
+
+                // See https://gamedev.stackexchange.com/questions/23447/moving-from-ax-y-to-bx1-y1-with-constant-speed.
+
+                // Moves current Actor (adds X and Y to current position) based on constant velocity (speed)
+                // and elapsed seconds since last frame.
+                moveBy( velocityShake.x * dt, velocityShake.y * dt );
+
+                // If actor at or past destination, then...
+                if ( distancePoints(this.shakeSrcX, this.shakeSrcY, super.getX(), 
+                    super.getY()) >= this.shakeDistanceCurr )
+                {
+
+                    // Actor at or past destination.
+
+                    // Move actor to destination.
+                    this.setX(this.shakeDestX);
+                    this.setY(this.shakeDestY);
+
+                    // Increment "shake" counter.
+                    shakeCounter++; 
+
+                    // If more "shake" animations remain, then...
+                    if (shakeCounter <= shakeCount)
+                    {
+
+                        // More "shake" animations remain.
+
+                        // Perform calculations related to next "shake".
+                        nextShake(null, null);
+
+                    }
+
+                    // Otherwise, if in first iteration after going through all "shake" animations, then...
+                    else if (shakeCounter == shakeCount + 1)
+                    {
+
+                        // In first iteration after going through all "shake" animations.
+                        // Go through one more movement to return actor to original location.
+
+                        // Return actor to original location.
+                        nextShake(this.shakeOrigPosX, this.shakeOrigPosY);
+
+                    }
+
+                    else
+                    {
+
+                        // Actor in original location.
+
+                        // Reset "shake" indicator and counter.
+                        shakeInd = false;
+                        shakeCounter = 1;
+
+                    }
+
+                } // End ... If actor at or past destination.
+
+            } // End ... if "shaking" actor.
             
-        } // End ... If sliding to base position.
+        } // End ... If movement NOT paused.
         
-        // Otherwise, if "shaking" actor, then...
-        else if (shakeInd)
-        {
-            
-            // "Shake" actor.
-                
-            // See https://gamedev.stackexchange.com/questions/23447/moving-from-ax-y-to-bx1-y1-with-constant-speed.
-            
-            // Moves current Actor (adds X and Y to current position) based on constant velocity (speed)
-            // and elapsed seconds since last frame.
-            moveBy( velocityShake.x * dt, velocityShake.y * dt );
-
-            // If actor at or past destination, then...
-            if ( distancePoints(this.shakeSrcX, this.shakeSrcY, super.getX(), 
-                super.getY()) >= this.shakeDistanceCurr )
-            {
-
-                // Actor at or past destination.
-                
-                // Move actor to destination.
-                this.setX(this.shakeDestX);
-                this.setY(this.shakeDestY);
-
-                // Increment "shake" counter.
-                shakeCounter++; 
-                
-                // If more "shake" animations remain, then...
-                if (shakeCounter <= shakeCount)
-                {
-                    
-                    // More "shake" animations remain.
-                    
-                    // Perform calculations related to next "shake".
-                    nextShake(null, null);
-                    
-                }
-
-                // Otherwise, if in first iteration after going through all "shake" animations, then...
-                else if (shakeCounter == shakeCount + 1)
-                {
-
-                    // In first iteration after going through all "shake" animations.
-                    // Go through one more movement to return actor to original location.
-                    
-                    // Return actor to original location.
-                    nextShake(this.shakeOrigPosX, this.shakeOrigPosY);
-
-                }
-                
-                else
-                {
-                    
-                    // Actor in original location.
-                    
-                    // Reset "shake" indicator and counter.
-                    shakeInd = false;
-                    shakeCounter = 1;
-                    
-                }
-
-            } // End ... If actor at or past destination.
-            
-        } // End ... if "shaking" actor.
-
     }
     
     // posX_Src = X-coordinate of source location.
     // posY_Src = Y-coordinate of source location.
     // posX_Dest = X-coordinate of destination location.
     // posY_Dest = Y-coordinate of destionation location.
-    private double distancePoints(float posX_Src, float posY_Src, float posX_Dest, float posY_Dest)
+    public static double distancePoints(float posX_Src, float posY_Src, float posX_Dest, float posY_Dest)
     {
         
-        // The function returns the distance between two points.
+        // The function returns the distance between the two passed points.
         
         // Return distance between passed point and original location of actor (before "shaking").
         return Math.sqrt(Math.pow(posX_Dest - posX_Src, 2) + Math.pow(posY_Dest - posY_Src, 2));
@@ -489,6 +511,12 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         
     }
     
+    public void pauseMovement()
+    {
+        // The function pauses movement of the actor.
+        this.pauseMovementInd = true;
+    }
+    
     private void performInitialization()
     {
         
@@ -511,6 +539,12 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // Initialize "shake" counter.
         shakeCounter = 1;
         
+    }
+    
+    public void resumeMovement()
+    {
+        // The function resumes movement of the actor.
+        this.pauseMovementInd = false;
     }
     
     // shakeDistanceMax = Maximum number of pixels to move actor.
