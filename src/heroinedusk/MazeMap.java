@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 // Local project imports.
 import core.AssetMgr;
 import core.BaseActor;
+import core.CoreEnum;
 import core.ShakyActor;
 import gui.CustomLabel;
 import routines.UtilityRoutines;
@@ -3039,28 +3040,54 @@ public class MazeMap
         
         The setting up the minimap for rendering (populating the array list) involves the following:
         
-        1.  Initialize array lists.
-        2.  Add minimap background (included in icon list for simplicity).
-        3.  Render (base) map.
-        4.  Render exits.
-        5.  Render shops.
-        6.  Render minimap cursor.
+        1.  Set defaults.
+        2.  Initialize array lists.
+        3.  Store color to use for transparency effect.
+        4.  Store icon width and height for use when placing side tiles.
+        5. Add minimap background (included in icon list for simplicity).
+        6.  Render (base) map.
+        7.  Render exits.
+        8.  Render shops.
+        9.  Render side tiles.
+        10.  Render minimap cursor.
+        11.  Add base actor for player icon.
+        12.  Return the array list with the base actors for the icons.
         */
         
         int counter; // Used to increment through exits and shops.
+        float dest_pos_x; // X-coordinate at which to place lower-left corner of actor used for door.
+        float dest_pos_y; // Y-coordinate at which to place lower-left corner of actor used for door.
+        int doorEastCount; // Number of doors on east side.
+        int doorNorthCount; // Number of doors on north side.
+        int doorSouthCount; // Number of doors on south side.
+        int doorWestCount; // Number of doors on west side.
+        float iconHeight; // Height of each icon in minimap.
         ArrayList<BaseActor> icons; // BaseActor objects associated with icons.
-        int tileNbr; // Tile number for which to render icon  in minimap.
-        boolean walkable; // Whether tile walkable.
-        BaseActor minimapBackground; // BaseActor serving as the minimap background.
+        float iconWidth; // Width of each icon in minimap.
         HeroineEnum.MinimapEnum key; // Key to texture region in hash map for icon to display.
         HeroineEnum.MinimapCursorEnum keyCursor; // Key to texture region in hash map for cursor icon to display.
+        BaseActor minimapBackground; // BaseActor serving as the minimap background.
+        Color tempColor; // Color used to apply partial transparency.
+        int tileNbr; // Tile number for which to render icon  in minimap.
+        boolean walkable; // Whether tile walkable.
         
-        // 1.  Initialize array lists.
+        // 1.  Set defaults.
+        doorNorthCount = 0;
+        doorSouthCount = 0;
+        doorEastCount = 0;
+        doorWestCount = 0;
+        
+        // 2.  Initialize array lists.
         icons = new ArrayList<>();
-        Color tempColor;
+        
+        // 3.  Store color to use for transparency effect.
         tempColor = new Color(Color.LIGHT_GRAY.r, Color.LIGHT_GRAY.g, Color.LIGHT_GRAY.b, 0.50f);
         
-        // 2. Add minimap background (included in icon list for simplicity).
+        // 4.  Store icon width and height for use when placing side tiles.
+        iconWidth = minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLACK).getRegionWidth();
+        iconHeight = minimapRegions.get(HeroineEnum.MinimapEnum.MINIMAP_BLOCK_BLACK).getRegionHeight();
+        
+        // 5. Add minimap background (included in icon list for simplicity).
         
         // Create and configure base actor for minimap background.
         minimapBackground = new BaseActor("Minimap_Background", 
@@ -3079,7 +3106,7 @@ public class MazeMap
         // Add the base actor for the background to the array list.
         icons.add( minimapBackground );
         
-        // 3.  Render (base) map.
+        // 6.  Render (base) map.
         
         // Loop through vertical tiles.
         for (int counterY = 0; counterY < regionHeight; counterY++)
@@ -3120,14 +3147,14 @@ public class MazeMap
                     icons.add( new BaseActor("Minimap_(" + Integer.toString(counterX) + "," + 
                       Integer.toString(counterY) + ")", minimapRegions.get(key), 
                       minimapDestX.get(counterY).get(counterX), minimapDestY.get(counterY).get(counterX) ) );
-                    
-                }
+                        
+                } // End ... If NOT a placeholder tile.
                 
-            }
+            } // End ... Loop through horizontal tiles.
                 
-        }
+        } // End ... Loop through vertical tiles.
         
-        // 4.  Render exits.
+        // 7.  Render exits.
         
         // Set starting value for counter.
         counter = 0;
@@ -3146,7 +3173,7 @@ public class MazeMap
             
         }
         
-        // 5.  Render shops.
+        // 8.  Render shops.
         
         // Set starting value for counter.
         counter = 0;
@@ -3165,7 +3192,149 @@ public class MazeMap
             
         }
         
-        // 6.  Render minimap cursor.
+        // 9.  Render side tiles.
+        
+        // Loop through vertical tiles.
+        for (int counterY = 0; counterY < regionHeight; counterY++)
+        {
+            
+            // Loop through horizontal tiles.
+            for (int counterX = 0; counterX < regionWidth; counterX++)
+            {
+                
+                // If side tile exists on north side, then...
+                if (getImgTileEnum_Side(counterX, counterY, HeroineEnum.FacingEnum.NORTH, false) != null )
+                {
+
+                    // Side tile exists on north side.
+
+                    // System.out.println("Side tile exists on north side.");
+                    
+                    // Increment north side tile count.
+                    doorNorthCount++;
+                    
+                    // Calculate placement of actor.
+                    dest_pos_x = minimapDestX.get(counterY).get(counterX);
+                    dest_pos_y = minimapDestY.get(counterY).get(counterX) + iconHeight;
+                    dest_pos_x++;
+                    dest_pos_y--;
+                    
+                    /*
+                    System.out.println("Key: " + 
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_MINIMAP_DOOR_HORZ.getValue_Key());
+                    System.out.println("Dest X: " + dest_pos_x);
+                    System.out.println("Dest Y: " + dest_pos_y);
+                    */
+                    
+                    // Add base actor for current side tile.
+                    icons.add( new BaseActor("Minimap_North_Side(" + Integer.toString(doorNorthCount) + ")", 
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_MINIMAP_DOOR_HORZ.getValue_Key(), 
+                      gameHD.getAssetMgr(), dest_pos_x, dest_pos_y, CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE, 
+                      tempColor) );
+
+                } // End ... If side tile exists on north side.
+                
+                // If side tile exists on south side, then...
+                if (getImgTileEnum_Side(counterX, counterY, HeroineEnum.FacingEnum.SOUTH, false) != null )
+                {
+
+                    // Side tile exists on south side.
+
+                    // System.out.println("Side tile exists on south side.");
+                    
+                    // Increment south side tile count.
+                    doorSouthCount++;
+                    
+                    // Calculate placement of actor.
+                    dest_pos_x = minimapDestX.get(counterY).get(counterX);
+                    dest_pos_y = minimapDestY.get(counterY).get(counterX); // + iconHeight;
+                    dest_pos_x++;
+                    dest_pos_y--;
+                    
+                    /*
+                    System.out.println("Key: " + 
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_MINIMAP_DOOR_HORZ.getValue_Key());
+                    System.out.println("Dest X: " + dest_pos_x);
+                    System.out.println("Dest Y: " + dest_pos_y);
+                    */
+                    
+                    // Add base actor for current side tile.
+                    icons.add( new BaseActor("Minimap_South_Side(" + Integer.toString(doorSouthCount) + ")", 
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_MINIMAP_DOOR_HORZ.getValue_Key(), 
+                      gameHD.getAssetMgr(), dest_pos_x, dest_pos_y, CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE, 
+                      tempColor) );
+
+                } // End ... If side tile exists on south side.
+                
+                // If side tile exists on east side, then...
+                if (getImgTileEnum_Side(counterX, counterY, HeroineEnum.FacingEnum.EAST, false) != null )
+                {
+
+                    // Side tile exists on east side.
+
+                    // System.out.println("Side tile exists on east side.");
+                    
+                    // Increment east side tile count.
+                    doorEastCount++;
+                    
+                    // Calculate placement of actor.
+                    dest_pos_x = minimapDestX.get(counterY).get(counterX) + iconWidth;
+                    dest_pos_y = minimapDestY.get(counterY).get(counterX);
+                    dest_pos_x--;
+                    dest_pos_y++;
+                    
+                    /*
+                    System.out.println("Key: " + 
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_MINIMAP_DOOR_VERT.getValue_Key());
+                    System.out.println("Dest X: " + dest_pos_x);
+                    System.out.println("Dest Y: " + dest_pos_y);
+                    */
+                    
+                    // Add base actor for current side tile.
+                    icons.add( new BaseActor("Minimap_East_Side(" + Integer.toString(doorEastCount) + ")", 
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_MINIMAP_DOOR_VERT.getValue_Key(), 
+                      gameHD.getAssetMgr(), dest_pos_x, dest_pos_y, CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE, 
+                      tempColor) );
+
+                } // End ... If side tile exists on east side.
+
+                // If side tile exists on west side, then...
+                if (getImgTileEnum_Side(counterX, counterY, HeroineEnum.FacingEnum.WEST, false) != null )
+                {
+
+                    // Side tile exists on west side.
+
+                    // System.out.println("Side tile exists on west side.");
+
+                    // Increment west side tile count.
+                    doorWestCount++;
+                    
+                    // Calculate placement of actor.
+                    dest_pos_x = minimapDestX.get(counterY).get(counterX);
+                    dest_pos_y = minimapDestY.get(counterY).get(counterX);
+                    dest_pos_x--;
+                    dest_pos_y++;
+                    
+                    /*
+                    System.out.println("Key: " + 
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_MINIMAP_DOOR_VERT.getValue_Key());
+                    System.out.println("Dest X: " + dest_pos_x);
+                    System.out.println("Dest Y: " + dest_pos_y);
+                    */
+                    
+                    // Add base actor for current side tile.
+                    icons.add( new BaseActor("Minimap_West_Side(" + Integer.toString(doorWestCount) + ")", 
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_MINIMAP_DOOR_VERT.getValue_Key(), 
+                      gameHD.getAssetMgr(), dest_pos_x, dest_pos_y, CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE, 
+                      tempColor) );
+                    
+                } // End ... If side tile exists on west side.
+                
+            } // End ... Loop through horizontal tiles.
+        
+        } // End ... Loop through vertical tiles.
+        
+        // 10.  Render minimap cursor.
         
         // Determine key containing texture region for icon.      
         
@@ -3226,13 +3395,13 @@ public class MazeMap
                 
         }
         
-        // Add base actor for player icon.
+        // 11.  Add base actor for player icon.
         icons.add( new BaseActor("Minimap_Avatar", 
           minimapCursorRegions.get(keyCursor), 
           minimapDestX.get(gameHD.getAvatar().getY()).get(gameHD.getAvatar().getX()), 
           minimapDestY.get(gameHD.getAvatar().getY()).get(gameHD.getAvatar().getX()) ) );
         
-        // Return the array list with the base actors for the icons.
+        // 12.  Return the array list with the base actors for the icons.
         return icons;
 
     }
@@ -3910,7 +4079,6 @@ public class MazeMap
         // Returns the enumerated value for the tile facing (or immediately behind) the player.
         // Refers actually to the side tile in the adjacent location.
         // Eases moving through and working with portals.
-        // Reverses y and x to ease working with tiles.
         
         Integer tileNbr; // Number of tile at side facing (or immediately behind) current player location (or null).
         HeroineEnum.ImgTileEnum imgTileEnum; // Tile at side facing (or immediately behind) current player location.
@@ -4078,7 +4246,7 @@ public class MazeMap
                 tileNbr = null;
                 
                 // Display warning.
-                System.out.println("Warning:  Player facing invalid direction while trying to display side tile at current location.");
+                System.out.println("Warning:  Player facing invalid direction while trying to determine side tile at current location.");
                 
                 // Exit selector.
                 break;
@@ -4096,6 +4264,105 @@ public class MazeMap
         
         else
         {
+            
+            // Side tile is null.
+            imgTileEnum = HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE;
+            
+        }
+        
+        // Return tile at side facing current player location (or ignore when none present).
+        return imgTileEnum;
+        
+    }
+    
+    // pos_x = X-coordinate of location for which to check adjacent tile side.
+    // pos_y = Y-coordinate of location for which to check adjacent tile side.
+    // facingEnum = Direction to use when checking adjacent tile side.
+    // convertNull = Whether to convert null to IMG_TILE_IGNORE.
+    public HeroineEnum.ImgTileEnum getImgTileEnum_Side(int pos_x, int pos_y, 
+      HeroineEnum.FacingEnum facingEnum, boolean convertNull) {
+        
+        // Returns the enumerated value for the (side) tile one away from the location passed, using the 
+        // specified direction.
+        
+        Integer tileNbr; // Number of tile at side facing (or immediately behind) current player location (or null).
+        HeroineEnum.ImgTileEnum imgTileEnum; // Tile at side facing (or immediately behind) current player location.
+        
+        // Set defaults.
+        imgTileEnum = null;
+        
+        // Depending on direction, ...
+        switch (facingEnum) {
+            
+            case NORTH:
+                
+                // Facing north.
+                    
+                // Store side tile (possibly none -- null).
+                tileNbr = currentRegion.getSideTilesSouth( pos_x, pos_y - 1 );
+                
+                // Exit selector.
+                break;
+                
+            case SOUTH:
+                
+                // Facing south.
+                    
+                // Store side tile (possibly none -- null).
+                tileNbr = currentRegion.getSideTilesNorth( pos_x, pos_y + 1 );
+                
+                // Exit selector.
+                break;
+                
+            case EAST:
+                
+                // Facing east.
+                    
+                // Store side tile (possibly none -- null).
+                tileNbr = currentRegion.getSideTilesWest( pos_x + 1, pos_y );
+                
+                // Exit selector.
+                break;
+                
+            case WEST:
+                
+                // Facing west.
+                    
+                // Store side tile (possibly none -- null).
+                tileNbr = currentRegion.getSideTilesEast( pos_x - 1, pos_y );
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Facing invalid direction.
+            
+                // Set value to return to null.
+                tileNbr = null;
+                
+                // Display warning.
+                System.out.println("Warning:  Player facing invalid direction while trying to determine side tile at passed location.");
+                
+                // Exit selector.
+                break;
+                
+        }
+        
+        // If side tile not null, then...
+        if (tileNbr != null)
+        {
+
+            // Side tile not null.
+            imgTileEnum = HeroineEnum.ImgTileEnum.valueOf( tileNbr );
+
+        }
+        
+        // Otherwise, if converting null, then...
+        else if (convertNull)
+        {
+            
+            // Convert null to IMG_TILE_IGNORE_SIDE.
             
             // Side tile is null.
             imgTileEnum = HeroineEnum.ImgTileEnum.IMG_TILE_IGNORE_SIDE;

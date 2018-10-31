@@ -287,8 +287,8 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
     {
         
         /*
-        The constructor creates a base actor using a texture region (from the asset manager) based on the 
-        passed properties.
+        The constructor creates a base actor using a texture / texture region (from the asset manager) 
+        based on the passed properties.
         Allows for ease of use of the asset manager and atlases / packs.
         Supports both textures and texture regions.
         
@@ -355,6 +355,84 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         
     }
     
+    // actorName = Name of actor.
+    // assetKey = Key (as relates to hash map -- textureRegions -- in asset manager) for texture (or region)
+    //   to return.
+    // assetMgr = Reference to the asset manager.
+    // x = X-coordinate at which to place lower left corner of the actor.
+    // y = Y-coordinate at which to place lower left corner of the actor.
+    // assetKeyType = Asset manager key type (texture, texture region, ...).
+    public BaseActor(String actorName, String assetKey, AssetMgr assetMgr, float x, float y,
+      CoreEnum.AssetKeyTypeEnum assetKeyType)
+    {
+        
+        /*
+        The constructor creates a base actor using a texture / texture region (from the asset manager) 
+        based on the passed properties.
+        Allows for ease of use of the asset manager and atlases / packs.
+        Supports both textures and texture regions.
+        */
+        
+        // Call basic logic related to a new base actor.
+        this();
+        
+        // Name actor.
+        this.actorName = actorName;
+        super.setName(actorName);
+        
+        // If working with a texture, then...
+        if (assetKeyType == CoreEnum.AssetKeyTypeEnum.KEY_TEXTURE)
+        {
+            
+            // Working with a texture.
+            
+            // Assign texture to actor.
+            setTexture( assetMgr.getImage_xRef(assetKey) );
+            
+        }
+        
+        else
+        {
+            
+            // Working with a texture region.
+            
+            // Assign texture region to actor.
+            setTextureRegion( assetMgr.getTextureRegion(assetKey) );
+            
+        }
+        
+        // Position the lower left corner of the actor.
+        setPosition( x, y );
+        
+    }
+    
+    // actorName = Name of actor.
+    // assetKey = Key (as relates to hash map -- textureRegions -- in asset manager) for texture (or region)
+    //   to return.
+    // assetMgr = Reference to the asset manager.
+    // x = X-coordinate at which to place lower left corner of the actor.
+    // y = Y-coordinate at which to place lower left corner of the actor.
+    // assetKeyType = Asset manager key type (texture, texture region, ...).
+    // color = shading to apply to the actor.
+    public BaseActor(String actorName, String assetKey, AssetMgr assetMgr, float x, float y,
+      CoreEnum.AssetKeyTypeEnum assetKeyType, Color color)
+    {
+        
+        /*
+        The constructor creates a base actor using a texture / texture region (from the asset manager) 
+        based on the passed properties.
+        Allows for ease of use of the asset manager and atlases / packs.
+        Supports both textures and texture regions.
+        */
+        
+        // Call basic logic related to a new base actor.
+        this(actorName, assetKey, assetMgr, x, y, assetKeyType);
+        
+        // Shade the actor.
+        super.setColor(color);
+        
+    }
+    
     // Methods below...
     
     // dt = Time in seconds since the last frame.  Also called delta.
@@ -364,7 +442,7 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
 
         // The function calls the act method of the Actor, which performs
         // a time based positional update.
-        System.out.println("Time: " + dt);
+        
         // Calls the act method of the Actor (parent / super) class.
         // Updates the actor based on time.
         super.act ( dt );

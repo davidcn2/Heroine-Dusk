@@ -43,29 +43,17 @@
       "sideTileCountEast" : 1,
       "sideTileCountNorth" : 0,
       "sideTileCountSouth" : 0,
-      "sideTileCountWest" : 1,
+      "sideTileCountWest" : 0,
       "tiles" : {
         "ROW_01" : [ 2, 2, 2 ],
         "ROW_02" : [ 2, 17, 2 ],
         "ROW_03" : [ 2, 5, 2 ],
         "ROW_04" : [ 2, 2, 2 ]
-      },
-      "west_side_tiles" : {
-        "SIDE_TILE_01" : {
-          "TILE" : 3,
-          "X" : 1,
-          "Y" : 2
-        }
       }
     },
     "MAP_01" : {
       "east_side_tiles" : {
         "SIDE_TILE_01" : {
-          "TILE" : 3,
-          "X" : 6,
-          "Y" : 6
-        },
-        "SIDE_TILE_02" : {
           "TILE" : 3,
           "X" : 1,
           "Y" : 6
@@ -111,11 +99,6 @@
         "SIDE_TILE_01" : {
           "TILE" : 3,
           "X" : 4,
-          "Y" : 1
-        },
-        "SIDE_TILE_02" : {
-          "TILE" : 3,
-          "X" : 4,
           "Y" : 10
         }
       },
@@ -126,20 +109,15 @@
       "regionNbr" : 1,
       "regionWidth" : 9,
       "shopCount" : 0,
-      "sideTileCountEast" : 2,
-      "sideTileCountNorth" : 2,
-      "sideTileCountSouth" : 2,
-      "sideTileCountWest" : 2,
+      "sideTileCountEast" : 1,
+      "sideTileCountNorth" : 1,
+      "sideTileCountSouth" : 1,
+      "sideTileCountWest" : 1,
       "south_side_tiles" : {
         "SIDE_TILE_01" : {
           "TILE" : 3,
           "X" : 4,
           "Y" : 0
-        },
-        "SIDE_TILE_02" : {
-          "TILE" : 3,
-          "X" : 4,
-          "Y" : 9
         }
       },
       "tiles" : {
@@ -159,11 +137,6 @@
         "SIDE_TILE_01" : {
           "TILE" : 3,
           "X" : 7,
-          "Y" : 6
-        },
-        "SIDE_TILE_02" : {
-          "TILE" : 3,
-          "X" : 2,
           "Y" : 6
         }
       }

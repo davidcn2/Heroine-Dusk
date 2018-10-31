@@ -1197,7 +1197,9 @@ public class HeroineEnum
         IMG_INTERFACE_INFO_BTN (3, "info_button.png", "info_button.atlas", "info_btn", "info_btn_atlas"), // Information button.
         IMG_INTERFACE_MINIMAP (4, "minimap.png", "minimap.pack", "minimap", "minimap_atlas"), // Minimap icons.
         IMG_INTERFACE_MINIMAP_CURSOR (5, "minimap_cursor.png", "minimap_cursor.pack", "minimap_cursor", "minimap_cursor_atlas"), // Minimap cursor.
-        IMG_INTERFACE_SELECT (6, "select.png", "", "select", "") // Button selection.
+        IMG_INTERFACE_MINIMAP_DOOR_HORZ (6, "minimap_door_horizontal.png", "", "minimap_door_horizontal", ""), // Minimap horizontal door.
+        IMG_INTERFACE_MINIMAP_DOOR_VERT (7, "minimap_door_vertical.png", "", "minimap_door_vertical", ""), // Minimap vertical door.
+        IMG_INTERFACE_SELECT (8, "select.png", "", "select", "") // Button selection.
         ; // semicolon needed when fields / methods follow
 
         private final int imgInterfaceEnum; // Enumerations related to interface images.
