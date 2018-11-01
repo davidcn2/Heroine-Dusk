@@ -49,7 +49,7 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
 
     /*
     The class extends the basic functionality of a BaseScreen class and sets up the introduction screen.
-    The application displays the introduction, followed by the title, screen.
+    The application displays the introduction, followed by the title screen.
     
     Methods include:
 
@@ -378,7 +378,8 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         5.  Populate hash maps related to sounds and music.
         6.  Split tile regions for use with explore screen.
         7.  Load pixel maps.
-        8.  Hides the progress bar.
+        8.  Set asset manager, in order to handle resuming properly.
+        9.  Hides the progress bar.
         */
         
         int counter; // Used to count through regions in current tile -- for splitting.
@@ -484,7 +485,10 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
         // 7.  Load pixel maps.
         gameHD.getAssetMgr().loadPixelMaps();
         
-        // 8.  Hide the progress bar.
+        // 8.  Set asset manager, in order to handle resuming properly.
+        Texture.setAssetManager(gameHD.getAssetMgr().getManager());
+        
+        // 9.  Hide the progress bar.
         progressBar.hideBar();
         
     }

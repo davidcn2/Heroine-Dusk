@@ -1,6 +1,7 @@
 package screens;
 
 // LibGDX imports.
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -72,6 +73,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel titleLabel; // Label displaying dialog title.
     
     // Declare regular variables.
+    private ArrayList<Float> selectorPosListY; // List of positions to place selector -- related to buttons.
     final private boolean initialized; // Whether screen initialized.
     private ArrayList<Integer> labelCountList; // Number of labels per button.
     private int windowHeight; // Application window height.
@@ -125,7 +127,12 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         /* 
         The function occurs during the startup / create phase and accomplishes the following:
         
-        
+        1.  Sets defaults.
+        2.  Initializes arrays and array lists.
+        3.  Configures and adds the background Actor.
+        4.  Renders the title label.
+        5.  Renders the buttons and associated labels.
+        6.  Renders the dialog message.
         */
         
         // Declare object variables.
@@ -143,6 +150,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         buttonLabels = new ArrayList<>();
         buttons = new ArrayList<>();
         removeList = new ArrayList<>();
+        selectorPosListY = new ArrayList<>();
         
         // 3.  Configure and add the background Actor.
         
@@ -251,6 +259,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                     
                         {
                         // Processing an event from a regular button and NOT the selector.
+                        // Same as clicking unselected button.
                         
                         // Update the selected button number based on the one clicked.
                         gameHD.getDialog().setSelect_pos(buttonNbr);
@@ -263,6 +272,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         {
                         // Processing an event from a regular button AND the selector.
+                        // Same as clicking already selected button.
                             
                         // Store the button number as the current selection.
                         buttonSelected = gameHD.getDialog().getSelect_pos();
@@ -346,6 +356,22 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // First, clear any existing buttons and labels, and the selector and remove them from the stage.
         
+        // If selector y-position list exists, then...
+        if (selectorPosListY != null)
+        {
+            
+            // Selector y-position list exists.
+            
+            // Reinitialize list.
+            selectorPosListY = new ArrayList<>();
+            
+            // Populate selector y-position list with null values (allowing for three buttons).
+            selectorPosListY.add(null);
+            selectorPosListY.add(null);
+            selectorPosListY.add(null);
+            
+        }
+        
         // If one or more buttons exist, then...
         if (buttons.size() > 0)
         {
@@ -396,8 +422,10 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         buttonCount = gameHD.getDialog().getOptions().length;
         
         // Store button height and width.
-        buttonHeight = gameHD.getAssetMgr().getTextureRegionRect(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key()).height;
-        buttonWidth = gameHD.getAssetMgr().getTextureRegionRect(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key()).width;
+        buttonHeight = gameHD.getAssetMgr().getTextureRegionRect(
+          HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key() ).height;
+        buttonWidth = gameHD.getAssetMgr().getTextureRegionRect(
+          HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_BUY.getValue_Key() ).width;
         
         // Store x-coordinate of left edge of labels.
         labelPosX = buttonWidth + buttonPosX + buttonLabelDistanceHorz;
@@ -423,7 +451,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
             buttonPosY_Middle = buttonPosY + (buttonHeight / 2);
             
             // If drawing button, then...
-            if (drawButton)    
+            if ( drawButton )    
             {
                 
                 // Drawing button -- Buy or exit.
@@ -432,13 +460,13 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                 button = new BaseActor();
 
                 // Name actor associated with button.
-                button.setActorName("button" + option.buttonNbr);
+                button.setActorName( "button" + option.buttonNbr );
 
                 // Assign the Texture to the button Actor.
-                button.setTextureRegion(gameHD.getAssetMgr().getTextureRegion(option.button.getValue_Key()));
+                button.setTextureRegion( gameHD.getAssetMgr().getTextureRegion(option.button.getValue_Key()) );
                 
                 // Position the background with its lower left corner at the corresponding location in the screen.
-                button.setPosition( buttonPosX, buttonPosY);
+                button.setPosition( buttonPosX, buttonPosY );
 
                 // Add events to current button.
                 addEvent( button, option.buttonNbr );
@@ -447,10 +475,13 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                 mainStage.addActor( button );
 
                 // Add button to array list.
-                buttons.add(button);
+                buttons.add( button );
+                
+                // Update position in selector list.
+                selectorPosListY.set( buttonCounter, buttonPosY - buttonSelectorHeight );
                 
                 // If current button selected, then...
-                if (option.buttonNbr == gameHD.getDialog().getSelect_pos())
+                if ( option.buttonNbr == gameHD.getDialog().getSelect_pos() )
                 {
 
                     // Current button selected.
@@ -459,12 +490,14 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                     selector = new BaseActor();
 
                     // Name actor associated with the selector.
-                    selector.setActorName("selector");
+                    selector.setActorName( "selector" );
 
                     // Assign the Texture to the selector Actor.
-                    selector.setTexture(gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_SELECT.getValue_Key()));
-
-                    // Position the background with its lower left corner at the corresponding location in the screen.
+                    selector.setTexture(gameHD.getAssetMgr().getImage_xRef(
+                      HeroineEnum.ImgInterfaceEnum.IMG_INTERFACE_SELECT.getValue_Key() ));
+                    
+                    // Position the selector with its lower left corner at the corresponding location 
+                    // in the screen.
                     selector.setPosition( 0, buttonPosY - buttonSelectorHeight );
                     
                     // Add events to selector.
@@ -485,16 +518,16 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
             buttonLabelCurr = new ArrayList<>();
 
             // If first of two possible messages exists for button, then...
-            if (option.msg1.length() > 0)
+            if ( option.msg1.length() > 0 )
 
             {
 
                 // First of two possible messages exists for button.
 
                 // Create button label.
-                buttonLabelCurr.add(new CustomLabel(game.skin, option.msg1.toUpperCase(), "option one label", 
+                buttonLabelCurr.add( new CustomLabel(game.skin, option.msg1.toUpperCase(), "option one label", 
                   "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), 
-                  HeroineEnum.FontEnum.FONT_UI.getValue_Key()));
+                  HeroineEnum.FontEnum.FONT_UI.getValue_Key()) );
 
                 // Add height of current label.
                 labelHeight += buttonLabelCurr.get(0).getLabelHeight();
@@ -512,9 +545,9 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Second of two possible messages exists for button.
 
                 // Create button label.
-                buttonLabelCurr.add(new CustomLabel(game.skin, option.msg2.toUpperCase(), "option two label", 
+                buttonLabelCurr.add( new CustomLabel(game.skin, option.msg2.toUpperCase(), "option two label", 
                   "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), 
-                  HeroineEnum.FontEnum.FONT_UI.getValue_Key()));
+                  HeroineEnum.FontEnum.FONT_UI.getValue_Key()) );
 
                 // Add height of current label.
                 labelHeight += buttonLabelCurr.get(labelCountCurr).getLabelHeight();
@@ -536,15 +569,15 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                 bottomY_Labels = buttonPosY_Middle - labelHeight / 2;
 
                 // Add current label to scene graph.
-                mainStage.addActor(buttonLabelCurr.get(0).displayLabel(labelPosX, bottomY_Labels));
+                mainStage.addActor( buttonLabelCurr.get(0).displayLabel(labelPosX, bottomY_Labels) );
 
                 // Add current label to array list.
-                buttonLabels.add(buttonLabelCurr.get(0));
+                buttonLabels.add( buttonLabelCurr.get(0) );
 
             }
 
             // If more than one message exists for current option / button, then...
-            else if (labelCountCurr > 1)
+            else if ( labelCountCurr > 1 )
 
             {
 
@@ -572,8 +605,8 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
                     labelPosY = bottomY_Labels - (labelHeightAdj * (labelCounterCurr - 1));
 
                     // Add current label to scene graph.
-                    mainStage.addActor(buttonLabelCurr.get(labelCounterCurr - 1).displayLabel(labelPosX, 
-                      labelPosY));
+                    mainStage.addActor( buttonLabelCurr.get(labelCounterCurr - 1).displayLabel(labelPosX, 
+                      labelPosY) );
 
                     // Add current label to array list.
                     buttonLabels.add(buttonLabelCurr.get(labelCounterCurr - 1));
@@ -651,6 +684,73 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         // Perform logic related to startup / create phase, including configuration and addition
         // of actors to stage.
         create();
+        
+    }
+    
+    // Handle discrete key events.
+    
+    // keycode = Code for key pressed.
+    @Override
+    public boolean keyDown(int keycode)
+    {
+        
+        // The function gets called when the user presses a key.
+        
+        // InputProcessor methods for handling discrete input.
+        
+        int newPos; // Position of selector after key press.
+        
+        // Depending on key pressed, ...
+        switch (keycode)
+        {
+        
+            case Keys.UP:
+            
+                // User pressed the up arrow key.
+                
+                // Move the selection up an item.
+                newPos = gameHD.getDialog().moveUp();
+                
+                // Position the selector with its lower left corner at the corresponding location 
+                // in the screen.
+                selector.setPosition( 0, selectorPosListY.get(newPos) );
+                
+                // Exit processing.
+                break;
+                
+            case Keys.DOWN:
+            
+                // User pressed the down arrow key.
+                
+                // Move the selection up an item.
+                newPos = gameHD.getDialog().moveDown();
+                
+                // Position the selector with its lower left corner at the corresponding location 
+                // in the screen.
+                selector.setPosition( 0, selectorPosListY.get(newPos) );
+                
+                // Exit processing.
+                break;
+                
+            case Keys.ENTER:
+            
+                // User pressed the enter key.
+                
+                // Process logic related to the label selected.
+                gameHD.getShopInfo().shop_act( gameHD.getDialog().getSelect_pos() );
+                
+                // Exit processing.
+                break;
+                
+            default:
+                
+                // Exit processing.
+                break;
+                
+        }
+        
+        // Return a value.
+        return false;
         
     }
     

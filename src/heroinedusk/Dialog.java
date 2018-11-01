@@ -1,5 +1,8 @@
 package heroinedusk;
 
+// Java imports.
+import java.util.ArrayList;
+
 public class Dialog 
 {
     
@@ -14,6 +17,9 @@ public class Dialog
 
     addOption:  Adds an option to the dialog.
     countButtons:  Stores and returns a count of the number of buttons.
+    finalize_option_nav_list:  Finishes setting up the option button navigation list.
+    moveDown:  Moves down an item in the dialog menu.
+    moveUp:  Moves up an item in the dialog menu.
     resetDialog:  Resets most aspects of the dialog.
     */
     
@@ -28,6 +34,10 @@ public class Dialog
       // Only meaningful when in a shop / location.  Matches to a ShopEnum value.
     private String title; // Name of current shop / location.
     private int optionCount; // Number of options.
+    private int optionNavCount; // Number of items in option navigation list.  Base 0.
+    private int optionNavCounter; // Used to increment option buttons when calling the addOption method.
+    private int optionNavItem; // Currently selected item in option navigation list.  Base 0.
+    private ArrayList<Integer> optionNavList; // List of option button numbers.  Generally -- 1, 2 or 1, 2, 3.
     private Option[] options; // Dialog button information.
     
     public Dialog()
@@ -82,8 +92,22 @@ public class Dialog
         
         // The function adds an option to the dialog.
         
-        // Add option.
+        // Add option to master list.
         options[optionCount] = new Option(button, optionCount, msg1, msg2);
+        
+        // If showing a dialog button, then...
+        if (button != HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_NONE)
+        {
+            
+            // Showing a dialog button.
+            
+            // Add option to navigation list.
+            optionNavList.set(optionNavCounter, optionNavCounter);
+            
+        }
+        
+        // Increment option button counter.
+        optionNavCounter++;
         
         //System.out.println("Adding option - " + optionCount + ": button: " + button + ", msg1: " + msg1 + 
         //  ", msg2: " + msg2);
@@ -102,8 +126,19 @@ public class Dialog
         
         // The function adds an option to the dialog.
         
-        // Add option.
+        // Add option to master list.
         options[optionNbr] = new Option(button, optionNbr, msg1, msg2);
+        
+        // If showing a dialog button, then...
+        if (button != HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_NONE)
+        {
+            
+            // Showing a dialog button.
+            
+            // Add option to navigation list.
+            optionNavList.set(optionNbr, optionNbr);
+            
+        }
         
     }
     
@@ -141,6 +176,113 @@ public class Dialog
         
     }
     
+    public void finalize_option_nav_list()
+    {
+        
+        // The function finishes setting up the option button navigation list.
+        
+        int itemCount; // Number of items in navigation button list.
+        ArrayList<Integer> removeList; // Navigation button entries to remove.
+        
+        // Initialize array list.
+        removeList = new ArrayList<>();
+        
+        // Count number of items in navigation button list, base 0.
+        itemCount = optionNavList.size() - 1;
+        
+        // Loop through and remove unnecessary items.
+        for (int counter = 0; counter <= itemCount; counter++)
+        {
+            
+            // If order does not match value, then...
+            if (counter != optionNavList.get(counter))
+            {
+                // Order does not match value.
+                
+                // Add to remove list.
+                removeList.add(counter);
+                
+            }
+            
+        } // End ... Loop through and remove unnecessary items.
+        
+        // Loop through and remove marked items.
+        removeList.forEach((item) -> {
+            
+            // Remove item.
+            optionNavList.remove((int)item);
+            
+        });
+        
+        // Store number of items in list, base 0.
+        optionNavCount = optionNavList.size() - 1;
+        
+        // By default, select last item -- base 0.
+        optionNavItem = optionNavCount;
+        
+    }
+    
+    public int moveDown()
+    {
+        
+        // The function moves down an item in the dialog menu.
+        
+        // Move to previous item in option navigation list.
+        optionNavItem++;
+        
+        // If position outside of bounds, then...
+        if (optionNavItem > optionNavCount)
+        {
+            
+            // Position outside of bounds.
+            
+            // Move to first item.
+            optionNavItem = 0;
+            
+        }
+        
+        // Update selector position.
+        select_pos = optionNavList.get(optionNavItem);
+        
+        // Return new position.
+        return select_pos;
+        
+    }
+    
+    public int moveUp()
+    {
+        
+        // The function moves up an item in the dialog menu.
+        
+        /*
+        System.out.println("Option count: " + optionCount);
+        System.out.println("Button count: " + buttonCount);
+        System.out.println("Nav List: " + optionNavList);
+        System.out.println("Option nav item (before): " + optionNavItem);
+        */
+
+        // Move to previous item in option navigation list.
+        optionNavItem--;
+        
+        // If position outside of bounds, then...
+        if (optionNavItem < 0)
+        {
+            
+            // Position outside of bounds.
+            
+            // Move to last item.
+            optionNavItem = optionNavCount;
+            
+        }
+        
+        // Update selector position.
+        select_pos = optionNavList.get(optionNavItem);
+        
+        // Return new position.
+        return select_pos;
+        
+    }
+    
     public final void resetDialog()
     {
         
@@ -149,16 +291,28 @@ public class Dialog
         // Set defaults.
         buttonCount = -1; // Not determined yet.
         optionCount = 0;
+        optionNavCount = 0;
+        optionNavCounter = 0;
         select_pos = 2; // Exit or similar button.
         fadeMessage = false;
         message = "";
         title = "";
         
-        // Initialize arrays.
+        // Initialize arrays and array lists.
         options = new Option[3];
+        optionNavList = new ArrayList<>();
         
         // Most shops should use the exit button as the third option.
         options[2] = new Option(HeroineEnum.DialogButtonEnum.DIALOG_BUTTON_EXIT, 2, "Exit", "");
+        
+        // Add three option buttons to the list, each pointing to the third button.
+        // Default involves only having one button, the third.
+        // Reset properties of the other buttons when adding them.
+        optionNavList.add(2); // Point to third button.
+        optionNavList.add(2); // Point to third button.
+        optionNavList.add(2); // Point to third button.
+        optionNavCount = 2; // Base 0 count ... Three buttons ... Same as Two.
+        optionNavItem = 2; // Last item, using base 0.
         
     }
     

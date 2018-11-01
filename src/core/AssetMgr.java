@@ -598,15 +598,8 @@ public class AssetMgr
         
     }
     
-    // regionKey = Key (as relates to hash map) for Rectangle2D to return.
-    public Rectangle2D.Float getTextureRegionRect(String regionKey)
-    {
-        
-        // The function returns the rect structure related to the texture region identified by the passed key.
-        
-        // Return the rect structure.
-        return textureRegionRects.get(regionKey);
-        
+    public AssetManager getManager() {
+        return manager;
     }
     
     // musicEnum = Enumerated value for the desired music.
@@ -675,6 +668,17 @@ public class AssetMgr
         
         // Return the texture region in the hash map with the passed key.
         return textureRegions.get(regionKey);
+        
+    }
+    
+    // regionKey = Key (as relates to hash map) for Rectangle2D to return.
+    public Rectangle2D.Float getTextureRegionRect(String regionKey)
+    {
+        
+        // The function returns the rect structure related to the texture region identified by the passed key.
+        
+        // Return the rect structure.
+        return textureRegionRects.get(regionKey);
         
     }
     

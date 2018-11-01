@@ -47,7 +47,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     
     /*
     The class extends the basic functionality of a BaseScreen class and sets up the main menu screen.
-    The application displays the introduction, followed by the title, screen.
+    The application displays the introduction, followed by the title screen.
 
     Methods include:
 
@@ -90,8 +90,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     private final int TITLE_MENU_MAIN = 0;
     private final int TITLE_MENU_OPTIONS = 1;
     private final int TITLE_MENU_LOAD = 2;
-    private final int TITLE_MENU_SAVE = 3;
-    private final int TITLE_MENU_EXIT = 4;
+    private final int TITLE_MENU_EXIT = 3;
     
     // Game world dimensions.
     private int mapWidth; // Total map width, in pixels.
@@ -142,7 +141,11 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         /* 
         The function occurs during the startup / create phase and accomplishes the following:
         
-        
+        1.  Sets defaults.
+        2.  Initializes arrays and array lists.
+        3.  Configures and adds the background Actor.
+        4.  Configures and adds the label with the title.
+        5.  Updates the menu list to contain those of the main menu.
         */
         
         // 1.  Set defaults.
@@ -152,7 +155,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         this.loadedGame = false;
         
         // 2.  Initialize arrays and array lists.
-        this.menu = new String[4];
+        this.menu = new String[5];
         removeList = new ArrayList<>();
         
         // 3.  Configure and add the background Actor.
@@ -164,7 +167,8 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         background.setActorName("Background");
         
         // Assign the Texture to the background Actor.
-        background.setTexture(gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgBackgroundEnum.IMG_BACK_NIGHTSKY.getValue_Key()));
+        background.setTexture(
+          gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgBackgroundEnum.IMG_BACK_NIGHTSKY.getValue_Key()) );
         
         // Position the background with its lower left corner at the corresponding location in the screen.
         background.setPosition( 0, 0 );
@@ -382,6 +386,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function switches to the passed menu and updates the list of text to display.
+        // Called when initializing screen and clicking on Options and Back buttons.
         
         // If identifier passed for same menu type, then...
         if (menu_id == id)
@@ -412,15 +417,17 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // Update menu type to the one passed.
         menu_id = id;
-
-        // Reset array containing menu options.
-        menu = new String[5];
-  
+        
         // If displaying main menu, then...
         if (id == TITLE_MENU_MAIN) 
             {
             // Displaying main menu.
-            ArrayRoutines.addAll(menu, (loadedGame ? "CONTINUE" : "START"), "OPTIONS", "LOAD", "SAVE", "EXIT");
+                
+            // Reset array containing menu options.
+            menu = new String[4];
+                
+            // Build array with menu options.
+            ArrayRoutines.addAll(menu, (loadedGame ? "CONTINUE" : "START"), "OPTIONS", "LOAD", "EXIT");
             }
   
         // Otherwise, if displaying options menu, then...
@@ -428,6 +435,9 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
             {
             // Displaying options menu.
                 
+            // Reset array containing menu options.
+            menu = new String[5];
+            
             if (gameHD.getConfig().getOptions().getAnimationsOn())
                 menu[0] = "ANIMATIONS ARE ON";
             else
@@ -505,13 +515,6 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                 case TITLE_MENU_LOAD:
 
                     // User clicked load button.
-                    
-                    // Exit selector.
-                    break;
-
-                case TITLE_MENU_SAVE:
-
-                    // User clicked save button.
                     
                     // Exit selector.
                     break;
@@ -710,8 +713,7 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function gets called when the user presses a key.
-        
-        // 1.  
+        // Supports navigating the current menu and selecting one of the "buttons".
         
         int menu_selector_keys_prev; // Previously navigated to menu item.  Base 0.
         String menu_text_prev; // Text from previously navigated to menu item (contains brackets).

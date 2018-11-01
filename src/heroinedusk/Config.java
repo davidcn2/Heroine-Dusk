@@ -77,7 +77,7 @@ public class Config
         options = new Options(true, true, true, false);
         
         // Populate array with y-positions at which to place first item in tile screen menu (depending on scale).
-        ArrayRoutines.addAll(menuTop, 0, 0, 0, 0, 0, 374, 0, 0);
+        ArrayRoutines.addAll(menuTop, 0, 0, 0, 0, 0, 344, 0, 0);
         
         // Determine current y-position at which to place top of menu on title screen.
         menuTopCurr = menuTop[prescale - 1];

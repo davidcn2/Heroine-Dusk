@@ -556,6 +556,9 @@ public class Shops
         //System.out.println("Option 1, Msg 1: " + gameHD.dialog.options[1].msg1);
         //System.out.println("Option 1, Msg 2: " + gameHD.dialog.options[1].msg2);
         
+        // Finish setting up the option button navigation list.
+        gameHD.getDialog().finalize_option_nav_list();
+        
     }
     
     // slot = Slot / item number in shop.

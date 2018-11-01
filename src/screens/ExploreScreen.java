@@ -3197,17 +3197,19 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Loop through actors required for ui stage.
         for (Actor actor : uiStageActors)
         {
-            System.out.println("Waking ui actor: " + actor.getName());
+            
             // Add actor to ui stage.
             uiStage.addActor( actor );
+            
         }
         
          // Loop through actors required for middle stage.
         for (Actor actor : middleStageActors)
         {
-            System.out.println("Waking middle actor: " + actor.getName());
+            
             // Add actor to ui stage.
             middleStage.addActor( actor );
+            
         }
         
         // Update labels.

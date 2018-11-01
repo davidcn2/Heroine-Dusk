@@ -142,13 +142,6 @@
       }
     },
     "MAP_02" : {
-      "east_side_tiles" : {
-        "SIDE_TILE_01" : {
-          "TILE" : 3,
-          "X" : 1,
-          "Y" : 2
-        }
-      },
       "enemyCount" : 0,
       "exitCount" : 1,
       "exits" : {
@@ -167,7 +160,7 @@
       "regionNbr" : 2,
       "regionWidth" : 3,
       "shopCount" : 0,
-      "sideTileCountEast" : 1,
+      "sideTileCountEast" : 0,
       "sideTileCountNorth" : 0,
       "sideTileCountSouth" : 0,
       "sideTileCountWest" : 1,
@@ -213,15 +206,8 @@
       "shopCount" : 0,
       "sideTileCountEast" : 0,
       "sideTileCountNorth" : 1,
-      "sideTileCountSouth" : 1,
+      "sideTileCountSouth" : 0,
       "sideTileCountWest" : 0,
-      "south_side_tiles" : {
-        "SIDE_TILE_01" : {
-          "TILE" : 3,
-          "X" : 2,
-          "Y" : 4
-        }
-      },
       "tiles" : {
         "ROW_01" : [ 0, 0, 0, 0, 0 ],
         "ROW_02" : [ 0, 0, 9, 0, 0 ],
@@ -258,11 +244,6 @@
       "north_side_tiles" : {
         "SIDE_TILE_01" : {
           "TILE" : 3,
-          "X" : 6,
-          "Y" : 2
-        },
-        "SIDE_TILE_02" : {
-          "TILE" : 3,
           "X" : 10,
           "Y" : 15
         }
@@ -284,16 +265,11 @@
         }
       },
       "sideTileCountEast" : 0,
-      "sideTileCountNorth" : 2,
-      "sideTileCountSouth" : 2,
+      "sideTileCountNorth" : 1,
+      "sideTileCountSouth" : 1,
       "sideTileCountWest" : 0,
       "south_side_tiles" : {
         "SIDE_TILE_01" : {
-          "TILE" : 3,
-          "X" : 10,
-          "Y" : 14
-        },
-        "SIDE_TILE_02" : {
           "TILE" : 3,
           "X" : 6,
           "Y" : 1
@@ -342,11 +318,6 @@
           "TILE" : 3,
           "X" : 9,
           "Y" : 11
-        },
-        "SIDE_TILE_02" : {
-          "TILE" : 3,
-          "X" : 3,
-          "Y" : 1
         }
       },
       "regionBackground" : "IMG_BACK_NIGHTSKY",
@@ -387,16 +358,11 @@
         }
       },
       "sideTileCountEast" : 0,
-      "sideTileCountNorth" : 2,
-      "sideTileCountSouth" : 2,
+      "sideTileCountNorth" : 1,
+      "sideTileCountSouth" : 1,
       "sideTileCountWest" : 0,
       "south_side_tiles" : {
         "SIDE_TILE_01" : {
-          "TILE" : 3,
-          "X" : 9,
-          "Y" : 10
-        },
-        "SIDE_TILE_02" : {
           "TILE" : 3,
           "X" : 3,
           "Y" : 0
@@ -451,11 +417,6 @@
       "north_side_tiles" : {
         "SIDE_TILE_01" : {
           "TILE" : 3,
-          "X" : 4,
-          "Y" : 3
-        },
-        "SIDE_TILE_02" : {
-          "TILE" : 3,
           "X" : 8,
           "Y" : 15
         }
@@ -468,19 +429,14 @@
       "regionWidth" : 16,
       "shopCount" : 0,
       "sideTileCountEast" : 0,
-      "sideTileCountNorth" : 2,
-      "sideTileCountSouth" : 2,
+      "sideTileCountNorth" : 1,
+      "sideTileCountSouth" : 1,
       "sideTileCountWest" : 0,
       "south_side_tiles" : {
         "SIDE_TILE_01" : {
           "TILE" : 3,
           "X" : 4,
           "Y" : 2
-        },
-        "SIDE_TILE_02" : {
-          "TILE" : 3,
-          "X" : 8,
-          "Y" : 14
         }
       },
       "tiles" : {
@@ -503,13 +459,6 @@
       }
     },
     "MAP_07" : {
-      "east_side_tiles" : {
-        "SIDE_TILE_01" : {
-          "TILE" : 3,
-          "X" : 9,
-          "Y" : 5
-        }
-      },
       "enemies" : {
         "ENEMY_01" : "ENEMY_SHADOW_SOUL",
         "ENEMY_02" : "ENEMY_ZOMBIE",
@@ -540,7 +489,7 @@
       "regionNbr" : 7,
       "regionWidth" : 15,
       "shopCount" : 0,
-      "sideTileCountEast" : 1,
+      "sideTileCountEast" : 0,
       "sideTileCountNorth" : 0,
       "sideTileCountSouth" : 0,
       "sideTileCountWest" : 1,
@@ -576,11 +525,6 @@
           "TILE" : 18,
           "X" : 4,
           "Y" : 12
-        },
-        "SIDE_TILE_03" : {
-          "TILE" : 3,
-          "X" : 14,
-          "Y" : 7
         }
       },
       "enemies" : {
@@ -613,10 +557,10 @@
       "regionNbr" : 8,
       "regionWidth" : 16,
       "shopCount" : 0,
-      "sideTileCountEast" : 3,
+      "sideTileCountEast" : 2,
       "sideTileCountNorth" : 0,
       "sideTileCountSouth" : 0,
-      "sideTileCountWest" : 3,
+      "sideTileCountWest" : 2,
       "tiles" : {
         "ROW_01" : [ 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 ],
         "ROW_02" : [ 0, 0, 2, 2, 2, 7, 5, 5, 5, 5, 5, 5, 7, 15, 15, 2 ],
@@ -637,15 +581,10 @@
       "west_side_tiles" : {
         "SIDE_TILE_01" : {
           "TILE" : 3,
-          "X" : 1,
-          "Y" : 7
-        },
-        "SIDE_TILE_02" : {
-          "TILE" : 3,
           "X" : 15,
           "Y" : 7
         },
-        "SIDE_TILE_03" : {
+        "SIDE_TILE_02" : {
           "TILE" : 18,
           "X" : 5,
           "Y" : 12
@@ -687,7 +626,7 @@
       "sideTileCountEast" : 1,
       "sideTileCountNorth" : 0,
       "sideTileCountSouth" : 0,
-      "sideTileCountWest" : 1,
+      "sideTileCountWest" : 0,
       "tiles" : {
         "ROW_01" : [ 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0 ],
         "ROW_02" : [ 0, 0, 0, 0, 0, 0, 1, 2, 2, 1, 0, 0, 0 ],
@@ -699,13 +638,6 @@
         "ROW_08" : [ 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0 ],
         "ROW_09" : [ 0, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 4, 0 ],
         "ROW_10" : [ 0, 0, 0, 0, 9, 1, 1, 1, 1, 0, 0, 0, 0 ]
-      },
-      "west_side_tiles" : {
-        "SIDE_TILE_01" : {
-          "TILE" : 3,
-          "X" : 1,
-          "Y" : 5
-        }
       }
     },
     "MAP_10" : {
@@ -746,11 +678,6 @@
         "SIDE_TILE_03" : {
           "TILE" : 3,
           "X" : 2,
-          "Y" : 1
-        },
-        "SIDE_TILE_04" : {
-          "TILE" : 3,
-          "X" : 2,
           "Y" : 15
         }
       },
@@ -785,7 +712,7 @@
         }
       },
       "sideTileCountEast" : 1,
-      "sideTileCountNorth" : 4,
+      "sideTileCountNorth" : 3,
       "sideTileCountSouth" : 4,
       "sideTileCountWest" : 0,
       "south_side_tiles" : {
