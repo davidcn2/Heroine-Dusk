@@ -858,8 +858,8 @@ public class IntroScreen extends BaseScreen { // Extends the BaseScreen class.
                 progress = gameHD.getAssetMgr().manager.getProgress();
                 
                 // Display load status.
-                System.out.println("Loading Status ... Asset " + 
-                  gameHD.getAssetMgr().manager.getAssetNames().size + " ... " + progress * 100 + "%");
+                //System.out.println("Loading Status ... Asset " + 
+                  //gameHD.getAssetMgr().manager.getAssetNames().size + " ... " + progress * 100 + "%");
 
                 // Update progress bar.
                 progressBar.setValue(progress);

@@ -754,10 +754,10 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                   menuLabels[menu_selector_keys].getLabelText() + " ]", 
                   gameHD.skin.getFont("uiFont"), viewWidthMain);
                 
-                // Exit checks.
+                // Exit selector.
                 break;
                 
-            // If the user pressed the down arrow key, then...
+            // Otherwise, if the user pressed the down arrow key, then...
             case Keys.DOWN:
                 
                 // The user pressed the down arrow key.
@@ -787,10 +787,10 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                   menuLabels[menu_selector_keys].getLabelText() + " ]", 
                   gameHD.skin.getFont("uiFont"), viewWidthMain);
                 
-                // Exit checks.
+                // Exit selector.
                 break;
                 
-            // If the user pressed the enter / return key, then...
+            // Otherwise, if the user pressed the enter / return key, then...
             case Keys.ENTER:
                 
                 // The user pressed the enter / return key.
@@ -799,10 +799,13 @@ public class TitleScreen extends BaseScreen { // Extends the BaseScreen class.
                 menu_selector = menu_selector_keys;
                 titleLogic();
                 
+                // Exit selector.
+                break;
+                
             // Otherwise...
             default:
                 
-                // Exit checks.
+                // Exit selector.
                 break;
                 
         }

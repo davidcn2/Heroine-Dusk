@@ -73,7 +73,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel titleLabel; // Label displaying dialog title.
     
     // Declare regular variables.
-    private ArrayList<Float> selectorPosListY; // List of positions to place selector -- related to buttons.
+    private ArrayList<Float> selectorPosListY; // List of y-positions to place selector -- related to buttons.
     final private boolean initialized; // Whether screen initialized.
     private ArrayList<Integer> labelCountList; // Number of labels per button.
     private int windowHeight; // Application window height.
