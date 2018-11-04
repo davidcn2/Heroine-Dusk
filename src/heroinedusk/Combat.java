@@ -42,7 +42,8 @@ public class Combat
     private final SecureRandom number; // Used for generating random numbers.
     private String offenseAction; // Action type employed by player.
     private String offenseResult; // Result of action by player.
-    private final int selectorAdjPos; // Position adjustment related to selector.
+    @SuppressWarnings("FieldMayBeFinal")
+    private int selectorAdjPos; // Position adjustment related to selector.
     
     // Declare constants.
     private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1);

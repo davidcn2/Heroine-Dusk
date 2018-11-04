@@ -111,16 +111,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private BaseActor infoButtonSelector; // BaseActor object that will act as the selector for the
       // information and other buttons.
     private CustomLabel infoLabel; // Label showing "INFO" text.
-    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled; // Hash map containing enabled 
-      // status of action buttons.
-    private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX; // X-coordinate of each action button.
-    private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosY; // Y-coordinate of bottom of each action button.
     private Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons; // Hash map containing
       // BaseActor objects that will act as the action buttons.
-    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonVisible; // Hash map containing visible 
-      // status of action buttons.
-    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapIgnoreNextExitEvent_ActionButtons; // Hash map containing
-      // whether to ignore next exit event (used with touchUp / exit) -- for action buttons.
     private MazeMap mazemap; // Stores data for the current active region / map.
     private Array<Actor> middleStageActors; // List of actors in middle stage used when waking screen.
     private Group minimapGroup; // Group containing minimap actors.
@@ -142,6 +134,14 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     // Declare regular variables.
     private HeroineEnum.SelectPosEnum buttonSelected; // Selected button.
     private boolean infoButtonSelected; // Whether information button selected and clicked.
+    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled; // Hash map containing enabled 
+      // status of action buttons.
+    private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX; // X-coordinate of each action button.
+    private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosY; // Y-coordinate of bottom of each action button.
+    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonVisible; // Hash map containing visible 
+      // status of action buttons.
+    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapIgnoreNextExitEvent_ActionButtons; // Hash map containing
+      // whether to ignore next exit event (used with touchUp / exit) -- for action buttons.
     private float minimapOffsetX; // X-coordinate of the point where the player first touched the minimap.
     private float minimapOffsetY; // Y-coordinate of the point where the player first touched the minimap.
     private float minimapOriginalX; // Original position (x-coordinate) of the minimap on the stage before drag operation.
@@ -150,6 +150,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private final SecureRandom number; // Used for generating random numbers.
     private HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX; // List of x-positions to place selector -- related to buttons.
     private HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY; // List of y-positions to place selector -- related to buttons.
+    private int selectorAdjPos; // Position adjustment related to selector.
     
     // Declare constants.
     private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1); // Disabled color.
@@ -173,7 +174,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 1.  Calls the constructor for the BaseScreen (parent / super) class.
         // 2.  Stores reference to main game class.
-        // 3.  Start random number generator.
+        // 3.  Starts random number generator.
         // 4.  Calls the create() function to perform remaining startup logic.
         
         // Call the constructor for the BaseScreen (parent / super) class.
@@ -239,6 +240,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         infoButtonSelected = false;
         minimapRenderInd = false;
         buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
+        selectorAdjPos = gameHD.getConfig().getScale() * 2;
         
         // 2.  Initialize arrays, array lists, and hash maps.
         middleStageActors = new Array<>();
@@ -723,40 +725,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     ignoreNextExitEvent = true;
                     
                     // Toggle information button.
-                    infoButtonSelected = !infoButtonSelected;     
-                    
-                    // If selected, then...
-                    if (infoButtonSelected)
-                    {
-                        
-                        // Information button selected.
-                    
-                        // Switch to information state.
-                        gameHD.setGameState(HeroineEnum.GameState.STATE_INFO);
-                        
-                        // Draw in selected state.
-                        infoButton.setTextureRegion(gameHD.getAssetMgr().getTextureRegion(HeroineEnum.InfoButtonEnum.INFO_BUTTON_SEL.getValue_Key()));
-                        
-                    }
-                    
-                    else
-                    {
-                    
-                        // Information button deselected.
-                        
-                        // Switch to explore state.
-                        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
-                        
-                        // Draw in unselected state.
-                        infoButton.setTextureRegion(gameHD.getAssetMgr().getTextureRegion(HeroineEnum.InfoButtonEnum.INFO_BUTTON.getValue_Key()));
-                        
-                    }
-                    
-                    // Play click sound.
-                    gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_CLICK);
-                    
-                    // Update screen to either display information or standard view.
-                    info_render();
+                    processAction_Info();
                     
                 }
                 
@@ -775,11 +744,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // (pointer will be -1).
                     // Notes:  Occurs when mouse cursor or finger touch is moved over the label.
                     
-                    // If information button selected, then...
+                    // If information button selected or processing an information button event, then...
                     if (buttonSelected == HeroineEnum.SelectPosEnum.BUTTON_POS_INFO || infoButtonInd)
                     {
                         
-                        // Information button selected.
+                        // Information button selected or processing an information button event.
                         
                         // Apply a dark shade to the information button.
                         infoButton.setColor(Color.LIGHT_GRAY);
@@ -791,12 +760,33 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         // Button other than information selected.
                         
-                        // Apply a dark shade to the selected button.
-                        mapActionButtons.get(
-                          HeroineEnum.ActionButtonExploreEnum.valueOf_xRef(
-                          buttonSelected).getValue_ActionButtonEnum()).setColor(Color.LIGHT_GRAY);
+                        // If in explore mode, then...
+                        if ( gameHD.getGameState() == HeroineEnum.GameState.STATE_EXPLORE )
+                        {
+                            
+                            // In explore mode.
+                            
+                            // Apply a dark shade to the selected button.
+                            mapActionButtons.get(
+                              HeroineEnum.ActionButtonExploreEnum.valueOf_xRef(
+                              buttonSelected).getValue_ActionButtonEnum()).setColor(Color.LIGHT_GRAY);
+                            
+                        }
                         
-                    }
+                        // Otherwise, if in combat mode, then...
+                        else if ( gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT )
+                        {
+                            
+                            // In combat mode.
+                            
+                            // Apply a dark shade to the selected button.
+                            mapActionButtons.get(
+                              HeroineEnum.ActionButtonCombatEnum.valueOf_xRef(
+                              buttonSelected).getValue_ActionButtonEnum()).setColor(Color.LIGHT_GRAY);
+                            
+                        }
+                        
+                    } // End ... If button other than information selected.
                     
                 }
                 
@@ -824,15 +814,16 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         ignoreNextExitEvent = false;
                     
                     // Otherwise, ...
-                    else
+                    else  
+                    {
                         
                         // Process exit event.
                         
-                        // If information button selected, then...
+                        // If information button selected or processing an information button event, then...
                         if (buttonSelected == HeroineEnum.SelectPosEnum.BUTTON_POS_INFO || infoButtonInd)
                         {
 
-                            // Information button selected.
+                            // Information button selected or processing an information button event.
                         
                             // Return information button to normal color.
                             infoButton.setColor(Color.WHITE);
@@ -844,13 +835,36 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
 
                             // Button other than information selected.
 
-                            // Return selected button to normal color.
-                            mapActionButtons.get(
-                              HeroineEnum.ActionButtonExploreEnum.valueOf_xRef(
-                              buttonSelected).getValue_ActionButtonEnum()).setColor(Color.WHITE);
+                            // If in explore mode, then...
+                            if ( gameHD.getGameState() == HeroineEnum.GameState.STATE_EXPLORE )
+                            {
 
-                        }
+                                // In explore mode.
+                            
+                                // Return selected button to normal color.
+                                mapActionButtons.get(
+                                  HeroineEnum.ActionButtonExploreEnum.valueOf_xRef(
+                                  buttonSelected).getValue_ActionButtonEnum()).setColor(Color.WHITE);
+                                
+                            }
+                            
+                            // Otherwise, if in combat mode, then...
+                            else if ( gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT )
+                            {
+
+                                // In combat mode.
+                                
+                                // Return selected button to normal color.
+                                mapActionButtons.get(
+                                  HeroineEnum.ActionButtonCombatEnum.valueOf_xRef(
+                                  buttonSelected).getValue_ActionButtonEnum()).setColor(Color.WHITE);
+
+                            }
+
+                        } // End ... Button other than information selected.
                         
+                    } // End ... If NOT ignoring next exit event.
+                    
                 }
                 
             }; // End ... InputListener.
@@ -1007,15 +1021,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, 
                       true);
                     
-                    // Remove any existing text and actions on the power action and result labels.
-                    info_clear_messages();
-                    
-                    System.out.println("Attack!");
-                    
-                    // Perform attack action using combat engine.
-                    combat.fight(HeroineEnum.FightEnum.FIGHT_ATTACK, gameHD.getSounds(), gameHD.getAvatar(),
-                      powerActionLabel, powerResultLabel, hpLabel, mpLabel, buttonActor, 
-                      mapActionButtonEnabled, null);
+                    // Process attack action.
+                    processAction_Attack();
                     
                 } // End ... touchUp.
                 
@@ -1074,82 +1081,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
                     // Notes:  Occurs when user releases mouse on button.
                     
-                    int burn_amount; // Either amount of damage to enemy, -1 when unable to cast spell, or 
-                      // 1 when succesfully burning an object.
-                    HeroineEnum.ImgTileEnum imgTileNumForward; // Tile image enumeration value for location
-                      // in front of player.  Null in combat.
-                    
                     // Flag to ignore next exit event.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, 
                       true);
                     
-                    // Remove any existing text and actions on the power action and result labels.
-                    info_clear_messages();
-                    
-                    // If player in combat, then...
-                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)
-                    {
-                        
-                        // Player in combat.
-                        
-                        // Cast burn spell and return base damage.
-                        burn_amount = Spells.cast_burn(gameHD.getAvatar(), gameHD.getAtlasItems(), true, false, 
-                          null, powerActionLabel, powerResultLabel, mpLabel, tiles, mazemap, buttonActor, 
-                          mapActionButtonEnabled, number, gameHD.getSounds());
-                        
-                        // Perform burn action using combat engine.
-                        combat.fight(HeroineEnum.FightEnum.FIGHT_BURN, gameHD.getSounds(), gameHD.getAvatar(),
-                          powerActionLabel, powerResultLabel, hpLabel, mpLabel, buttonActor, 
-                          mapActionButtonEnabled, burn_amount);
-                        
-                    }
-                    
-                    else
-                    {
-                        
-                        // Player NOT in combat.
-                        
-                        // If minimap group initialized, then...
-                        if (minimapGroup != null)
-                        {
-
-                            // Minimap group initialized.
-
-                            // Hide the minimap.
-                            minimapGroup.setVisible(false);
-
-                        }
-                        
-                        // Store tile image enumeration value for location in front of player.
-                        imgTileNumForward = mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar());
-                        
-                        // Cast burn spell.
-                        burn_amount = Spells.cast_burn(gameHD.getAvatar(), gameHD.getAtlasItems(), false, 
-                          infoButtonSelected, imgTileNumForward, powerActionLabel, powerResultLabel, mpLabel, tiles, 
-                          mazemap, buttonActor, mapActionButtonEnabled, number, gameHD.getSounds());
-                        
-                        // If player successfully cast burn spell, then...
-                        if (burn_amount == SPELL_SUCCESSFUL)
-                        {
-
-                            // Player successfully cast burn spell.
-                        
-                            // Move burn button to original location (in spell list / area).
-
-                            // Pos X = -18 * scale factor.  -- Relative to right of screen.
-                            // Pos Y = +62 * scale factor.  -- Relative to bottom of screen.
-                            mapActionButtons.get( 
-                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setRelativePosition(null, 
-                              CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
-                              uiStage.getHeight(), -18f * gameHD.getConfig().getScale(), 
-                              62f * gameHD.getConfig().getScale() );
-                            
-                            // Reset flag for minimap rendering, indicating regeneration necessary.
-                            minimapRenderInd = false;
-                            
-                        } // End ... If player successfully cast burn spell.
-                        
-                    } // End ... If player NOT in combat.
+                    // Process burn action.
+                    processAction_Burn();
                     
                 } // End ... touchUp.
                 
@@ -1212,34 +1149,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE, 
                       true);
                     
-                    // Remove any existing text and actions on the power action and result labels.
-                    info_clear_messages();
-                    
-                    // Hide the minimap.
-                    minimapGroup.setVisible(false);
-                    
-                    // If player in combat, then...
-                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
-                    {
-                        
-                        // Player in combat.
-                        
-                        System.out.println("Freeze!");
-                    
-                        // Play freeze sound.
-                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_FREEZE);
-                        
-                    }
-                    
-                    else
-                    {
-                        
-                        // Player NOT in combat.
-                        
-                        // Render "(NO TARGET)" message.
-                        info_render_no_target(null);
-                        
-                    }
+                    // Process freeze action.
+                    processAction_Freeze();
                     
                 } // End ... touchUp.
                 
@@ -1366,34 +1277,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT, 
                       true);
                     
-                    // Remove any existing text and actions on the power action and result labels.
-                    info_clear_messages();
-                    
-                    // Hide the minimap.
-                    minimapGroup.setVisible(false);
-                    
-                    // If player in combat, then...
-                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
-                    {
-                        
-                        // Player in combat.
-                        
-                        System.out.println("Reflect!");
-                    
-                        // Play reflect sound.
-                        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_REFLECT);
-                        
-                    }
-                    
-                    else
-                    {
-                        
-                        // Player NOT in combat.
-                        
-                        // Render "(NO TARGET)" message.
-                        info_render_no_target(null);
-                        
-                    }
+                    // Process reflect action.
+                    processAction_Reflect();
                     
                 } // End ... touchUp.
                 
@@ -1456,10 +1341,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, 
                       true);
                     
-                    // Remove any existing text and actions on the power action and result labels.
-                    info_clear_messages();
-                    
-                    System.out.println("Run!");
+                    // Process run action.
+                    processAction_Run();
                     
                 } // End ... touchUp.
                 
@@ -1518,73 +1401,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
                     // Notes:  Occurs when user releases mouse on button.
                     
-                    int unlock_amount; // Either amount of damage to enemy, -1 when unable to cast spell, or 
-                      // 1 when succesfully unlocking an object.
-                    HeroineEnum.ImgTileEnum imgTileNumForward; // Tile image enumeration value for location
-                      // in front of player.  Null in combat.
-                    
                     // Flag to ignore next exit event.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, 
                       true);
                     
-                    // Remove any existing text and actions on the power action and result labels.
-                    info_clear_messages();
-                    
-                    // If player in combat, then...
-                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)
-                    {
-                        
-                        // Player in combat.
-                        
-                    }
-                    
-                    else
-                    {
-                        
-                        // Player NOT in combat.
-                        
-                        // If minimap group initialized, then...
-                        if (minimapGroup != null)
-                        {
-
-                            // Minimap group initialized.
-
-                            // Hide the minimap.
-                            minimapGroup.setVisible(false);
-                            
-                        }
-                        
-                        // Store tile image enumeration value for location in front of player.
-                        //imgTileNumForward = mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar());
-                        imgTileNumForward = mazemap.getImgTileEnum_Side(gameHD.getAvatar(), true);
-                        
-                        // Cast unlock spell.
-                        unlock_amount = Spells.cast_unlock(gameHD.getAvatar(), gameHD.getAtlasItems(), false, 
-                          infoButtonSelected, imgTileNumForward, powerActionLabel, powerResultLabel, mpLabel, 
-                          tiles, mazemap, buttonActor, mapActionButtonEnabled, number, gameHD.getSounds());
-                        
-                        // If player successfully cast unlock spell, then...
-                        if (unlock_amount == SPELL_SUCCESSFUL)
-                        {
-                            
-                            // Player successfully cast unlock spell.
-                            
-                            // Move unlock button to original location (in spell list / area).
-                            
-                            // Pos X = -38 * scale factor.  -- Relative to right of screen.
-                            // Pos Y = +42 * scale factor.  -- Relative to bottom of screen.
-                            mapActionButtons.get( 
-                              HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setRelativePosition(null, 
-                              CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
-                              uiStage.getHeight(), -38f * gameHD.getConfig().getScale(), 
-                              42f * gameHD.getConfig().getScale() );
-                            
-                            // Reset flag for minimap rendering, indicating regeneration necessary.
-                            minimapRenderInd = false;
-                            
-                        } // End ... If player successfully cast unlock spell.
-                        
-                    } // End ... If player NOT in combat.
+                    // Process unlock action.
+                    processAction_Unlock();
                     
                 } // End ... touchUp.
                 
@@ -1864,16 +1686,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     mapIgnoreNextExitEvent_ActionButtons.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT, 
                       true);
                     
-                    // Remove any existing text and actions on the power action and result labels.
-                    info_clear_messages();
-                    
-                    // Hide the minimap.
-                    minimapGroup.setVisible(false);
-                    
-                    System.out.println("Light!");
-                    
-                    // Play light sound.
-                    gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_LIGHT);
+                    // Process light action.
+                    processAction_Light();
                     
                 } // End ... touchUp.
                 
@@ -1952,8 +1766,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, temp.getY());
         
         // Store stage location of button selector.
-        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_HEAL, temp.getX() - 12f );
-        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_HEAL, temp.getY() - 12f );
+        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_HEAL, temp.getX() - selectorAdjPos ); // 12f );
+        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_HEAL, temp.getY() - selectorAdjPos ); // 12f );
         
         // 2.  Configure and add the burn (spell) button Actor.
         
@@ -1993,8 +1807,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, temp.getY());
         
         // Store stage location of button selector.
-        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_BURN, temp.getX() - 12f );
-        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_BURN, temp.getY() - 12f );
+        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_BURN, temp.getX() - selectorAdjPos ); // 12f );
+        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_BURN, temp.getY() - selectorAdjPos ); // 12f );
         
         // 3.  Configure and add the unlock (spell) button Actor.
         
@@ -2034,8 +1848,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, temp.getY());
         
         // Store stage location of button selector.
-        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_UNLOCK, temp.getX() - 12f );
-        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_UNLOCK, temp.getY() - 12f );
+        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_UNLOCK, temp.getX() - selectorAdjPos ); // 12f );
+        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_UNLOCK, temp.getY() - selectorAdjPos ); // 12f );
         
         // 4.  Configure and add the light (spell) button Actor.
         
@@ -2075,8 +1889,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_LIGHT, temp.getY());
         
         // Store stage location of button selector.
-        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_LIGHT, temp.getX() - 12f );
-        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_LIGHT, temp.getY() - 12f );
+        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_LIGHT, temp.getX() - selectorAdjPos ); // 12f );
+        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_LIGHT, temp.getY() - selectorAdjPos ); // 12f );
         
         // 5.  Configure and add the freeze (spell) button Actor.
         
@@ -2116,8 +1930,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_FREEZE, temp.getY());
         
         // Store stage location of button selector.
-        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_FREEZE, temp.getX() - 12f );
-        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_FREEZE, temp.getY() - 12f );
+        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_FREEZE, temp.getX() - selectorAdjPos ); // 12f );
+        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_FREEZE, temp.getY() - selectorAdjPos ); // 12f );
         
         // 6.  Configure and add the reflect (spell) button Actor.
         
@@ -2157,8 +1971,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT, temp.getY());
         
         // Store stage location of button selector.
-        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_REFLECT, temp.getX() - 12f );
-        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_REFLECT, temp.getY() - 12f );
+        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_REFLECT, temp.getX() - selectorAdjPos ); // 12f );
+        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_REFLECT, temp.getY() - selectorAdjPos ); // 12f );
         
         // 7.  Configure and add the attack (combat) button Actor.
         
@@ -2195,8 +2009,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, temp.getY());
         
         // Store stage location of button selector.
-        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_ATTACK, temp.getX() - 12f );
-        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_ATTACK, temp.getY() - 12f );
+        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_ATTACK, temp.getX() - selectorAdjPos ); // 12f );
+        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_ATTACK, temp.getY() - selectorAdjPos ); // 12f );
         
         // 8.  Configure and add the run (combat) button Actor.
         
@@ -2233,8 +2047,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         mapActionButtonPosY.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, temp.getY());
         
         // Store stage location of button selector.
-        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_RUN, temp.getX() - 12f );
-        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_RUN, temp.getY() - 12f );
+        mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_RUN, temp.getX() - selectorAdjPos ); // 12f );
+        mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_RUN, temp.getY() - selectorAdjPos ); // 12f );
         
     }
     
@@ -2276,11 +2090,194 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     }
     
     // keycode = Code for key pressed.
+    private void handle_key_combat(int keycode)
+    {
+        
+        // The function encapsulates logic related to key presses when in combat mode.
+        
+        // System.out.println("In combat mode");
+            
+        // Depending on key pressed, ...
+        switch (keycode) {
+
+            // If the user pressed the up arrow key, then...
+            case Input.Keys.UP:
+
+                // The user pressed the up arrow key.
+
+                // Try to move up an action button.
+                moveUp_Combat();
+
+                // Exit selector.
+                break;
+
+            // Otherwise, if the user pressed the down arrow key, then...
+            case Input.Keys.DOWN:
+
+                // The user pressed the down arrow key.
+
+                // Try to move down an action button.
+                moveDown_Combat();
+
+                // Exit selector.
+                break;
+
+            // Otherwise, if the user pressed the left arrow key, then...
+            case Input.Keys.LEFT:
+
+                // The user pressed the left arrow key.
+
+                // Try to move left an action button.
+                moveLeft_Combat();
+
+                // Exit selector.
+                break;
+
+            // Otherwise, if the user pressed the right arrow key, then...
+            case Input.Keys.RIGHT:
+
+                // The user pressed the right arrow key.
+
+                // Try to move right an action button.
+                moveRight_Combat();
+
+                // Exit selector.
+                break;
+
+            // Otherwise, if the user pressed the enter / return key, then...
+            case Input.Keys.ENTER:
+
+                // The user pressed the enter / return key.
+
+                // Depending on active action button, ...
+                switch (buttonSelected) {
+                    
+                    case BUTTON_POS_ATTACK:
+                        
+                        // The user pressed enter on the attack button.
+                        
+                        // Process attack action.
+                        processAction_Attack();
+                        
+                        // Exit selector.
+                        break;
+                    
+                    case BUTTON_POS_BURN:
+
+                        // The user pressed enter on the burn button.
+
+                        // Process burn action.
+                        processAction_Burn();
+
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_FREEZE:
+
+                        // The user pressed enter on the freeze button.
+
+                        // Process freeze action.
+                        processAction_Freeze();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_HEAL:
+
+                        // The user pressed enter on the heal button.
+
+                        // Process heal action.
+                        processAction_Heal();
+
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_INFO:
+                        
+                        // The user pressed enter on the information button.
+                        
+                        // Toggle information button.
+                        processAction_Info();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_LIGHT:
+
+                        // The user pressed enter on the light button.
+
+                        // Process light action.
+                        processAction_Light();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_REFLECT:
+                        
+                        // The user pressed enter on the reflect button.
+                        
+                        // Process reflect action.
+                        processAction_Reflect();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_RUN:
+                        
+                        // The user pressed enter on the run button.
+                        
+                        // Process run action.
+                        processAction_Run();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_UNLOCK:
+                        
+                        // The user pressed enter on the unlock button.
+                        
+                        // Process unlock action.
+                        processAction_Unlock();
+                        
+                        // Exit selector.
+                        break;
+
+                    default:
+
+                        // The user pressed enter on an unknown button.
+
+                        // Display warning.
+                        System.out.println("Warning:  Pressing enter in combat mode with unknown button selected.");
+
+                        // Exit selector.
+                        break;
+
+                } // End ... Depending on active action button.
+
+
+                // Exit selector.
+                break;
+
+            // Otherwise, ...
+            default:
+
+                // Otherwise...
+
+                // Exit selector.
+                break;
+
+        } // End ... Depending on key pressed.
+        
+    }
+    
+    // keycode = Code for key pressed.
     private void handle_key_explore(int keycode)
     {
         
         // The function encapsulates logic related to key presses when in explore mode.
         
+        HeroineEnum.SpellEnum entryKey; // Hash map key related to current entry when looping through set.
+        Set<Map.Entry<HeroineEnum.SpellEnum, Boolean>> entrySetSpellList; // Set view of the spellbook mappings in the hash map.
         boolean movementInd; // Whether movement occurred.  Includes turning left to right.
         boolean movementNewPosInd; // Whether movement occurred that involved a new position.
         RegionMap.RegionExit regionExit; // Exit occurring at location to which player moves.
@@ -2292,67 +2289,91 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         movementNewPosInd = false;
         turnInd = false;
         
-        // If the user pressed the up arrow key, then...
-        if (keycode == Input.Keys.UP)
-        {
-            // The user pressed the up arrow key.
+        // Depending on key pressed, ...
+        switch (keycode) {
+        
+            // If the user pressed the up arrow key, then...
+            case Input.Keys.UP:
+                
+                // The user pressed the up arrow key.
 
-            // Try to move forward / up.
-            movementInd = gameHD.getAvatar().avatar_move(true, mazemap, gameHD);
-            movementNewPosInd = movementInd;
-        }
+                // Try to move forward / up.
+                movementInd = gameHD.getAvatar().avatar_move(true, mazemap, gameHD);
+                movementNewPosInd = movementInd;
+                
+                // Exit selector.
+                break;
+                
+            // If the user pressed the down arrow key, then...
+            case Input.Keys.DOWN:
+                
+                // The user pressed the down arrow key.
+                
+                // Try to move backward / down.
+                movementInd = gameHD.getAvatar().avatar_move(false, mazemap, gameHD);
+                movementNewPosInd = movementInd;
+                
+                // Exit selector.
+                break;
+                
+            // If the user pressed the left arrow key, then...
+            case Input.Keys.LEFT:
+                
+                // The user pressed the left arrow key.
+                
+                // Turn the player to the left.
+                gameHD.getAvatar().avatar_turn_left();
 
-        // If the user pressed the down arrow key, then...
-        if (keycode == Input.Keys.DOWN)
-        {
-            // The user pressed the down arrow key.
+                // Update direction label.
+                facingLabel.setLabelText(gameHD.getAvatar().getFacing().toString());
 
-            // Try to move backward / down.
-            movementInd = gameHD.getAvatar().avatar_move(false, mazemap, gameHD);
-            movementNewPosInd = movementInd;
-        }
+                // Flag "movement" as occurring.
+                movementInd = true;
 
-        // If the user pressed the left arrow key, then...
-        if (keycode == Input.Keys.LEFT)
-        {
-            // The user pressed the left arrow key.
+                // Flag that player stayed in same location.
+                movementNewPosInd = false;
 
-            // Turn the player to the left.
-            gameHD.getAvatar().avatar_turn_left();
+                // Flag that player turned.
+                turnInd = true;
+                
+                // Exit selector.
+                break;
+                
+            // If the user pressed the right arrow key, then...
+            case Input.Keys.RIGHT:
+                
+                // The user pressed the right arrow key.
+                
+                // Turn the player to the right.
+                gameHD.getAvatar().avatar_turn_right();
 
-            // Update direction label.
-            facingLabel.setLabelText(gameHD.getAvatar().getFacing().toString());
+                // Update direction label.
+                facingLabel.setLabelText(gameHD.getAvatar().getFacing().toString());
 
-            // Flag "movement" as occurring.
-            movementInd = true;
+                // Flag "movement" as occurring.
+                movementInd = true;
 
-            // Flag that player stayed in same location.
-            movementNewPosInd = false;
+                // Flag that player stayed in same location.
+                movementNewPosInd = false;
 
-            // Flag that player turned.
-            turnInd = true;
-        }
-
-        // If the user pressed the right arrow key, then...
-        if (keycode == Input.Keys.RIGHT)
-        {
-            // The user pressed the right arrow key.
-
-            // Turn the player to the right.
-            gameHD.getAvatar().avatar_turn_right();
-
-            // Update direction label.
-            facingLabel.setLabelText(gameHD.getAvatar().getFacing().toString());
-
-            // Flag "movement" as occurring.
-            movementInd = true;
-
-            // Flag that player stayed in same location.
-            movementNewPosInd = false;
-
-            // Flag that player turned.
-            turnInd = true;
-        }
+                // Flag that player turned.
+                turnInd = true;
+                
+                // Exit selector.
+                break;
+                
+            // If the user pressed the enter key, then...
+            case Input.Keys.ENTER:
+                
+                // The user pressed the enter key.
+                
+                // Toggle information button.
+                processAction_Info();
+                
+                // Exit selector.
+                break;
+            
+        } // End ... Depending on key pressed.
 
         // If movement occurred, then...
         if (movementInd)
@@ -2420,11 +2441,45 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Render updated view.
                         renderCurrentView(turnInd, false);
 
-                        // Check for encounter.
-                        mazemap.check_random_encounter(combat, enemyLabel, infoButtonSelector, hpLabel, 
+                        /*
+                        If encounter occurred, then...
+                        * Initializes any encounter that occurs *
+                        */
+                        if ( mazemap.check_random_encounter(combat, enemyLabel, infoButtonSelector, hpLabel, 
                           mpLabel, infoButton, facingLabel, regionLabel, enemy, gameHD.getAssetMgr(), 
                           mapActionButtons, mapActionButtonEnabled, mapActionButtonPosX, 
-                          mapActionButtonPosY);
+                          mapActionButtonPosY) )
+                        {
+                            
+                            // Encounter occurred.
+                            
+                            // Switch selected button to attack.
+                            buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_ATTACK;
+                            
+                            // Clear visible action list.
+                            mapActionButtonVisible.clear();
+                            
+                            // Set attack and run buttons as visible.
+                            mapActionButtonVisible.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, true);
+                            mapActionButtonVisible.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, true);
+                            
+                            // Ste available player spells as visible.
+                            
+                            // Store a set view of the spellbook mappings for the hash map.
+                            entrySetSpellList = gameHD.getAvatar().getSpellList().entrySet();
+                            
+                            // Loop through entries for player spells.
+                            for (Map.Entry entrySpell : entrySetSpellList)
+                            {
+
+                                // Store the key for the current entry.
+                                entryKey = (HeroineEnum.SpellEnum)entrySpell.getKey();
+                                
+                                // Add spell as visible in related hash map.
+                                mapActionButtonVisible.put(entryKey.getValue_ActionButtonEnum(), true);
+                            }
+                            
+                        } // End ... If encounter occurred.
 
                     } // End ... If NO exit or shop exists at current location.
 
@@ -2443,6 +2498,167 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             }
 
         } // End ... If movement occurred.
+        
+    }
+    
+    // keycode = Code for key pressed.
+    private void handle_key_information(int keycode)
+    {
+        
+        // The function encapsulates logic related to key presses when in information mode.
+        
+        // System.out.println("In information mode");
+            
+        // Depending on key pressed, ...
+        switch (keycode) {
+
+            // If the user pressed the up arrow key, then...
+            case Input.Keys.UP:
+
+                // The user pressed the up arrow key.
+
+                // Try to move up an action button.
+                moveUp_Explore();
+
+                // Exit selector.
+                break;
+
+            // Otherwise, if the user pressed the down arrow key, then...
+            case Input.Keys.DOWN:
+
+                // The user pressed the down arrow key.
+
+                // Try to move down an action button.
+                moveDown_Explore();
+
+                // Exit selector.
+                break;
+
+            // Otherwise, if the user pressed the left arrow key, then...
+            case Input.Keys.LEFT:
+
+                // The user pressed the left arrow key.
+
+                // Try to move left an action button.
+                moveLeft_Explore();
+
+                // Exit selector.
+                break;
+
+            // Otherwise, if the user pressed the right arrow key, then...
+            case Input.Keys.RIGHT:
+
+                // The user pressed the right arrow key.
+
+                // Try to move right an action button.
+                moveRight_Explore();
+
+                // Exit selector.
+                break;
+
+            // Otherwise, if the user pressed the enter / return key, then...
+            case Input.Keys.ENTER:
+
+                // The user pressed the enter / return key.
+
+                // Depending on active action button, ...
+                switch (buttonSelected) {
+                    
+                    case BUTTON_POS_BURN:
+
+                        // The user pressed enter on the burn button.
+
+                        // Process burn action.
+                        processAction_Burn();
+
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_FREEZE:
+
+                        // The user pressed enter on the freeze button.
+
+                        // Process freeze action.
+                        processAction_Freeze();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_HEAL:
+
+                        // The user pressed enter on the heal button.
+
+                        // Process heal action.
+                        processAction_Heal();
+
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_INFO:
+                        
+                        // The user pressed enter on the information button.
+                        
+                        // Toggle information button.
+                        processAction_Info();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_LIGHT:
+
+                        // The user pressed enter on the light button.
+
+                        // Process light action.
+                        processAction_Light();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_REFLECT:
+                        
+                        // The user pressed enter on the reflect button.
+                        
+                        // Process reflect action.
+                        processAction_Reflect();
+                        
+                        // Exit selector.
+                        break;
+                        
+                    case BUTTON_POS_UNLOCK:
+                        
+                        // The user pressed enter on the unlock button.
+                        
+                        // Process unlock action.
+                        processAction_Unlock();
+                        
+                        // Exit selector.
+                        break;
+
+                    default:
+
+                        // The user pressed enter on an unknown button.
+
+                        // Display warning.
+                        System.out.println("Warning:  Pressing enter in information mode with unknown button selected.");
+
+                        // Exit selector.
+                        break;
+
+                } // End ... Depending on active action button.
+
+
+                // Exit selector.
+                break;
+
+            // Otherwise, ...
+            default:
+
+                // Otherwise...
+
+                // Exit selector.
+                break;
+
+        } // End ... Depending on key pressed.
         
     }
     
@@ -3172,16 +3388,52 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
-    private HeroineEnum.SelectPosEnum moveDown()
+    private HeroineEnum.SelectPosEnum moveDown_Combat()
     {
         
-        // The function moves down an item in the action buttons.
+        // The function moves down an item in the action buttons while in combat mode.
+        // The function does not accomplish any movement to the right or left.
+        
+        HeroineEnum.ActionButtonCombatEnum actionButtonNavEnumPre; // Action button navigation enumerated
+          // value related to the selection.  Before movement.
+        HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
+          // selection -- after movement (switching buttons).
+          
+        // Set defaults.
+        selectPosEnumPost = null;
+        
+        // Get the action button navigation enumerated value related to the current selection.
+        actionButtonNavEnumPre = HeroineEnum.ActionButtonCombatEnum.valueOf_xRef(buttonSelected);
+        
+        // If enumerated value exists, then...
+        if (actionButtonNavEnumPre != null)
+        {
+            
+            // Enumerated value exists.
+        
+            // Get the selected button enumerated value after applying the movement.
+            selectPosEnumPost = actionButtonNavEnumPre.getValue_MoveDown();
+            
+            // Move the selector.
+            moveSelector_Combat(selectPosEnumPost);
+            
+        }
+        
+        // Return (enumerated value for) new position.
+        return selectPosEnumPost;
+        
+    }
+    
+    private HeroineEnum.SelectPosEnum moveDown_Explore()
+    {
+        
+        // The function moves down an item in the action buttons while in explore mode.
         // The function does not accomplish any movement to the right or left.
         
         HeroineEnum.ActionButtonExploreEnum actionButtonNavEnumPre; // Action button navigation enumerated
-          // value related to the selection.  Before movement.
+          // value related to the selection.  Before movement (switching buttons).
         HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
-          // selection -- after movement.
+          // selection -- after movement (switching buttons).
           
         // Set defaults.
         selectPosEnumPost = null;
@@ -3199,7 +3451,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             selectPosEnumPost = actionButtonNavEnumPre.getValue_MoveDown();
             
             // Move the selector.
-            moveSelector(selectPosEnumPost);
+            moveSelector_Explore(selectPosEnumPost);
             
         }
         
@@ -3208,16 +3460,52 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
-    private HeroineEnum.SelectPosEnum moveLeft()
+    private HeroineEnum.SelectPosEnum moveLeft_Combat()
     {
         
-        // The function moves left an item in the action buttons.
+        // The function moves left an item in the action buttons while in combat mode.
         // The function does not accomplish any movement up or down.
         
+        HeroineEnum.ActionButtonCombatEnum actionButtonNavEnumPre; // Action button navigation enumerated
+          // value related to the selection.  Before movement (switching buttons).
         HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
-          // selection -- after movement.
+          // selection -- after movement (switching buttons).
+        
+        // Set defaults.
+        selectPosEnumPost = null;
+        
+        // Get the action button navigation enumerated value related to the current selection.
+        actionButtonNavEnumPre = HeroineEnum.ActionButtonCombatEnum.valueOf_xRef(buttonSelected);
+        
+        // If enumerated value exists, then...
+        if (actionButtonNavEnumPre != null)
+        {
+            
+            // Enumerated value exists.
+        
+            // Get the selected button enumerated value after applying the movement.
+            selectPosEnumPost = actionButtonNavEnumPre.getValue_MoveLeft();
+            
+            // Move the selector.
+            moveSelector_Combat(selectPosEnumPost);
+            
+        }
+        
+        // Return (enumerated value for) new position.
+        return selectPosEnumPost;
+        
+    }
+    
+    private HeroineEnum.SelectPosEnum moveLeft_Explore()
+    {
+        
+        // The function moves left an item in the action buttons while in explore mode.
+        // The function does not accomplish any movement up or down.
+        
         HeroineEnum.ActionButtonExploreEnum actionButtonNavEnumPre; // Action button navigation enumerated
-          // value related to the selection.  Before movement.
+          // value related to the selection.  Before movement (switching buttons).
+        HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
+          // selection -- after movement (switching buttons).
         
         // Set defaults.
         selectPosEnumPost = null;
@@ -3235,7 +3523,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             selectPosEnumPost = actionButtonNavEnumPre.getValue_MoveLeft();
             
             // Move the selector.
-            moveSelector(selectPosEnumPost);
+            moveSelector_Explore(selectPosEnumPost);
             
         }
         
@@ -3244,16 +3532,16 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
-    private HeroineEnum.SelectPosEnum moveRight()
+    private HeroineEnum.SelectPosEnum moveRight_Explore()
     {
         
-        // The function moves right an item in the action buttons.
+        // The function moves right an item in the action buttons while in explore mode.
         // The function does not accomplish any movement up or down.
         
-        HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
-          // selection -- after movement.
         HeroineEnum.ActionButtonExploreEnum actionButtonNavEnumPre; // Action button navigation enumerated
-          // value related to the selection.  Before movement.
+          // value related to the selection.  Before movement (switching buttons).
+        HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
+          // selection -- after movement (switching buttons).
         
         // Set defaults.
         selectPosEnumPost = null;
@@ -3271,7 +3559,43 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             selectPosEnumPost = actionButtonNavEnumPre.getValue_MoveRight();
             
             // Move the selector.
-            moveSelector(selectPosEnumPost);
+            moveSelector_Explore(selectPosEnumPost);
+            
+        }
+        
+        // Return (enumerated value for) new position.
+        return selectPosEnumPost;
+        
+    }
+    
+    private HeroineEnum.SelectPosEnum moveRight_Combat()
+    {
+        
+        // The function moves right an item in the action buttons while in combat mode.
+        // The function does not accomplish any movement up or down.
+        
+        HeroineEnum.ActionButtonCombatEnum actionButtonNavEnumPre; // Action button navigation enumerated
+          // value related to the selection.  Before movement (switching buttons).
+        HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
+          // selection -- after movement (switching buttons).
+        
+        // Set defaults.
+        selectPosEnumPost = null;
+        
+        // Get the action button navigation enumerated value related to the current selection.
+        actionButtonNavEnumPre = HeroineEnum.ActionButtonCombatEnum.valueOf_xRef(buttonSelected);
+        
+        // If enumerated value exists, then...
+        if (actionButtonNavEnumPre != null)
+        {
+            
+            // Enumerated value exists.
+        
+            // Get the selected button enumerated value after applying the movement.
+            selectPosEnumPost = actionButtonNavEnumPre.getValue_MoveRight();
+            
+            // Move the selector.
+            moveSelector_Combat(selectPosEnumPost);
             
         }
         
@@ -3281,10 +3605,61 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     }
     
     // selectPosEnumPost = Enumeration value related to explore screen button selection -- after movement.
-    private Boolean moveSelector(HeroineEnum.SelectPosEnum selectPosEnumPost)
+    private Boolean moveSelector_Combat(HeroineEnum.SelectPosEnum selectPosEnumPost)
     {
         
-        // The function moves the selector to the new location specified in the passed parameter.
+        // The function moves the selector to the new location specified in the passed parameter (while 
+        // in combat mode).
+        // No movement occurs when the parameter is null (occurs when trying to move to invalid location).
+        
+        Boolean enabled; // Whether the action button to which to move is enabled.
+        HeroineEnum.ActionButtonEnum actionButtonEnumPost; // Enumeration value related to action button --
+          // after movement.
+        
+        // Set defaults.
+        enabled = null;
+        
+        // If enumerated value exists after applying movement, then...
+        if (selectPosEnumPost != null)
+        {
+
+            // Enumerated value exists after applying movement.
+            
+            // Determine action button after movement.
+            actionButtonEnumPost = HeroineEnum.ActionButtonCombatEnum.valueOf_xRef(
+              selectPosEnumPost).getValue_ActionButtonEnum();
+
+            // Base enabled status on visibility of action button.
+            enabled = mapActionButtonVisible.get(actionButtonEnumPost) != null;
+
+            // If action button enabled, then...
+            if (enabled)
+            {
+
+                // Action button enabled.
+                
+                // Update selected button.
+                buttonSelected = selectPosEnumPost;
+
+                // Move selector.
+                infoButtonSelector.setPosition( mapSelectorPosX.get(buttonSelected), 
+                  mapSelectorPosY.get(buttonSelected) );
+
+            } // End ... If action button enabled.
+
+        } // End ... If enumerated value exists after applying movement.
+        
+        // Return whether enabled -- or null.
+        return enabled;
+        
+    }
+    
+    // selectPosEnumPost = Enumeration value related to explore screen button selection -- after movement.
+    private Boolean moveSelector_Explore(HeroineEnum.SelectPosEnum selectPosEnumPost)
+    {
+        
+        // The function moves the selector to the new location specified in the passed parameter (while 
+        // in explore mode).
         // No movement occurs when the parameter is null (occurs when trying to move to invalid location).
         
         Boolean enabled; // Whether the action button to which to move is enabled.
@@ -3346,16 +3721,52 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
-    private HeroineEnum.SelectPosEnum moveUp()
+    private HeroineEnum.SelectPosEnum moveUp_Combat()
     {
         
-        // The function moves up an item in the action buttons.
+        // The function moves up an item in the action buttons while in combat mode.
         // The function does not accomplish any movement to the right or left.
         
+        HeroineEnum.ActionButtonCombatEnum actionButtonNavEnumPre; // Action button navigation enumerated
+          // value related to the selection.  Before movement (switching buttons).
         HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
-          // selection -- after movement.
+          // selection -- after movement (switching buttons).
+        
+        // Set defaults.
+        selectPosEnumPost = null;
+        
+        // Get the action button navigation enumerated value related to the current selection.
+        actionButtonNavEnumPre = HeroineEnum.ActionButtonCombatEnum.valueOf_xRef(buttonSelected);
+        
+        // If enumerated value exists, then...
+        if (actionButtonNavEnumPre != null)
+        {
+            
+            // Enumerated value exists.
+        
+            // Get the selected button enumerated value after applying the movement.
+            selectPosEnumPost = actionButtonNavEnumPre.getValue_MoveUp();
+            
+            // Move the selector.
+            moveSelector_Combat(selectPosEnumPost);
+            
+        }
+        
+        // Return (enumerated value for) new position.
+        return selectPosEnumPost;
+        
+    }
+    
+    private HeroineEnum.SelectPosEnum moveUp_Explore()
+    {
+        
+        // The function moves up an item in the action buttons while in explore mode.
+        // The function does not accomplish any movement to the right or left.
+        
         HeroineEnum.ActionButtonExploreEnum actionButtonNavEnumPre; // Action button navigation enumerated
-          // value related to the selection.  Before movement.
+          // value related to the selection.  Before movement (switching buttons).
+        HeroineEnum.SelectPosEnum selectPosEnumPost; // Enumeration value related to explore screen button 
+          // selection -- after movement (switching buttons).
         
         // Set defaults.
         selectPosEnumPost = null;
@@ -3373,7 +3784,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             selectPosEnumPost = actionButtonNavEnumPre.getValue_MoveUp();
             
             // Move the selector.
-            moveSelector(selectPosEnumPost);
+            moveSelector_Explore(selectPosEnumPost);
             
         }
         
@@ -3496,6 +3907,153 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    private void processAction_Attack()
+    {
+        
+        // The function encapsulates logic related to performing the attack action.
+        
+        // Remove any existing text and actions on the power action and result labels.
+        info_clear_messages();
+
+        System.out.println("Attack!");
+
+        // Perform attack action using combat engine.
+        combat.fight(HeroineEnum.FightEnum.FIGHT_ATTACK, gameHD.getSounds(), gameHD.getAvatar(),
+          powerActionLabel, powerResultLabel, hpLabel, mpLabel, 
+          mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), mapActionButtonEnabled, 
+          null);
+        
+    }
+    
+    private void processAction_Burn()
+    {
+        
+        // The function encapsulates logic related to performing the burn action.
+        
+        int burn_amount; // Either amount of damage to enemy, -1 when unable to cast spell, or 
+          // 1 when succesfully burning an object.
+        HeroineEnum.ImgTileEnum imgTileNumForward; // Tile image enumeration value for location
+          // in front of player.  Null in combat.
+        
+        // Remove any existing text and actions on the power action and result labels.
+        info_clear_messages();
+
+        System.out.println("Burn!");
+        
+        // If player in combat, then...
+        if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)
+        {
+
+            // Player in combat.
+
+            // Cast burn spell and return base damage.
+            burn_amount = Spells.cast_burn(gameHD.getAvatar(), gameHD.getAtlasItems(), true, false, 
+              null, powerActionLabel, powerResultLabel, mpLabel, tiles, mazemap, 
+              mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), 
+              mapActionButtonEnabled, number, gameHD.getSounds());
+
+            // Perform burn action using combat engine.
+            combat.fight(HeroineEnum.FightEnum.FIGHT_BURN, gameHD.getSounds(), gameHD.getAvatar(),
+              powerActionLabel, powerResultLabel, hpLabel, mpLabel, 
+              mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), 
+              mapActionButtonEnabled, burn_amount);
+
+        } // End ... If player in combat.
+
+        else
+        {
+
+            // Player NOT in combat.
+
+            // If minimap group initialized, then...
+            if (minimapGroup != null)
+            {
+
+                // Minimap group initialized.
+
+                // Hide the minimap.
+                minimapGroup.setVisible(false);
+
+            }
+
+            // Store tile image enumeration value for location in front of player.
+            imgTileNumForward = mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar());
+
+            // Cast burn spell.
+            burn_amount = Spells.cast_burn(gameHD.getAvatar(), gameHD.getAtlasItems(), false, 
+              infoButtonSelected, imgTileNumForward, powerActionLabel, powerResultLabel, mpLabel, tiles, 
+              mazemap, mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), 
+              mapActionButtonEnabled, number, gameHD.getSounds());
+
+            // If player successfully cast burn spell, then...
+            if (burn_amount == SPELL_SUCCESSFUL)
+            {
+
+                // Player successfully cast burn spell.
+
+                // Move burn button to original location (in spell list / area).
+
+                // Pos X = -18 * scale factor.  -- Relative to right of screen.
+                // Pos Y = +62 * scale factor.  -- Relative to bottom of screen.
+                mapActionButtons.get( 
+                  HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setRelativePosition(null, 
+                  CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
+                  uiStage.getHeight(), -18f * gameHD.getConfig().getScale(), 
+                  62f * gameHD.getConfig().getScale() );
+
+                // Reset flag for minimap rendering, indicating regeneration necessary.
+                minimapRenderInd = false;
+
+            } // End ... If player successfully cast burn spell.
+
+        } // End ... If player NOT in combat.
+        
+    }
+    
+    private void processAction_Freeze()
+    {
+        
+        // The function encapsulates logic related to performing the freeze action.
+        
+        // Remove any existing text and actions on the power action and result labels.
+        info_clear_messages();
+
+        System.out.println("Freeze!");
+        
+        // If player in combat, then...
+        if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
+        {
+
+            // Player in combat.
+            
+            // Play freeze sound.
+            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_FREEZE);
+
+        } // End ... If player in combat.
+
+        else
+        {
+
+            // Player NOT in combat.
+
+            // If minimap group initialized, then...
+            if (minimapGroup != null)
+            {
+
+                // Minimap group initialized.
+            
+                // Hide the minimap.
+                minimapGroup.setVisible(false);
+            
+            }
+            
+            // Render "(NO TARGET)" message.
+            info_render_no_target(null);
+
+        } // End ... If player NOT in combat.
+        
+    }
+    
     private void processAction_Heal()
     {
         
@@ -3515,24 +4073,251 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             // Perform heal action using combat engine.
             combat.fight(HeroineEnum.FightEnum.FIGHT_HEAL, gameHD.getSounds(), gameHD.getAvatar(),
               powerActionLabel, powerResultLabel, hpLabel, mpLabel, 
-              mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), mapActionButtonEnabled, null);
+              mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), mapActionButtonEnabled, 
+              null);
 
-        }
+        } // End ... If player in combat.
 
         else
         {
 
             // Player NOT in combat.
 
-            // Hide the minimap.
-            minimapGroup.setVisible(false);
+            // If minimap group initialized, then...
+            if (minimapGroup != null)
+            {
+
+                // Minimap group initialized.
+            
+                // Hide the minimap.
+                minimapGroup.setVisible(false);
+                
+            }
 
             // Cast heal spell.
             Spells.cast_heal(gameHD.getAvatar(), powerActionLabel, powerResultLabel, hpLabel, 
               mpLabel, mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), 
               mapActionButtonEnabled, gameHD.getSounds());
             
+        } // End ... If player NOT in combat.
+        
+    }
+    
+    private void processAction_Info()
+    {
+        
+        // The function encapsulates logic related to toggling the information button.
+        // The information control acts like, but is not, an action button.
+        
+        // Toggle information button.
+        infoButtonSelected = !infoButtonSelected;     
+
+        // If selected, then...
+        if (infoButtonSelected)
+        {
+
+            // Information button selected.
+
+            // Switch to information state.
+            gameHD.setGameState(HeroineEnum.GameState.STATE_INFO);
+
+            // Draw in selected state.
+            infoButton.setTextureRegion(gameHD.getAssetMgr().getTextureRegion(HeroineEnum.InfoButtonEnum.INFO_BUTTON_SEL.getValue_Key()));
+
         }
+
+        else
+        {
+
+            // Information button deselected.
+
+            // Switch to explore state.
+            gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+
+            // Draw in unselected state.
+            infoButton.setTextureRegion(gameHD.getAssetMgr().getTextureRegion(HeroineEnum.InfoButtonEnum.INFO_BUTTON.getValue_Key()));
+
+        }
+
+        // Play click sound.
+        gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_CLICK);
+
+        // Update screen to either display information or standard view.
+        info_render();
+        
+    }
+    
+    private void processAction_Light()
+    {
+        
+        // The function encapsulates logic related to performing the light action.
+        
+        // Remove any existing text and actions on the power action and result labels.
+        info_clear_messages();
+
+        System.out.println("Light!");
+        
+        // If player in combat, then...
+        if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
+        {
+
+            // Player in combat.
+        
+            // Play light sound.
+            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_LIGHT);
+            
+        } // End ... If player in combat.
+        
+        else
+        {
+
+            // Player NOT in combat.
+            
+            // If minimap group initialized, then...
+            if (minimapGroup != null)
+            {
+
+                // Minimap group initialized.
+
+                // Hide the minimap.
+                minimapGroup.setVisible(false);
+
+            }
+            
+            // Render "(NO TARGET)" message.
+            info_render_no_target(null);
+            
+        } // End ... If player NOT in combat.
+        
+    }
+    
+    private void processAction_Reflect()
+    {
+        
+        // The function encapsulates logic related to performing the reflect action.
+        
+        // Remove any existing text and actions on the power action and result labels.
+        info_clear_messages();
+
+        System.out.println("Reflect!");
+        
+        // If player in combat, then...
+        if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)    
+        {
+
+            // Player in combat.
+
+            // Play reflect sound.
+            gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_REFLECT);
+
+        } // End ... If player in combat.
+
+        else
+        {
+
+            // Player NOT in combat.
+
+            // If minimap group initialized, then...
+            if (minimapGroup != null)
+            {
+
+                // Minimap group initialized.
+
+                // Hide the minimap.
+                minimapGroup.setVisible(false);
+
+            }
+            
+            // Render "(NO TARGET)" message.
+            info_render_no_target(null);
+
+        } // End ... If player NOT in combat.
+        
+    }
+    
+    private void processAction_Run()
+    {
+        
+        // The function encapsulates logic related to performing the run action.
+        
+        // Remove any existing text and actions on the power action and result labels.
+        info_clear_messages();
+
+        System.out.println("Run!");
+        
+    }
+    
+    private void processAction_Unlock()
+    {
+    
+        // The function encapsulates logic related to performing the unlock action.
+        
+        int unlock_amount; // Either amount of damage to enemy, -1 when unable to cast spell, or 
+          // 1 when succesfully unlocking an object.
+        HeroineEnum.ImgTileEnum imgTileNumForward; // Tile image enumeration value for location
+          // in front of player.  Null in combat.
+
+        // Remove any existing text and actions on the power action and result labels.
+        info_clear_messages();
+
+        System.out.println("Unlock!");
+        
+        // If player in combat, then...
+        if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)
+        {
+
+            // Player in combat.
+
+        } // End ... If player in combat.
+
+        else
+        {
+
+            // Player NOT in combat.
+
+            // If minimap group initialized, then...
+            if (minimapGroup != null)
+            {
+
+                // Minimap group initialized.
+
+                // Hide the minimap.
+                minimapGroup.setVisible(false);
+
+            }
+
+            // Store tile image enumeration value for location in front of player.
+            //imgTileNumForward = mazemap.getImgTileEnum_ForwardLoc(gameHD.getAvatar());
+            imgTileNumForward = mazemap.getImgTileEnum_Side(gameHD.getAvatar(), true);
+
+            // Cast unlock spell.
+            unlock_amount = Spells.cast_unlock(gameHD.getAvatar(), gameHD.getAtlasItems(), false, 
+              infoButtonSelected, imgTileNumForward, powerActionLabel, powerResultLabel, mpLabel, 
+              tiles, mazemap, mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), 
+              mapActionButtonEnabled, number, gameHD.getSounds());
+
+            // If player successfully cast unlock spell, then...
+            if (unlock_amount == SPELL_SUCCESSFUL)
+            {
+
+                // Player successfully cast unlock spell.
+
+                // Move unlock button to original location (in spell list / area).
+
+                // Pos X = -38 * scale factor.  -- Relative to right of screen.
+                // Pos Y = +42 * scale factor.  -- Relative to bottom of screen.
+                mapActionButtons.get( 
+                  HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setRelativePosition(null, 
+                  CoreEnum.PosRelativeEnum.REL_POS_LOWER_RIGHT, uiStage.getWidth(), 
+                  uiStage.getHeight(), -38f * gameHD.getConfig().getScale(), 
+                  42f * gameHD.getConfig().getScale() );
+
+                // Reset flag for minimap rendering, indicating regeneration necessary.
+                minimapRenderInd = false;
+
+            } // End ... If player successfully cast unlock spell.
+
+        } // End ... If player NOT in combat.
         
     }
     
@@ -3778,117 +4563,48 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // TESTING
         
-        // If in explore mode, then...
-        if (gameHD.getGameState() == HeroineEnum.GameState.STATE_EXPLORE)
-        {
+        // Depending on game state...
+        switch (gameHD.getGameState()) {
             
-            // In explore mode.
-            
-            // Process key event while in explore mode.
-            handle_key_explore(keycode);
-            
-        } // End ... If in explore mode.
-        
-        // If in information mode, then...
-        else if (gameHD.getGameState() == HeroineEnum.GameState.STATE_INFO)
-        {
-            
-            // In information mode.
-            
-            System.out.println("In information mode");
-            
-            // Depending on key pressed, ...
-            switch (keycode) {
+            case STATE_EXPLORE:
                 
-                // If the user pressed the up arrow key, then...
-                case Input.Keys.UP:
-                    
-                    // The user pressed the up arrow key.
-                    
-                    // Try to move up an action button.
-                    moveUp();
-                    
-                    // Exit selector.
-                    break;
-                    
-                // Otherwise, if the user pressed the down arrow key, then...
-                case Input.Keys.DOWN:
-                    
-                    // The user pressed the down arrow key.
-                    
-                    // Try to move down an action button.
-                    moveDown();
-                    
-                    // Exit selector.
-                    break;
+                // In explore mode.
                 
-                // Otherwise, if the user pressed the left arrow key, then...
-                case Input.Keys.LEFT:
-                    
-                    // The user pressed the left arrow key.
-                    
-                    // Try to move left an action button.
-                    moveLeft();
-                    
-                    // Exit selector.
-                    break;
-                    
-                // Otherwise, if the user pressed the right arrow key, then...
-                case Input.Keys.RIGHT:
-                    
-                    // The user pressed the right arrow key.
-                    
-                    // Try to move right an action button.
-                    moveRight();
-                    
-                    // Exit selector.
-                    break;
-                    
-                // Otherwise, if the user pressed the enter / return key, then...
-                case Input.Keys.ENTER:
-                    
-                    // The user pressed the enter / return key.
-                    
-                    // Depending on active action button, ...
-                    switch (buttonSelected) {
-                        
-                        case BUTTON_POS_HEAL:
-                            
-                            // The user pressed enter on the heal button.
-                            
-                            // Process heal action.
-                            processAction_Heal();
-                            
-                            // Exit selector.
-                            break;
-                            
-                        default:
-                            
-                            // The user pressed enter on an unknown button.
-                            
-                            // Display warning.
-                            System.out.println("Warning:  Pressing enter with unknown button selected.");
-                            
-                            // Exit selector.
-                            break;
-                        
-                    } // End ... Depending on active action button.
-                        
-                    
-                    // Exit selector.
-                    break;
-                    
-                // Otherwise, ...
-                default:
+                // Process key event while in explore mode.
+                handle_key_explore(keycode);
                 
-                    // Otherwise...
-                    
-                    // Exit selector.
-                    break;
-                    
-            } // End ... Depending on key pressed.
+                // Exit selector.
+                break;
+                
+            case STATE_INFO:
+                
+                // In information mode.
+                
+                // Process key event while in information mode.
+                handle_key_information(keycode);
+                
+                // Exit selector.
+                break;
+                
+            case STATE_COMBAT:
+                
+                // In combat mode.
+                
+                // Process key event while in combat mode.
+                handle_key_combat(keycode);
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Display warning related to unknown game state.
+                System.out.println("Warning:  Key press detected in unknown game state on explore screen.");
+                
+                // Exit selector.
+                break;
             
-        } // End ... If in information mode.
+        } // End ... Depending on game state.
         
         // Return a value.
         return false;

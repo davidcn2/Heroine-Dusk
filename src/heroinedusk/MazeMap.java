@@ -1183,7 +1183,7 @@ public class MazeMap
         encounterInd = false;
         
         // If one or more enemies exist in current region, then...
-        if ( currentRegion.getEnemyCount() > 990 ) // 99990 )
+        if ( currentRegion.getEnemyCount() > 0 ) // 99990 )
         {
             
             // One or more enemies exist in current region.
@@ -1199,6 +1199,9 @@ public class MazeMap
                 
                 // Reset encounter chance.
                 encounter_chance = 0;
+                
+                // Flag encounter as occurring.
+                encounterInd = true;
                 
                 // Set game state as in combat.
                 gameHD.setGameState(HeroineEnum.GameState.STATE_COMBAT);

@@ -18,42 +18,208 @@ public class HeroineEnum
     
     Enumerations include:
     
-    1.  ActionButtonEnum:  Enumerations related to action buttons.  Helps with atlas keys and button navigation.
-    2.  ActionButtonExploreEnum:  Enumerations related to action button navigation in explore mode.
-    3.  ArmorEnum:  Enumerations related to armors.
-    4.  CombatPhaseEnum:  Enumerations related to combat phases.
-    5.  DialogButtonEnum:  Enumerations related to dialog buttons.  Helps with atlas keys.
-    6.  EnemyCategoryEnum:  Enumerations related to enemy categories.
-    7.  EnemyEnum:  Enumerations related to enemies.
-    8.  EnemyPowerEnum:  Enumerations realted to enemy powers.
-    9.  FacingEnum:  Enumerations related to direction player is facing.
-    10.  FightEnum:  Enumerations related to fighting actions.
-    11.  FontEnum:  Enumerations related to fonts.
-    12.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
-    13.  HeroinePlayerEnum:  Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
-    14.  ImgBackgroundEnum:  Enumerations related to background images.
-    15.  ImgEnemyEnum:  Enumerations related to images of enemies.
-    16.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
-    17.  ImgOtherEnum:  Enumerations related to other images.
-    18.  ImgTileEnum:  Enumerations related to tile images.
-    19.  ImgTreasureEnum:  Enumerations related to treasure images.
-    20.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
-    21.  ItemCategoryEnum:  Enumerations related to item categories.
-    22.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
-    23.  ItemTypeEnum:  Enumerations related to item types.
-    24.  ListEnum:  Enumerations related to list types.
-    25.  MagicItemEnum:  Enumerations related to magic items.
-    26.  MusicEnum:  Enumerations related to music.
-    27.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
-    28.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
-    29.  SelectPosEnum:  Enumerations related to explore screen button selection.
-    30.  ShopEnum:  Enumerations related to shops / locations.
-    31.  ShopTypeEnum:  Enumerations related to shop / location types.
-    32.  SoundsEnum:  Enumerations related to sounds.
-    33.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    34.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
-    35:  WeaponEnum:  Enumerations related to weapons.
+    1.  ActionButtonCombatEnum:  Enumerations related to action button navigation in combat mode.
+    2.  ActionButtonEnum:  Enumerations related to action buttons.  Helps with atlas keys and button navigation.
+    3.  ActionButtonExploreEnum:  Enumerations related to action button navigation in explore mode.
+    4.  ArmorEnum:  Enumerations related to armors.
+    5.  CombatPhaseEnum:  Enumerations related to combat phases.
+    6.  DialogButtonEnum:  Enumerations related to dialog buttons.  Helps with atlas keys.
+    7.  EnemyCategoryEnum:  Enumerations related to enemy categories.
+    8.  EnemyEnum:  Enumerations related to enemies.
+    9.  EnemyPowerEnum:  Enumerations realted to enemy powers.
+    10.  FacingEnum:  Enumerations related to direction player is facing.
+    11.  FightEnum:  Enumerations related to fighting actions.
+    12.  FontEnum:  Enumerations related to fonts.
+    13.  GameState:  Enumerations related to state of the game (explore, combat, information, dialog, title).
+    14.  HeroinePlayerEnum:  Enumerations related to heroine (player / weapon / armor).  Helps with atlas keys.
+    15.  ImgBackgroundEnum:  Enumerations related to background images.
+    16.  ImgEnemyEnum:  Enumerations related to images of enemies.
+    17.  ImgInterfaceEnum:  Enumerations related to interface images -- except fonts.
+    18.  ImgOtherEnum:  Enumerations related to other images.
+    19.  ImgTileEnum:  Enumerations related to tile images.
+    20.  ImgTreasureEnum:  Enumerations related to treasure images.
+    21.  InfoButtonEnum:  Enumerations related to information buttons.  Helps with atlas keys.
+    22.  ItemCategoryEnum:  Enumerations related to item categories.
+    23.  ItemEnum:  Enumerations related to items (often found in chests) -- gold, weapons, armors, spells, and magic items.
+    24.  ItemTypeEnum:  Enumerations related to item types.
+    25.  ListEnum:  Enumerations related to list types.
+    26.  MagicItemEnum:  Enumerations related to magic items.
+    27.  MusicEnum:  Enumerations related to music.
+    28.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
+    29.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
+    30.  SelectPosEnum:  Enumerations related to explore screen button selection.
+    31.  ShopEnum:  Enumerations related to shops / locations.
+    32.  ShopTypeEnum:  Enumerations related to shop / location types.
+    33.  SoundsEnum:  Enumerations related to sounds.
+    34.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    35.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
+    36:  WeaponEnum:  Enumerations related to weapons.
     */
+    
+    // Enumerations related to action button navigation in combat mode.
+    public enum ActionButtonCombatEnum 
+    {
+        
+        ACTION_BUTTON_COMBAT_ATTACK (0, SelectPosEnum.BUTTON_POS_HEAL, null,
+                SelectPosEnum.BUTTON_POS_RUN, null, SelectPosEnum.BUTTON_POS_ATTACK, 
+                ActionButtonEnum.ACTION_BUTTON_ATTACK), // Attack button.
+        ACTION_BUTTON_COMBAT_RUN (1, SelectPosEnum.BUTTON_POS_BURN, SelectPosEnum.BUTTON_POS_ATTACK,
+                null, null, SelectPosEnum.BUTTON_POS_RUN, ActionButtonEnum.ACTION_BUTTON_RUN), // Run button.
+        ACTION_BUTTON_COMBAT_HEAL (2, SelectPosEnum.BUTTON_POS_UNLOCK, null, 
+                SelectPosEnum.BUTTON_POS_BURN, SelectPosEnum.BUTTON_POS_ATTACK, 
+                SelectPosEnum.BUTTON_POS_HEAL, ActionButtonEnum.ACTION_BUTTON_HEAL), // Heal button.
+        ACTION_BUTTON_COMBAT_BURN (3, SelectPosEnum.BUTTON_POS_LIGHT, SelectPosEnum.BUTTON_POS_HEAL, 
+                null, SelectPosEnum.BUTTON_POS_RUN, SelectPosEnum.BUTTON_POS_BURN, 
+                ActionButtonEnum.ACTION_BUTTON_BURN), // Burn button.
+        ACTION_BUTTON_COMBAT_UNLOCK (4, SelectPosEnum.BUTTON_POS_FREEZE, null, 
+                SelectPosEnum.BUTTON_POS_LIGHT, SelectPosEnum.BUTTON_POS_HEAL, 
+                SelectPosEnum.BUTTON_POS_UNLOCK, ActionButtonEnum.ACTION_BUTTON_UNLOCK), // Unlock button.
+        ACTION_BUTTON_COMBAT_LIGHT (5, SelectPosEnum.BUTTON_POS_REFLECT, 
+                SelectPosEnum.BUTTON_POS_UNLOCK, null, SelectPosEnum.BUTTON_POS_BURN, 
+                SelectPosEnum.BUTTON_POS_LIGHT, ActionButtonEnum.ACTION_BUTTON_LIGHT), // Light button.
+        ACTION_BUTTON_COMBAT_FREEZE (6, null, null, 
+                SelectPosEnum.BUTTON_POS_REFLECT, SelectPosEnum.BUTTON_POS_UNLOCK, 
+                SelectPosEnum.BUTTON_POS_FREEZE, ActionButtonEnum.ACTION_BUTTON_FREEZE), // Freeze button.
+        ACTION_BUTTON_COMBAT_REFLECT (7, null, SelectPosEnum.BUTTON_POS_FREEZE, 
+                null, SelectPosEnum.BUTTON_POS_LIGHT, SelectPosEnum.BUTTON_POS_REFLECT,
+                ActionButtonEnum.ACTION_BUTTON_REFLECT) // Reflect button.
+        ; // semicolon needed when fields / methods follow
+
+        private final ActionButtonEnum actionButtonEnum; // Enumeration value for action button.
+        private final int actionButtonNavEnum; // Enumerations related to navigation related to action button.
+        private final SelectPosEnum moveDown; // Enumeration value for action button below.
+        private final SelectPosEnum moveLeft; // Enumeration value for action button to the left.
+        private final SelectPosEnum moveRight; // Enumeration value for action button to the right.
+        private final SelectPosEnum moveUp; // Enumeration value for action button above.
+        private final SelectPosEnum selectPosEnum; // Enumeration value for selected button.
+        private static final Map actionButtonNavMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        private static final Map actionButtonSelMap = new HashMap<>(); // Hash map containing cross reference to selected button enumerations.
+        
+        // actionButtonNavEnum = Value to associate.
+        // moveDown = Enumeration value for action button below.
+        // moveLeft = Enumeration value for action button to the left.
+        // moveRight = Enumeration value for action button to the right.
+        // moveUp = Enumeration value for action button above.
+        // selectPosEnum = Enumeration value for selected button.
+        // actionButtonEnum = Enumeration value for action button.
+        private ActionButtonCombatEnum(int actionButtonNavEnum, SelectPosEnum moveDown, 
+          SelectPosEnum moveLeft, SelectPosEnum moveRight, SelectPosEnum moveUp, SelectPosEnum selectPosEnum,
+          ActionButtonEnum actionButtonEnum) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.actionButtonNavEnum = actionButtonNavEnum;
+            this.moveDown = moveDown;
+            this.moveLeft = moveLeft;
+            this.moveRight = moveRight;
+            this.moveUp = moveUp;
+            this.selectPosEnum = selectPosEnum;
+            this.actionButtonEnum = actionButtonEnum;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ActionButtonCombatEnum actionButtonNavigationEnum : ActionButtonCombatEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                actionButtonNavMap.put(actionButtonNavigationEnum.actionButtonNavEnum, actionButtonNavigationEnum);
+            }
+            
+        }
+        
+        // Populate the hash map containing the cross reference with the selected button enumerations.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (ActionButtonCombatEnum actionButtonNavigationEnum : ActionButtonCombatEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                actionButtonSelMap.put(actionButtonNavigationEnum.selectPosEnum, actionButtonNavigationEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.ActionButtonCombatEnum.ACTION_BUTTON_NAV_REFLECT.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return actionButtonNavEnum;
+        }
+        
+        public ActionButtonEnum getValue_ActionButtonEnum() 
+        {
+            // The function returns the related action button enumeration.
+            // Example for use:  ActionButtonEnum x = HeroineEnum.ActionButtonCombatEnum.ACTION_BUTTON_NAV_REFLECT.getValue_ActionButtonEnum();
+            
+            // Return the related action button enumeration.
+            return actionButtonEnum;
+        }
+        
+        public SelectPosEnum getValue_MoveDown() 
+        {
+            // The function returns the enumeration associated with moving down from the action button.
+            // Example for use:  SelectPosEnum x = HeroineEnum.ActionButtonCombatEnum.ACTION_BUTTON_NAV_REFLECT.getValue_MoveDown();
+            
+            // Return the enumeration associated with moving down from the action button.
+            return moveDown;
+        }
+        
+        public SelectPosEnum getValue_MoveLeft() 
+        {
+            // The function returns the enumeration associated with moving left from the action button.
+            // Example for use:  SelectPosEnum x = HeroineEnum.ActionButtonCombatEnum.ACTION_BUTTON_NAV_REFLECT.getValue_MoveLeft();
+            
+            // Return the enumeration associated with moving left from the action button.
+            return moveLeft;
+        }
+        
+        public SelectPosEnum getValue_MoveRight() 
+        {
+            // The function returns the enumeration associated with moving right from the action button.
+            // Example for use:  SelectPosEnum x = HeroineEnum.ActionButtonCombatEnum.ACTION_BUTTON_NAV_REFLECT.getValue_MoveRight();
+            
+            // Return the enumeration associated with moving right from the action button.
+            return moveRight;
+        }
+        
+        public SelectPosEnum getValue_MoveUp() 
+        {
+            // The function returns the enumeration associated with moving up from the action button.
+            // Example for use:  SelectPosEnum x = HeroineEnum.ActionButtonCombatEnum.ACTION_BUTTON_REFLECT.getValue_MoveUp();
+            
+            // Return the enumeration associated with moving up from the action button.
+            return moveUp;
+        }
+        
+        public SelectPosEnum getValue_SelectPosEnum() 
+        {
+            // The function returns the related selected button enumeration.
+            // Example for use:  SelectPosEnum x = HeroineEnum.ActionButtonCombatEnum.ACTION_BUTTON_NAV_REFLECT.getValue_SelectPosEnum();
+            
+            // Return the related selected button enumeration.
+            return selectPosEnum;
+        }
+        
+        // actionButton = Numeric value to convert to text.
+        public static ActionButtonCombatEnum valueOf(int actionButton) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (ActionButtonCombatEnum) actionButtonNavMap.get(actionButton);
+        }
+        
+        // actionButton = Selected button to convert to action button navigation enumeration.
+        public static ActionButtonCombatEnum valueOf_xRef(SelectPosEnum selectedButton) 
+        {
+            // The function converts the passed selected button to its equivalent action button navigation enumeration.
+            return (ActionButtonCombatEnum) actionButtonSelMap.get(selectedButton);
+        }
+        
+    }
     
     // Enumerations related to action buttons.  Helps with atlas keys and button navigation.
     public enum ActionButtonEnum 
