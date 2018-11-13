@@ -46,21 +46,39 @@ public class Sounds
         
         // The function clears the memory related to LibGDX objects for sound.
         
-        // Loop through sounds in hash map.
-        soundMap.values().forEach((sound) -> {
+        // ** Necessary check in case user quits application while loading.
+        // If sound hash map exists, then...
+        if (soundMap != null)
+        {
             
-            // Clear memory related to current LibGDX object for sound.
-            sound.dispose();
+            // Sound hash map exists.
             
-        });
+            // Loop through sounds in hash map.
+            soundMap.values().forEach((sound) -> {
+
+                // Clear memory related to current LibGDX object for sound.
+                sound.dispose();
+
+            });
+            
+        }
         
-        // Loop through music in hash map.
-        musicMap.values().forEach((music) -> {
+        // ** Necessary check in case user quits application while loading.
+        // If music hash map exists, then...
+        if (musicMap != null)
+        {
             
-            // Clear memory related to current LibGDX object for music.
-            music.dispose();
+            // Music hash map exists.
             
-        });
+            // Loop through music in hash map.
+            musicMap.values().forEach((music) -> {
+
+                // Clear memory related to current LibGDX object for music.
+                music.dispose();
+
+            });
+            
+        }
         
     }
     

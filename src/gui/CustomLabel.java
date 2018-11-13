@@ -696,7 +696,8 @@ public class CustomLabel
             Actions.visible(true),
             Actions.delay(delay), 
             Actions.fadeOut(fadeOut), 
-            Actions.visible(false)
+            Actions.visible(false),
+            Actions.color(Color.WHITE)
           ));
         
         // Set up fade effect for the label.
@@ -964,7 +965,10 @@ public class CustomLabel
         });
         
         // Reinitialize the hash map for actions.
-        actionMapping = new HashMap<>();
+        //actionMapping = new HashMap<>();
+        
+        // Clear hash map for actions.
+        actionMapping.clear();
         
     }
     

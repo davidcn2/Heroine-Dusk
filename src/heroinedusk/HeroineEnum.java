@@ -47,13 +47,15 @@ public class HeroineEnum
     27.  MusicEnum:  Enumerations related to music.
     28.  MinimapEnum:  Enumerations related to minimap image blocks.  Helps with atlas keys.
     29.  MinimapCursorEnum:  Enumerations related to minimap cursor image blocks.  Helps with atlas keys.
-    30.  SelectPosEnum:  Enumerations related to explore screen button selection.
-    31.  ShopEnum:  Enumerations related to shops / locations.
-    32.  ShopTypeEnum:  Enumerations related to shop / location types.
-    33.  SoundsEnum:  Enumerations related to sounds.
-    34.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
-    35.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
-    36:  WeaponEnum:  Enumerations related to weapons.
+    30.  PowerActionEnum:  Enumerations related to power actions.
+    31.  PowerResultEnum:  Enumerations related to power results.
+    32.  SelectPosEnum:  Enumerations related to explore screen button selection.
+    33.  ShopEnum:  Enumerations related to shops / locations.
+    34.  ShopTypeEnum:  Enumerations related to shop / location types.
+    35.  SoundsEnum:  Enumerations related to sounds.
+    36.  SpellEnum:  Enumerations related to spells.  Also used for spellbook.
+    37.  TileRegionEnum:  Enumerations related to regions within unscaled tiles.
+    38:  WeaponEnum:  Enumerations related to weapons.
     */
     
     // Enumerations related to action button navigation in combat mode.
@@ -225,27 +227,30 @@ public class HeroineEnum
     public enum ActionButtonEnum 
     {
         
-        ACTION_BUTTON_ATTACK (0, "action_buttons0"), // Attack button.
-        ACTION_BUTTON_RUN (1, "action_buttons1"), // Run button.
-        ACTION_BUTTON_HEAL (2, "action_buttons2"), // Heal button.
-        ACTION_BUTTON_BURN (3, "action_buttons3"), // Burn button.
-        ACTION_BUTTON_UNLOCK (4, "action_buttons4"), // Unlock button.
-        ACTION_BUTTON_LIGHT (5, "action_buttons5"), // Light button.
-        ACTION_BUTTON_FREEZE (6, "action_buttons6"), // Freeze button.
-        ACTION_BUTTON_REFLECT (7, "action_buttons7") // Reflect button.
+        ACTION_BUTTON_ATTACK (0, "action_buttons0", false), // Attack button.
+        ACTION_BUTTON_RUN (1, "action_buttons1", false), // Run button.
+        ACTION_BUTTON_HEAL (2, "action_buttons2", true), // Heal button.
+        ACTION_BUTTON_BURN (3, "action_buttons3", true), // Burn button.
+        ACTION_BUTTON_UNLOCK (4, "action_buttons4", true), // Unlock button.
+        ACTION_BUTTON_LIGHT (5, "action_buttons5", true), // Light button.
+        ACTION_BUTTON_FREEZE (6, "action_buttons6", true), // Freeze button.
+        ACTION_BUTTON_REFLECT (7, "action_buttons7", true) // Reflect button.
         ; // semicolon needed when fields / methods follow
 
         private final int actionButtonEnum; // Enumerations related to action buttons.
         private final String actionButtonKey; // Key associated with texture region -- used with asset manager and textureRegions hash map.
         private static final Map actionButtonMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+        private final boolean spellInd; // Whether an action for a spell.
         
         // actionButtonEnum = Value to associate.
         // actionButtonKey = Key associated with texture -- used with asset manager and textureRegions hash map.
-        private ActionButtonEnum(int actionButtonEnum, String actionButtonKey) 
+        // spellInd = Whether an action for a spell.
+        private ActionButtonEnum(int actionButtonEnum, String actionButtonKey, boolean spellInd) 
         {
             // The constructor sets the values for each enumeration.
             this.actionButtonEnum = actionButtonEnum;
             this.actionButtonKey = actionButtonKey;
+            this.spellInd = spellInd;
         }
         
         // Populate the hash map containing the text and numbers.
@@ -277,6 +282,15 @@ public class HeroineEnum
             
             // Return the key associated with the texture region.
             return actionButtonKey;
+        }
+        
+        public boolean getValue_SpellInd() 
+        {
+            // The function returns whether the action is for a spell.
+            // Example for use:  String x = HeroineEnum.ActionButtonEnum.ACTION_BUTTON_REFLECT.getValue_SpellInd();
+            
+            // Return whether action is for a spell.
+            return spellInd;
         }
         
         // actionButton = Numeric value to convert to text.
@@ -2586,6 +2600,144 @@ public class HeroineEnum
         {
             // The function converts the passed numeric value to its corresponding text.
             return (MinimapCursorEnum) minimapCursorMap.get(minimapCursor);
+        }
+        
+    }
+    
+    // Enumerations related to power actions.
+    public enum PowerActionEnum 
+    {
+        
+        POWER_ACTION_NO_TARGET (0, "(NO TARGET)"), // Power action text -- no target.
+        POWER_ACTION_ATTACK (1, "ATTACK!"), // Power action text -- attack.
+        POWER_ACTION_BONE_SHIELD (2, "BONE SHIELD!"), // Power action text -- bone shield.
+        POWER_ACTION_BURN (3, "BURN!"), // Power action text -- burn action.
+        POWER_ACTION_CRITICAL (4, "CRITICAL!"), // Power action text -- critical attack.
+        POWER_ACTION_HEAL (5, "HEAL!"), // Power action text -- heal action.
+        POWER_ACTION_HP_DRAIN (6, "HP DRAIN!"), // Power action text -- hp drain action.
+        POWER_ACTION_MP_DRAIN (7, "MP DRAIN!"), // Power action text -- mp drain action.
+        POWER_ACTION_RUN (8, "RUN!"), // Power action text -- run.
+        POWER_ACTION_SCORCH (9, "SCORCH!"), // Power action text -- scorch action.
+        POWER_ACTION_UNLOCK (10, "UNLOCK!") // Power action text -- unlock action.
+        ; // semicolon needed when fields / methods follow
+
+        private final int powerActionEnum; // Enumerations related to power / action text.
+        private final String text; // Text associated with power / action.
+        private static final Map powerActionMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+
+        // powerActionEnum = Value to associate.
+        // text = Text associated with power / action.
+        private PowerActionEnum(int powerActionEnum, String text) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.powerActionEnum = powerActionEnum;
+            this.text = text;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (PowerActionEnum powerActionEnum : PowerActionEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                powerActionMap.put(powerActionEnum.powerActionEnum, powerActionEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.powerActionEnum.POWER_ACTION_SCORCH.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return powerActionEnum;
+        }
+        
+        public String getValue_Text() 
+        {
+            // The function returns the (clean) text value for the enumeration.
+            // Example for use:  String x = HeroineEnum.powerActionEnum.POWER_ACTION_SCORCH.getValue_Text();
+            
+            // Return the (clean) text value for the enumeration.
+            return text;
+        }
+        
+        // powerAction = Numeric value to convert to text.
+        public static PowerActionEnum valueOf(int powerAction) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (PowerActionEnum) powerActionMap.get(powerAction);
+        }
+        
+    }
+    
+    // Enumerations related to power results.
+    public enum PowerResultEnum 
+    {
+        
+        POWER_RESULT_DEF_UP (0, "+DEF UP!"), // Power result -- defense up (enemy response for bone shield).
+        POWER_RESULT_PLUS_N_HP (1, "+n HP"), // Power result -- heal.
+        POWER_RESULT_MINUS_1_MP (2, "-1 MP"), // Power result -- cast spell, lose a mp.
+        POWER_RESULT_ABSORBED (3, "ABSORBED!"), // Power result -- absorbed (player response for bone shield).
+        POWER_RESULT_BLOCKED (4, "BLOCKED!"), // Power result -- blocked (failed run, unlock against non-automaton).
+        POWER_RESULT_MISS (5, "MISS!"), // Power result -- miss.
+        POWER_RESULT_N_DAMAGE (6, "n DAMAGE"), // Power result -- n damage (e.g. for an attack).
+        POWER_RESULT_NO_EFFECT (7, "NO EFFECT"), // Power result -- no effect (e.g. mp drain when player has no mp).
+        POWER_RESULT_RUN_SUCCESSFUL (8, ""), // Power result -- successful running away from enemy.
+        ; // semicolon needed when fields / methods follow
+
+        private final int powerResultEnum; // Enumerations related to power / action result text.
+        private final String text; // Text associated with power / action result.
+        private static final Map powerResultMap = new HashMap<>(); // Hash map containing text and numbers in enumeration.
+
+        // powerResultEnum = Value to associate.
+        // text = Text associated with power / action result.
+        private PowerResultEnum(int powerResultEnum, String text) 
+        {
+            // The constructor sets the values for each enumeration.
+            this.powerResultEnum = powerResultEnum;
+            this.text = text;
+        }
+        
+        // Populate the hash map containing the text and numbers.
+        static 
+        {
+            
+            // Loop through each of the enumerated values.
+            for (PowerResultEnum powerResultEnum : PowerResultEnum.values()) 
+            {
+                // Add the current enumeration to the hash map.
+                powerResultMap.put(powerResultEnum.powerResultEnum, powerResultEnum);
+            }
+            
+        }
+        
+        public int getValue() 
+        {
+            // The function returns the numeric value for the enumeration.
+            // Example for use:  int x = HeroineEnum.powerResultEnum.POWER_ACTION_SCORCH.getValue();
+            
+            // Return the numeric value for the enumeration.
+            return powerResultEnum;
+        }
+        
+        public String getValue_Text() 
+        {
+            // The function returns the (clean) text value for the enumeration.
+            // Example for use:  String x = HeroineEnum.powerResultEnum.POWER_ACTION_SCORCH.getValue_Text();
+            
+            // Return the (clean) text value for the enumeration.
+            return text;
+        }
+        
+        // powerResult = Numeric value to convert to text.
+        public static PowerResultEnum valueOf(int powerResult) 
+        {
+            // The function converts the passed numeric value to its corresponding text.
+            return (PowerResultEnum) powerResultMap.get(powerResult);
         }
         
     }

@@ -804,7 +804,8 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
             Actions.visible(true),
             Actions.delay(delay), 
             Actions.fadeOut(fadeOut), 
-            Actions.visible(false)
+            Actions.visible(false),
+            Actions.color(Color.WHITE)
           ));
         
         // Set up fade effect for the actor.
@@ -1091,7 +1092,10 @@ public class BaseActor extends Group // Extends the Group class from LibGDX.
         });
         
         // Reinitialize the hash map for actions.
-        actionMapping = new HashMap<>();
+        //actionMapping = new HashMap<>();
+        
+        // Clear hash map for actions.
+        actionMapping.clear();
         
     }
     

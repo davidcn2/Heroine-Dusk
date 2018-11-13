@@ -40,6 +40,17 @@ public class Spells
     /*
     The class stores information and logic related to the player casting spells.
     
+    Action button enabled - hash map:
+    1.  In function, cast_burn, calls disableButtons_Spell when running out of magic points.
+    2.  In function, cast_burn, when tile in front of player is a skull pile, sets value to false for 
+        enumeration, ACTION_BUTTON_BURN.
+    3.  In function, cast_heal, calls disableButtons_Spell when running out of magic points.
+    4.  In function, cast_heal, when player reaches maximum hit points, sets value to false for enumeration, 
+        ACTION_BUTTON_HEAL.
+    5.  In function, cast_unlock, calls disableButtons_Spell when running out of magic points.
+    6.  In function, cast_unlock, when tile in front of player is a locked door, sets value to false for 
+        enumeration, ACTION_BUTTON_UNLOCK.
+    
     Methods include:
 
     cast_burn:  Encapsulates logic related to the player casting the burn spell.
@@ -66,30 +77,43 @@ public class Spells
     // tiles = BaseActor objects associated with tiles.
     // mazemap = Stores data for the current active region / map.
     // buttonActor = Reference to BaseActor for the button.
+    // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // number = Used for generating random numbers.
     // sounds = Reference to the sounds class.
-    public static int cast_burn(Avatar avatar, AtlasItems atlasItems, boolean combatInd, 
+    // actionResult = Reference to object with result information.  Allows for reuse.
+    public static void cast_burn(Avatar avatar, AtlasItems atlasItems, boolean combatInd, 
       boolean infoButtonSelected, HeroineEnum.ImgTileEnum imgTileNumForward, CustomLabel powerActionLabel, 
       CustomLabel powerResultLabel, CustomLabel mpLabel, ArrayList<BaseActor> tiles, MazeMap mazemap, 
-      BaseActor buttonActor, Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
-      SecureRandom number, Sounds sounds)
+      BaseActor buttonActor, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons,
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
+      SecureRandom number, Sounds sounds, ActionResult actionResult)
     {
         
         // The function encapsulates logic related to the player casting the burn spell.
-        // The function returns either:
-        // -1 to indicate the inability to cast the spell.
-        // 1 to indicate successfully burning an object (NOT an enemy).
-        // or the (base) number of hit points of damage caused to an enemy (1 or more).
+        // The function uses the actionResult (object) parameter to return the results.
         
+        // The numeric portion of the result indicates...
+        // 1 to n = The (base) number of hit points of damage caused to an enemy.
+        // -1 = Unable to cast the spell.
+        // 1 = Successful burning an object (NOT AN enemy).
+        
+        String actionText; // Text to display related to action.
         int atk_max; // Maximum damage caused by player.
         int atk_min; // Minimum damage caused by player.
         int burn_amount; // Either amount of damage to enemy, -1 when unable to cast spell, or 1 when
           // succesfully burning an object.
+        Boolean enemy_hurt; // Whether enemy hurt.  Null when not in combat or failing to cast spell.
         String mpText; // Text to display for magic points.
+        String resultText; // Text to display related to result.
+        boolean success; // Whether successful casting spell.
         
         // Set defaults.
         burn_amount = -1; // Signifies unable to cast burn spell.  Update later if spell cast.
+        actionText = "";
+        resultText = "";
+        success = false;
+        enemy_hurt = null;
         
         // If player lacks sufficient magic points, then...
         if (avatar.getMp() == 0)
@@ -107,17 +131,41 @@ public class Spells
                 // Render "(NO TARGET)" message.
                 ExploreScreen.info_render_no_target(null, powerActionLabel, sounds);
                 
+                // Store action text.
+                actionText = "(NO TARGET)";
+                
             }
 
             else
             {
 
-                // Square in front of player is a skull pile and NOT in combat mode.
+                // Square in front of player is a skull pile or player in combat mode.
 
-                // Render "INSUFFICIENT MP!" message.
-                ExploreScreen.info_render_insufficient_mp(powerActionLabel, sounds);
+                // If in combat, then...
+                if (combatInd)
+                {
 
-            } // End ... If player lacks mp, square in front is a skull, and NOT in combat mode.
+                    // In combat.
+
+                    // Play error sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+
+                }
+
+                else
+                {
+
+                    // NOT in combat and square in front of player is a skull pile.
+                
+                    // Render "INSUFFICIENT MP!" message.
+                    ExploreScreen.info_render_insufficient_mp(powerActionLabel, sounds);
+                    
+                }
+                
+                // Store action text.
+                actionText = "INSUFFICIENT MP!";
+
+            } // End ... If square in front of player is a skull pile and player lacks sufficient magic points.
             
         } // End ... If player lacks sufficient magic points.
 
@@ -146,17 +194,26 @@ public class Spells
             // Update magic points label.
             mpLabel.setLabelText(mpText);
             
-            // If player now has no magic points, then...
+            // Store action and result text.
+            actionText = "BURN!";
+            resultText = "TBD - Base " + Integer.toString(burn_amount) + " damage";
+            
+            // Flag enemy as hurt.
+            enemy_hurt = true;
+            
+            // Flag as successful.
+            success = true;
+            
+            // If player has no (remaining) magic points, then...
             if (avatar.getMp() == 0)
             {
-
-                // Player now at no magic points.
-
-                // Disable burn button.
-                ExploreScreen.disableButton(buttonActor, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, 
-                  mapActionButtonEnabled);
                 
-            } // End ... If player now has no magic points.
+                // Player has no (remaining) magic points.
+                
+                // Disable all spell-associated buttons.
+                ExploreScreen.disableButtons_Spell(mapActionButtons, mapActionButtonEnabled);
+                
+            } // End ... If player has no (remaining) magic points.
             
             System.out.println("Burn (base) - " + burn_amount + " hp!");
             
@@ -200,14 +257,14 @@ public class Spells
 
                 // Display action-related text.
                 ExploreScreen.info_update_powerResponseLines("BURN!", "CLEARED PATH!", powerActionLabel, 
-                  powerResultLabel);
+                  powerResultLabel, true);
                 
                 // If button passed and NOT in information mode, then...
                 if (buttonActor != null && !infoButtonSelected)
                 {
                     
                     // Button passed and NOT in information mode.
-                
+                    
                     // Set the burn button to not visible.
                     buttonActor.setVisible(false);
 
@@ -216,11 +273,37 @@ public class Spells
 
                 }
                 
-                // Disable burn button.
-                mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, false);
+                // If player has no (remaining) magic points, then...
+                if (avatar.getMp() == 0)
+                {
 
+                    // Player has no (remaining) magic points.
+
+                    // Disable all spell-associated buttons.
+                    ExploreScreen.disableButtons_Spell(mapActionButtons, mapActionButtonEnabled);
+
+                } // End ... If player has no (remaining) magic points.
+                
+                else
+                {
+                    
+                    // Player has one or more (remaining) magic points.
+                    // Only need to disable current button.
+                    
+                    // Disable burn button.
+                    mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, false);
+                    
+                }
+                
                 // Store amount to indicate successful burning of object.
                 burn_amount = 1;
+                
+                // Store action and result text.
+                actionText = "BURN!";
+                resultText = "CLEARED PATH!";
+
+                // Flag as successful.
+                success = true;
                 
                 // TO DO:  Add avatar save.
 
@@ -234,40 +317,72 @@ public class Spells
                 // Render "(NO TARGET)" message.
                 ExploreScreen.info_render_no_target(null, powerActionLabel, sounds);
 
+                // Store action text.
+                actionText = "(NO TARGET)";
+                
             }
 
         } // End ... If NOT in combat.
         
-        // Return damage inflicted, 1 if successfully burning an object, or -1 if unable to cast spell.
-        return burn_amount;
+        // If action result object passed (not null), then...
+        if (actionResult != null)
+        {
+            
+            // Action result object passed (not null).
+            
+            // Set properties of action result object.
+            actionResult.setResult(success);
+            actionResult.setResultNumeric(burn_amount);
+            actionResult.setTextAction(actionText);
+            actionResult.setTextResult(resultText);
+            
+            // If enemy hurt value exists, then...
+            if (enemy_hurt != null)
+                actionResult.setOpponentHurt(enemy_hurt);
+            
+        }
         
     } // End ... cast_burn function.
     
     // avatar = Reference to the player inormation (class).
+    // combatInd = Whether in combat.
     // powerActionLabel = Label showing the first line -- power action.
     // powerResultLabel = Label showing the second line -- power result.
     // hpLabel = Label showing player hit points.
     // mpLabel = Label showing player magic points.
     // buttonActor = Reference to BaseActor for the button.
+    // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // sounds = Reference to the sounds class.
-    public static int cast_heal(Avatar avatar, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
-      CustomLabel hpLabel, CustomLabel mpLabel, BaseActor buttonActor, 
-      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, Sounds sounds)
+    // actionResult = Reference to object with result information.  Allows for reuse.
+    public static void cast_heal(Avatar avatar, boolean combatInd, CustomLabel powerActionLabel, 
+      CustomLabel powerResultLabel, CustomLabel hpLabel, CustomLabel mpLabel, BaseActor buttonActor, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons,
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, Sounds sounds, 
+      ActionResult actionResult)
     {
         
         // The function encapsulates logic related to the player casting the heal spell.
-        // The function returns either the number of hp healed or -1 to indicate the 
-        // inability to cast the spell.
+        // The function uses the actionResult (object) parameter to return the results.
         
+        // The numeric portion of the result indicates...
+        // 0 to n = The number of hp healed.
+        // -1 = Unable to cast the spell.
+        
+        String actionText; // Text to display related to action.
         int heal_amount; // Number of hit points to heal.  -1 = Unable to cast heal spell.
         int hp; // Number of player hit points before healing.  Current player hit points.
         int hpMax; // Maximum number of player hit points.
         String hpText; // Text to display for hit points.
         String mpText; // Text to display for magic points.
-
+        String resultText; // Text to display related to result.
+        boolean success; // Whether successful casting spell.
+        
         // Set defaults.
         heal_amount = -1; // Signifies unable to cast heal spell.  Update later if spell cast.
+        actionText = "";
+        resultText = "";
+        success = false;
         
         // If player at maximum hit points, then...
         if (avatar.getHp_AtMax())    
@@ -275,19 +390,30 @@ public class Spells
 
             // Player at maximum hit points.
 
-            // Update power action labels.
-            powerActionLabel.setLabelText("HP AT MAX!");
-
-            // Display power action  labels.
-            powerActionLabel.applyVisible(true);
-
-            // Set up fade effect for power action label.
-            powerActionLabel.addAction_Fade();
-
             // Play error sound.
             sounds.playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+            
+            // Store action text.
+            actionText = "HP AT MAX!";
+            
+            // If NOT in combat, then...
+            if (!combatInd)
+            {
+                
+                // NOT in combat.
+                
+                // Update power action labels.
+                powerActionLabel.setLabelText("HP AT MAX!");
+                
+                // Display power action  labels.
+                powerActionLabel.applyVisible(true);
 
-        }
+                // Set up fade effect for power action label.
+                powerActionLabel.addAction_Fade();
+                
+            }
+
+        } // End ... If player at maximum hit points.
 
         // Otherwise, if player lacks sufficient magic points, then...
         else if (avatar.getMp() == 0)
@@ -295,10 +421,31 @@ public class Spells
 
             // Player lacks sufficient magic points.
 
-            // Render "INSUFFICIENT MP!" message.
-            ExploreScreen.info_render_insufficient_mp(powerActionLabel, sounds);
-
-        }
+            // Store action text.
+            actionText = "INSUFFICIENT MP!";
+            
+            // If in combat, then...
+            if (combatInd)
+            {
+                
+                // In combat.
+                
+                // Play error sound.
+                sounds.playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+                
+            }
+            
+            else
+            {
+                
+                // NOT in combat.
+                
+                // Render "INSUFFICIENT MP!" message.
+                ExploreScreen.info_render_insufficient_mp(powerActionLabel, sounds);
+                
+            }
+            
+        } // End ... If player lacks sufficient magic points.
 
         else
         {
@@ -338,37 +485,74 @@ public class Spells
 
             // Update magic points label.
             mpLabel.setLabelText(mpText);
-
-            // If player now at maximum hit points or no magic points, then...
-            if (avatar.getHp_AtMax() || avatar.getMp() == 0)
+            
+            // If player has no (remaining) magic points, then...
+            if (avatar.getMp() == 0)
+            {
+                
+                // Player has no (remaining) magic points.
+                
+                // Disable all spell-associated buttons.
+                ExploreScreen.disableButtons_Spell(mapActionButtons, mapActionButtonEnabled);
+                
+            } // End ... If player has no (remaining) magic points.
+            
+            // Otherwise, if player now at maximum hit points, then...
+            else if (avatar.getHp_AtMax())
             {
 
-                // Player now at maximum hit points or no magic points.
+                // Player now at maximum hit points.
 
                 // Disable heal button.
                 ExploreScreen.disableButton(buttonActor, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, 
                   mapActionButtonEnabled);
                 
-            } // End ... If player now at maximum hit points or no magic points.
+            } // End ... If player now at maximum hit points.
 
             System.out.println("Heal - " + heal_amount + " hp!");
 
-            // Update power action and result labels.
-            powerActionLabel.setLabelText("HEAL!");
-            powerResultLabel.setLabelText("+" + Integer.toString(heal_amount) + " HP");
+            // Store action and result text.
+            actionText = "HEAL!";
+            resultText = "+" + Integer.toString(heal_amount) + " HP";
+            
+            // If NOT in combat, then...
+            if (!combatInd)
+            {
+                
+                // NOT in combat.
+                
+                // Update power action and result labels.
+                powerActionLabel.setLabelText("HEAL!");
+                powerResultLabel.setLabelText("+" + Integer.toString(heal_amount) + " HP");
 
-            // Display power action and result labels.
-            powerActionLabel.applyVisible(true);
-            powerResultLabel.applyVisible(true);
+                // Display power action and result labels.
+                powerActionLabel.applyVisible(true);
+                powerResultLabel.applyVisible(true);
 
-            // Set up fade effects for power action and result labels.
-            powerActionLabel.addAction_Fade();
-            powerResultLabel.addAction_Fade();
-
+                // Set up fade effects for power action and result labels.
+                powerActionLabel.addAction_Fade();
+                powerResultLabel.addAction_Fade();
+                
+            }
+            
+            // Flag as successful.
+            success = true;
+            
         } // End ... If player at maximum hit points.
         
-        // Return amount healed (or -1 if unable to cast heal spell).
-        return heal_amount;
+        // If action result object passed (not null), then...
+        if (actionResult != null)
+        {
+            
+            // Action result object passed (not null).
+            
+            // Set properties of action result object.
+            actionResult.setResult(success);
+            actionResult.setResultNumeric(heal_amount);
+            actionResult.setTextAction(actionText);
+            actionResult.setTextResult(resultText);
+            
+        }
         
     } // End ... cast_heal function.
     
@@ -383,30 +567,43 @@ public class Spells
     // tiles = BaseActor objects associated with tiles.
     // mazemap = Stores data for the current active region / map.
     // buttonActor = Reference to BaseActor for the button.
+    // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // number = Used for generating random numbers.
     // sounds = Reference to the sounds class.
-    public static int cast_unlock(Avatar avatar, AtlasItems atlasItems, boolean combatInd, 
+    // actionResult = Reference to object with result information.  Allows for reuse.
+    public static void cast_unlock(Avatar avatar, AtlasItems atlasItems, boolean combatInd, 
       boolean infoButtonSelected, HeroineEnum.ImgTileEnum imgTileNumForward, CustomLabel powerActionLabel, 
       CustomLabel powerResultLabel, CustomLabel mpLabel, ArrayList<BaseActor> tiles, MazeMap mazemap, 
-      BaseActor buttonActor, Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
-      SecureRandom number, Sounds sounds)
+      BaseActor buttonActor, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
+      SecureRandom number, Sounds sounds, ActionResult actionResult)
     {
         
         // The function encapsulates logic related to the player casting the unlock spell.
-        // The function returns either:
-        // -1 to indicate the inability to cast the spell.
-        // 1 to indicate successfully unlocking an object (NOT an enemy).
-        // or the (base) number of hit points of damage caused to an enemy (1 or more).
+        // The function uses the actionResult (object) parameter to return the results.
         
+        // The numeric portion of the result indicates...
+        // 1 to n = The (base) number of hit points of damage caused to an enemy.
+        // -1 = Unable to cast the spell.
+        // 1 = Successful unlocking an object (NOT AN enemy).
+        
+        String actionText; // Text to display related to action.
         int atk_max; // Maximum damage caused by player.
         int atk_min; // Minimum damage caused by player.
+        Boolean enemy_hurt; // Whether enemy hurt.  Null when not in combat or failing to cast spell.
         int unlock_amount; // Either amount of damage to enemy, -1 when unable to cast spell, or 1 when
           // succesfully unlocking an object.
         String mpText; // Text to display for magic points.
-
+        String resultText; // Text to display related to result.
+        boolean success; // Whether successful casting spell.
+        
         // Set defaults.
         unlock_amount = -1; // Signifies unable to cast unlock spell.  Update later if spell cast.
+        actionText = "";
+        resultText = "";
+        success = false;
+        enemy_hurt = null;
         
         // If player lacks sufficient magic points, then...
         if (avatar.getMp() == 0)
@@ -424,17 +621,43 @@ public class Spells
                 ExploreScreen.info_render_no_target(HeroineEnum.SoundEnum.SOUND_BLOCKED, powerActionLabel, 
                   sounds);
                 
+                // Store action text.
+                actionText = "(NO TARGET)";
+                
             }
 
             else
             {
                 
-                // Square in front of player is a locked door and NOT in combat mode.
+                // Player lacks sufficient magic points and one of the two...
+                // 1.  NOT in combat and square in front of player is a locked door.
+                // 2.  IN combat.
 
-                // Render "INSUFFICIENT MP!" message.
-                ExploreScreen.info_render_insufficient_mp(powerActionLabel, sounds);
+                // If in combat, then...
+                if (combatInd)
+                {
 
-            } // End ... If player lacks mp, square in front is a locked door, and NOT in combat mode.
+                    // In combat.
+
+                    // Play error sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_ERROR);
+
+                }
+
+                else
+                {
+
+                    // NOT in combat.
+                
+                    // Render "INSUFFICIENT MP!" message.
+                    ExploreScreen.info_render_insufficient_mp(powerActionLabel, sounds);
+                    
+                }
+                
+                // Store action text.
+                actionText = "INSUFFICIENT MP!";
+
+            } // End ... If square in front of player is a locked door and player lacks sufficient magic points.
 
         } // End ... If player lacks sufficient magic points.
 
@@ -463,17 +686,26 @@ public class Spells
             // Update magic points label.
             mpLabel.setLabelText(mpText);
             
-            // If player now has no magic points, then...
+            // Store action and result text.
+            actionText = "UNLOCK!";
+            resultText = "TBD - Base " + Integer.toString(unlock_amount) + " damage";
+            
+            // Flag enemy as hurt.
+            enemy_hurt = true;
+            
+            // Flag as successful.
+            success = true;
+            
+            // If player has no (remaining) magic points, then...
             if (avatar.getMp() == 0)
             {
-
-                // Player now at no magic points.
-
-                // Disable unlock button.
-                ExploreScreen.disableButton(buttonActor, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, 
-                  mapActionButtonEnabled);
                 
-            } // End ... If player now has no magic points.
+                // Player has no (remaining) magic points.
+                
+                // Disable all spell-associated buttons.
+                ExploreScreen.disableButtons_Spell(mapActionButtons, mapActionButtonEnabled);
+                
+            } // End ... If player has no (remaining) magic points.
             
             System.out.println("Unlock (base) - " + unlock_amount + " hp!");
 
@@ -524,7 +756,7 @@ public class Spells
 
                 // Display action-related text.
                 ExploreScreen.info_update_powerResponseLines("UNLOCK!", "DOOR OPENED!", powerActionLabel, 
-                  powerResultLabel);
+                  powerResultLabel, true);
 
                 // If button passed and NOT in information mode, then...
                 if (buttonActor != null && !infoButtonSelected)
@@ -540,32 +772,76 @@ public class Spells
                     
                 }
                 
-                // Disable unlock button.
-                ExploreScreen.disableButton(null, HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, 
-                  mapActionButtonEnabled);
+                // If player has no (remaining) magic points, then...
+                if (avatar.getMp() == 0)
+                {
+
+                    // Player has no (remaining) magic points.
+
+                    // Disable all spell-associated buttons.
+                    ExploreScreen.disableButtons_Spell(mapActionButtons, mapActionButtonEnabled);
+
+                } // End ... If player has no (remaining) magic points.
+                
+                else
+                {
+                    
+                    // Player has one or more (remaining) magic points.
+                    // Only need to disable current button.
+                    
+                    // Disable unlock button.
+                    mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, false);
+                    
+                }
                 
                 // Store amount to indicate successful unlocking of object.
                 unlock_amount = 1;
+                
+                // Store action and result text.
+                actionText = "UNLOCK!";
+                resultText = "DOOR OPENED!";
+
+                // Flag as successful.
+                success = true;
                 
                 // TO DO:  Add avatar save.
 
             } // End ... If tile in front of player is a locked door.
 
+            // Otherwise -- tile in front of player NOT a locked door and NOT in combat.
             else
             {
 
-                // Tile in front of player not a locked door.
-
+                // Tile in front of player NOT a locked door and NOT in combat.
+                
                 // Render "(NO TARGET)" message.
                 ExploreScreen.info_render_no_target(HeroineEnum.SoundEnum.SOUND_BLOCKED, powerActionLabel,
                   sounds);
-
+                
+                // Store action text.
+                actionText = "(NO TARGET)";
+                
             }
 
         } // End ... If NOT in combat.
         
-        // Return damage inflicted, 1 if successfully unlocking an object, or -1 if unable to cast spell.
-        return unlock_amount;
+        // If action result object passed (not null), then...
+        if (actionResult != null)
+        {
+            
+            // Action result object passed (not null).
+            
+            // Set properties of action result object.
+            actionResult.setResult(success);
+            actionResult.setResultNumeric(unlock_amount);
+            actionResult.setTextAction(actionText);
+            actionResult.setTextResult(resultText);
+            
+            // If enemy hurt value exists, then...
+            if (enemy_hurt != null)
+                actionResult.setOpponentHurt(enemy_hurt);
+            
+        }
         
     } // End ... cast_unlock function.
     

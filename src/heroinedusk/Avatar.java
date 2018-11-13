@@ -69,7 +69,7 @@ public class Avatar
         armor = HeroineEnum.ArmorEnum.ARMOR_SERF_RAGS;
         hp = 5; //25;
         max_hp = 25;
-        mp = 14;
+        mp = 1; //14;
         max_mp = 14;
         gold = 80000; // 0;
         bonus_atk = 0;
@@ -647,26 +647,14 @@ public class Avatar
     // spellEnum = Spell to check whether player knows and has magic points sufficient to cast.
     public boolean getSpellCastInd(HeroineEnum.SpellEnum spellEnum) {
         
-        // The function returns whether the player knows the passed spell and has sufficient magic points 
-        // for casting.
+        // The function returns whether the player knows the passed spell.
         
         boolean spellCastInd; // Whether player knows the passed spell.
+          
+        // Determine whether player knows spell.
+        spellCastInd = getSpellInd(spellEnum);
         
-        // Set default return value.
-        spellCastInd = false;
-        
-        // If player has one or more magic points, then...
-        if (mp >= 1)
-        {
-            
-            // Player has one or more magic points.
-            
-            // Determine whether player knows spell.
-            spellCastInd = getSpellInd(spellEnum);
-            
-        }
-        
-        // Return whether the player knows the spell and has sufficient magic points for casting.
+        // Return whether the player knows the spell.
         return spellCastInd;
         
     }

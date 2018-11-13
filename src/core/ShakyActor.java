@@ -39,6 +39,23 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
     The main purpose of the ShakyActor class involves extending base actor
     functionality to support "shaking" -- random movement to nearby locations and
     then back to the point of origin.  Supports pausing.
+    
+    1.  The actor usually slides to its initial origin at the constant velocity, velocity.
+    2.  The actor "shakes" a constant number of times, shakeCount -- fourteen (14).  Consider changing to a variable later.
+    3.  During each "shake" the actor moves along a straight path (line) to a location / destination.
+    4.  The length of the line in the current "shake" equals the variable, shakeDistanceCurr.
+    5.  One or more movements along the line occur until reaching / passing the destination of the "shake".
+    6.  If past the line length in the last movement, the logic positions the actor at the destination.
+    7.  The actor moves along the line in each "shake" at the constant velocity, velocityShake.
+    8.  During the last "shake", the actor returns to its original location.
+    9.  During a random "shake", the actor moves up to the maximum allowed distance from its original 
+        (not current) location.
+    10. The maximum distance of a random "shake" exists in the variable, shakeDistanceMax, set when
+        initiating the shake in the function, startShake.
+    11. While time-based, no specific amount of time is stored for tracking completion purposes.
+    12. IMPORTANT:  When a "shake" starts, the variable, shakeInd, is set to true.
+    13. IMPORTANT:  When a "shake" finishes, the variable, shakeInd, is set to false.
+    14. As a result of 12 and 13, once a shake starts, the value of shakeInd can be checked for completion.
 
     Methods include:
 
@@ -283,6 +300,7 @@ public class ShakyActor extends BaseActor { // Extends the BaseActor class.
         // The function:
 
         // 1.  Performs a time based positional update.
+        
         // When movement NOT paused...
         // 2.  Updates the elapsed time value.
         // 3.  Conditionally slides the actor to base position.

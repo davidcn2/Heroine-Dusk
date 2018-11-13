@@ -52,6 +52,24 @@ public class MazeMap
     /* 
     The class stores data for the current active region / map.
     
+    Action button enabled - hash map:
+    1.  In function, mazemap_render, when tile in front of player is a skull pile (and MP > 0), sets value 
+        to true for enumeration, ACTION_BUTTON_BURN.
+    2.  In function, mazemap_render, when tile in front of player is a skull pile (and MP > 0), sets color
+        to Color.WHITE.
+    3.  In function, mazemap_render, when tile in front of player is NOT a skull pile, sets value to false 
+        for enumeration, ACTION_BUTTON_BURN.
+    4.  In function, mazemap_render, when tile in front of player is NOT a skull pile, sets color to 
+        Color.DARK_GRAY.
+    5.  In function, mazemap_render, when tile in front of player is a locked door (and MP > 0), sets value 
+        to true for enumeration, ACTION_BUTTON_UNLOCK.
+    6.  In function, mazemap_render, when tile in front of player is a locked door (and MP > 0), sets color 
+        to Color.WHITE.
+    7.  In function, mazemap_render, when tile in front of player is NOT a locked door, sets value to false 
+        for enumeration, ACTION_BUTTON_UNLOCK.
+    8.  In function, mazemap_render, when tile in front of player is NOT a locked door, sets color to 
+        Color.DARK_GRAY.
+    
     Methods include:
     
     acquireChestContents:  Gives the contents of the chest(s) at the passed location to the player.
@@ -138,6 +156,7 @@ public class MazeMap
     private final int regionWidth; // Region width, in tiles.
     
     // Declare constants.
+    private final boolean ALLOW_ENCOUNTERS = true; // Whether to allow encounters / combat.
     private final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1);
     private final int ENCOUNTER_INCREMENT = 5; // Amount by which encounter chance increases.
     private final int ENCOUNTER_MAX = 30; // Maximum encounter chance.
@@ -1157,6 +1176,9 @@ public class MazeMap
     // infoButton = BaseActor object that acts as the information button.
     // facingLabel = Label showing direction player is facing.
     // regionLabel = Label showing the current region name.
+    // powerSourceLabel = Label showing the source of the power (player or object).
+    // powerActionLabel = Label showing the first line -- power action.
+    // powerResultLabel = Label showing the second line -- power result.
     // enemy = ShakyActor object that acts as the enemy.
     // assetMgr = Reference to the asset manager class.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
@@ -1165,7 +1187,8 @@ public class MazeMap
     // mapActionButtonPosY = Y-coordinate of bottom of each action button.
     public boolean check_random_encounter(Combat combat, CustomLabel enemyLabel, BaseActor infoButtonSelector, 
       CustomLabel hpLabel, CustomLabel mpLabel, BaseActor infoButton, CustomLabel facingLabel, 
-      CustomLabel regionLabel, ShakyActor enemy, AssetMgr assetMgr, 
+      CustomLabel regionLabel, CustomLabel powerSourceLabel, CustomLabel powerActionLabel, 
+      CustomLabel powerResultLabel, ShakyActor enemy, AssetMgr assetMgr, 
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled,
       Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX,
@@ -1182,8 +1205,9 @@ public class MazeMap
         // Set defaults.
         encounterInd = false;
         
+        // * ALLOW_ENCOUNTERS = Debug flag allowing to skip encounters during testing.
         // If one or more enemies exist in current region, then...
-        if ( currentRegion.getEnemyCount() > 0 ) // 99990 )
+        if ( currentRegion.getEnemyCount() > 0 && ALLOW_ENCOUNTERS )
         {
             
             // One or more enemies exist in current region.
@@ -1217,8 +1241,9 @@ public class MazeMap
                 
                 // Initiate combat.
                 combat.initiate_combat(enemyEnum, enemyLabel, infoButtonSelector, hpLabel, mpLabel, 
-                  infoButton, facingLabel, regionLabel, enemy, assetMgr, mapActionButtons, 
-                  mapActionButtonEnabled, mapActionButtonPosX, mapActionButtonPosY);
+                  infoButton, facingLabel, regionLabel, powerSourceLabel, powerActionLabel, 
+                  powerResultLabel, enemy, assetMgr, mapActionButtons, mapActionButtonEnabled, 
+                  mapActionButtonPosX, mapActionButtonPosY);
                 
                 // Temp.
                 //gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
@@ -2390,20 +2415,29 @@ public class MazeMap
             // Set bone pile actor as visible.
             tiles.get(TILE_POS_BONE_PILE).setVisible(true);
             
-            // If sufficient magic points, set burn button shading to indicate enabled.
-            if (gameHD.getAvatar().getMp() > 0 && mapActionButtons.size() > 0)
+            // If sufficient magic points, then...
+            if (gameHD.getAvatar().getMp() > 0)
             {
                 
                 // Player has sufficient magic points to cast burn spell.
-                // Include check for elements in hash map (empty when application starts).
                 
-                // Shade burn button to indicate enabled.
-                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( Color.WHITE );
+                // * Check for elements to avoid issue when app starts.
+                // If action buttons hash map exists, then...
+                if (mapActionButtons.size() > 0)
+                {
+                    
+                    // Action buttons hash map exists.
+                    
+                    // Shade burn button to indicate enabled.
+                    mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( 
+                      Color.WHITE );
+                    
+                }
                 
-            }
-            
-            // Enable burn button.
-            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, true);
+                // Enable burn button.
+                mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN, true);
+                
+            } // End ... If sufficient magic points.
             
         } // End ... If bone pile exists immediately in front of player.
         
@@ -2417,7 +2451,7 @@ public class MazeMap
             {
                 
                 // Shade burn button to indicate disabled.
-                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( Color.DARK_GRAY );
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN).setColor( COLOR_MED_GRAY );
                 
             }
             
@@ -2451,20 +2485,29 @@ public class MazeMap
             // Set lock actor as visible.
             tiles.get(TILE_POS_LOCK).setVisible(true);
             
-            // If sufficient magic points, set unlock button shading to indicate enabled.
-            // Include check for elements in hash map (empty when application starts).
-            if (gameHD.getAvatar().getMp() > 0 && mapActionButtons.size() > 0)
+            // If sufficient magic points, then...
+            if (gameHD.getAvatar().getMp() > 0)
             {
                 
                 // Player has sufficient magic points to cast unlock spell.
                 
-                // Shade unlock button to indicate enabled.
-                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( Color.WHITE );
+                // * Check for elements to avoid issue when app starts.
+                // If action buttons hash map exists, then...
+                if (mapActionButtons.size() > 0)
+                {
+                    
+                    // Action buttons hash map exists.
+                    
+                    // Shade unlock button to indicate enabled.
+                    mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( 
+                      Color.WHITE );
+                    
+                }
                 
-            }
-            
-            // Enable unlock button.
-            mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, true);
+                // Enable unlock button.
+                mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK, true);
+                
+            } // End ... If sufficient magic points.
             
         } // End ... If locked door exists immediately in front of player.
         
@@ -2478,7 +2521,8 @@ public class MazeMap
             {
                 
                 // Shade unlock button to indicate disabled.
-                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( Color.DARK_GRAY );
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK).setColor( 
+                  COLOR_MED_GRAY );
                 
             }
             
