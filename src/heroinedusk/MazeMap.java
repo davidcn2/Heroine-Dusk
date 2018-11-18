@@ -89,7 +89,7 @@ public class MazeMap
     eventExitMagic:  Encapsulates exit event logic related to items with associated action buttons.
     eventMouseMoveAction:  Encapsulates mouse move event logic related to items with associated
 	  action buttons.
-    fade_gold_pile:  Fades out the treasure group and gold pile, including associated actors.
+    fade_out_gold_pile:  Fades out the treasure group and gold pile, including associated actors.
     fade_treasure:  Fades all treasure / gold actors (including the label) and is called when 
       clicking on the last item.
     mazemap_bounds_check:  Checks to see if the passed location exists in the current region.
@@ -113,7 +113,7 @@ public class MazeMap
     private final AtlasItems atlasItems; // Reference to the atlas items information.
     private ArrayList<HeroineEnum.ItemEnum> chestOtherItems; // Additional items in chest(s).
     private ArrayList<Integer> chestOtherItemsQty; // Quantity of each additional item in chest(s).
-    private final RegionMap currentRegion; // Reference to current region / map.
+    private RegionMap currentRegion; // Reference to current region / map.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
     private final ArrayList<Action> goldActions; // List of actions to apply to gold actors.
     private final HashMap<Integer, Integer> goldXRef; // Cross reference between amount of gold (key) and 
@@ -142,18 +142,18 @@ public class MazeMap
     private boolean goldPileActiveInd; // Whether gold pile active.
     private final boolean[] goldVisibleList; // Whether each gold actor visible.
     private boolean lockedDoorActiveInd; // Whether locked door in square in front of (NOT UNDER) player enabled.
-    private final int map_id; // Current region / map location (number).
+    private int map_id; // Current region / map location (number).
     private final float minimapIconSize; // Size of an icon in minimap (width and height match).
-    private final float minimapOffsetX; // X-coordinate of lower left corner of minimap.
-    private final float minimapOffsetY; // Y-coordinate of lower left corner of minimap.
+    private float minimapOffsetX; // X-coordinate of lower left corner of minimap.
+    private float minimapOffsetY; // Y-coordinate of lower left corner of minimap.
     private float minimapHeight; // Height of the minimap, including the background.
     private float minimapWidth; // Width of the minimap, including the background.
     private final SecureRandom number; // Used for generating random numbers.
-    private final String regionName; // Name of current region / map location.
+    private String regionName; // Name of current region / map location.
       // Maps to one of the integers in the mapIdentifiers object in the atlas.
     private HeroineEnum.MusicEnum current_song; // Song associated with the current region / map location.
-    private final int regionHeight; // Region height, in tiles.
-    private final int regionWidth; // Region width, in tiles.
+    private int regionHeight; // Region height, in tiles.
+    private int regionWidth; // Region width, in tiles.
     
     // Declare constants.
     private final boolean ALLOW_ENCOUNTERS = true; // Whether to allow encounters / combat.
@@ -173,7 +173,7 @@ public class MazeMap
     private final int TILE_POS_LOCK = 17; // Tile position of lock.
     private final int TREASURE_LABEL_POS_Y = 2; // How many pixels (adjusted by scale) to place label above
       // treasure.
-    private final int TREASURE_POS_Y = 1; // Y-coordinate at which to place treasure when in same square 
+    private final int TREASURE_POS_SAME_SQ_Y = 1; // Y-coordinate at which to place treasure when in same square 
       // as player.  Adjusted by scale factor.
     
     // hdg = Reference to Heroine Dusk (main) game.
@@ -734,7 +734,7 @@ public class MazeMap
 
                                 // 6.  Perform actions on treasure actor and label.
 
-                                // Display the first chest / item.
+                                // Render the first chest / item -- hidden.
                                 treasureImageInd = render_treasure_first( chestList.get(0).getPrimaryItem(), tiles, 
                                   goldPile, viewWidth, treasureLabel, chestList.get(0).getPrimaryItemCount() );
 
@@ -1005,9 +1005,12 @@ public class MazeMap
       CustomLabel treasureLabel, int viewWidth)
     {
         
-        // The function adds events to the passed treasure actor and label.
-        // Clicking the tresaure actor causes the actor and label to fade out.
-        // Events include touchDown, touchUp, enter, and exit.
+        // The function adds events to the passed treasure actor / group and label.
+        // The function is used to add events to a treasure actor / group associated with a chest.
+        // Clicking the treasure actor causes the (current) actor and label to fade out and the
+        // next (if any exist) to fade into view.
+        // Events include touchDown and touchUp.
+        // Note:  No events exist currently for enter or exit.
         
         InputListener treasureEvent; // Events to add to passed objects.
         
@@ -1165,6 +1168,90 @@ public class MazeMap
         tiles.get(TILE_POS_TREASURE).addListener(treasureEvent);
         tiles.get(TILE_POS_TREASURE_GROUP).addListener(treasureEvent);
         treasureLabel.getLabel().addListener(treasureEvent);
+        
+    }
+    
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
+    // firstLabel = First label associated with treasure.  Supports null.
+    // secondLabel = Second label associated with treasure.  Supports null.
+    // treasureLabel = Reference to label with the treasure description.
+    private void addEvent_TreasureActor(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+      CustomLabel firstLabel, CustomLabel secondLabel)
+    {
+        
+        // The function adds events to the passed treasure actor / group and label.
+        // The function is used to add events to a treasure actor / group NOT associated with a chest.
+        // Example:  The function is used to add events to a treasure actor / group resulting from winning
+        // a combat.
+        // Clicking the treasure actor causes the actor and any passed label(s) to fade out.
+        // Events include touchDown and touchUp.
+        // Note:  No events exist currently for enter or exit.
+        
+        InputListener treasureEvent; // Events to add to passed objects.
+        
+        // Craft event logic to add to passed label.
+        treasureEvent = new InputListener()
+            {
+                
+                boolean ignoreNextExitEvent; // Whether to ignore next exit event (used with touchUp / exit).
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public boolean touchDown(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user touches the screen or presses a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS. 
+                    // Notes:  Occurs when user press down mouse on button.
+                    // Notes:  Event (touchDown) necessary to reach touchUp.
+                    
+                    // Return a value.
+                    return true;
+                    
+                }
+                
+                // event = Event for actor input: touch, mouse, keyboard, and scroll.
+                // x = The x coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // y = The y coordinate where the user touched the screen, basing the origin in the upper left corner.
+                // pointer = Pointer for the event.
+                // button = Button pressed.
+                @Override
+                public void touchUp(InputEvent event, float x, float y, int pointer, int button)
+                {
+                    
+                    // The function occurs when the user lifts a finger or released a mouse button.
+                    
+                    // Notes:  The button parameter will be Input.Buttons.LEFT on iOS.
+                    // Notes:  Occurs when user releases mouse on button.
+                    
+                    // Flag to ignore next exit event.
+                    ignoreNextExitEvent = true;
+                    
+                    // Play click sound.
+                    gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_CLICK);
+                    
+                    // Fade all treasure-related actors (regular, gold, and label(s)).
+                    fade_treasure( tiles, goldPile, firstLabel, secondLabel );
+                    
+                } // End ... touchUp.
+                
+            }; // End ... InputListener.
+        
+        // Add event to actors.
+        tiles.get(TILE_POS_TREASURE).addListener(treasureEvent);
+        tiles.get(TILE_POS_TREASURE_GROUP).addListener(treasureEvent);
+        
+        // Add event to passed labels.
+        if (firstLabel != null)
+            firstLabel.getLabel().addListener(treasureEvent);
+        if (secondLabel != null)
+            secondLabel.getLabel().addListener(treasureEvent);
         
     }
     
@@ -1398,12 +1485,12 @@ public class MazeMap
             // Chest actor NOT active.
 
             // Position treasure actor (group) vertically slightly above the bottom.
-            tiles.get(TILE_POS_TREASURE_GROUP).setY( TREASURE_POS_Y * gameHD.getConfig().getScale() );
+            tiles.get(TILE_POS_TREASURE_GROUP).setY(TREASURE_POS_SAME_SQ_Y * gameHD.getConfig().getScale() );
 
         }
         
-        // Redraw / update gold pile and treasure group.
-        render_gold(tiles, goldPile, viewWidth, chestOtherItemsQty.get(chestOtherItemIndex));
+        // Redraw / update gold pile (treasure group).
+        render_gold(goldPile, chestOtherItemsQty.get(chestOtherItemIndex), true, null, null);
 
         // Remove existing actions on treasure group.
         tiles.get(TILE_POS_TREASURE_GROUP).removeActions();
@@ -1569,7 +1656,7 @@ public class MazeMap
             goldPileActiveInd = false;
             
             // Fade out gold pile.
-            fade_gold_pile( tiles, goldPile, 0.00f, 0.50f );
+            fade_out_gold_pile( tiles, goldPile, 0.00f, 0.50f );
             
             // Update image for treasure actor.
             tiles.get(TILE_POS_TREASURE).setTextureRegion( 
@@ -1602,8 +1689,8 @@ public class MazeMap
 
                 // Position treasure actor at center of stage horizontally and 
                 // vertically slightly above the bottom.
-                tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
-                  TREASURE_POS_Y * gameHD.getConfig().getScale() );
+                tiles.get(TILE_POS_TREASURE).setPosition((viewWidth - treasureWidth) / 2, 
+                  TREASURE_POS_SAME_SQ_Y * gameHD.getConfig().getScale() );
 
             }
 
@@ -1667,8 +1754,8 @@ public class MazeMap
 
                     // Position treasure actor at center of stage horizontally and 
                     // vertically slightly above the bottom.
-                    tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
-                      TREASURE_POS_Y * gameHD.getConfig().getScale() );
+                    tiles.get(TILE_POS_TREASURE).setPosition((viewWidth - treasureWidth) / 2, 
+                      TREASURE_POS_SAME_SQ_Y * gameHD.getConfig().getScale() );
                 }
 
                 // Resize treasure actor based on scale.
@@ -1717,7 +1804,7 @@ public class MazeMap
             // Gold pile active.
 
             // Fade out gold pile.
-            fade_gold_pile( tiles, goldPile, 0f, 0.5f );
+            fade_out_gold_pile( tiles, goldPile, 0f, 0.5f );
 
             // Flag gold pile as inactive.
             goldPileActiveInd = false;
@@ -1891,11 +1978,12 @@ public class MazeMap
     // goldPile = List of gold actors.
     // delay = Time, in seconds, before fade occurs.
     // fadeOut = Duration, in seconds, of fade.
-    private void fade_gold_pile(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, float delay, 
+    private void fade_out_gold_pile(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, float delay, 
       float fadeOut)
     {
         
         // The function fades out the treasure group and gold pile, including associated actors.
+        // Note:  The fading in of the gold pile occurs in the function, render_gold.
         
         // Fade out visible actors in gold pile.
         goldPile.forEach((actor) -> {
@@ -1927,6 +2015,7 @@ public class MazeMap
         
         // The function fades all treasure / gold actors (including the label) and is called when 
         // clicking on the last item.
+        // The function is associated with a chest.
         
         // If gold pile active, then...
         if (goldPileActiveInd)
@@ -1934,7 +2023,7 @@ public class MazeMap
             // Gold pile active.
 
             // Fade out the gold pile, including all associated actors.
-            fade_gold_pile( tiles, goldPile, 0f, 1f );
+            fade_out_gold_pile( tiles, goldPile, 0f, 1f );
 
             // Flag gold pile as inactive.
             goldPileActiveInd = false;
@@ -1952,6 +2041,48 @@ public class MazeMap
 
         // Set up an action to fade out the treasure label.
         treasureLabel.addAction_FadeOut(0f, 1f);
+        
+    }
+    
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
+    // firstLabel = First label associated with treasure.  Supports null.
+    // secondLabel = Second label associated with treasure.  Supports null.
+    private void fade_treasure(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+      CustomLabel firstLabel, CustomLabel secondLabel)
+    {
+        
+        // The function fades all treasure / gold actors (including any passed label(s)) and is called when 
+        // clicking on the last item.
+        // The function is NOT associated with a chest.
+        
+        // If gold pile active, then...
+        if (goldPileActiveInd)
+        {
+            // Gold pile active.
+
+            // Fade out the gold pile, including all associated actors.
+            fade_out_gold_pile( tiles, goldPile, 0f, 1f );
+
+            // Flag gold pile as inactive.
+            goldPileActiveInd = false;
+
+        }
+
+        // Otherwise, If texture for treasure actor initialized, then...
+        else if (tiles.get(TILE_POS_TREASURE).getRegion().getTexture() != null)
+        {
+            // Texture for treasure actor initialized.
+
+            // Fade out the treasure actor.
+            tiles.get(TILE_POS_TREASURE).addAction_FadeOut( 0f, 1f );
+        }
+
+        // Set up an action to fade out any passed label(s).
+        if (firstLabel != null)
+            firstLabel.addAction_FadeOut(0f, 1f);
+        if (secondLabel != null)
+            secondLabel.addAction_FadeOut(0f, 1f);
         
     }
     
@@ -3520,23 +3651,42 @@ public class MazeMap
         
     }
     
-    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
     // goldPile = List of gold actors.
-    // viewWidth = Width of the stage.
     // quantity = Number of items to render.
-    private void render_gold(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, int viewWidth, 
-      int quantity)
+    // dynamicFadingInd = Whether to use dynamic fading logic (e.g. for chests).
+    // delay = Time, in seconds, before fade in occurs.
+    // fadeIn = Duration, in seconds, of fade in effect.  Defaults to 0.50f, if null passed.
+    private void render_gold(ArrayList<BaseActor> goldPile, int quantity, boolean dynamicFadingInd,
+      Float delay, Float fadeIn)
     {
         
         // The function displays the current gold pile (only the actors necessary to add up to the desired
         // quantity).
+        // The dynamic fading option allows for fading based on the current visiblity status of actors.
+        // The alternative (simple fading) does no fading out (only fades in images).
+        // Note:  The function, at the least, always fades in the gold pile.
+        // Note:  The function supports rendering up to 1023 gold.
         
         int counter; // Used to increment through actors.
+        float delayAction; // Time to use for delay portion of action -- when fading in image.
+        float fadeInAction; // Time to use for fade in portion of action.
         ArrayList<Integer> bitwiseList; // List of numbers that add up to gold amount.
     
         // Flag gold pile as active.
         goldPileActiveInd = true;
     
+        // If fade in time NOT passed, then...
+        if (fadeIn == null)
+            fadeInAction = 0.50f;
+        else
+            fadeInAction = fadeIn;
+        
+        // If delay NOT passed, then...
+        if (delay == null)
+            delayAction = 0.00f;
+        else
+            delayAction = delay;
+        
         // Clear array list with actions for gold actors.
         goldActions.clear();
         
@@ -3569,137 +3719,192 @@ public class MazeMap
         
         // Set up actions...
         
-        // Loop through actors.
-        for (BaseActor actor : goldPile)
+        // If using dynamic fading logic, then...
+        if (dynamicFadingInd)
         {
             
-            // If actor visible, then...
-            if (actor.isVisible())  
+            // Use dynamic fading logic.
+            
+            // Loop through actors.
+            for (BaseActor actor : goldPile)
             {
-                
-                // Actor visible.
-                
-                // Route 1:  Visible.  Fade out first.
-                
-                // If rendering current gold actor, then...
-                if (this.goldVisibleList[counter])
+
+                // If actor visible, then...
+                if (actor.isVisible())  
                 {
-                    
-                    // Rendering current gold actor.
-                    
-                    // Route 1A:  Visible (before and after).  Fade out.  Then, fade in.
-                    
-                    // Add action to fade out and in the actor.
-                    goldActions.add(
-                        Actions.sequence
-                            (
-                            //Actions.fadeIn(0.0f), // First step of fade out.
-                            //Actions.visible(true),
-                            Actions.delay(0.0f), 
-                            Actions.fadeOut(0.5f), 
-                            Actions.visible(false), // Last step of fade out.
-                            Actions.delay(0.0f), // First step of fade in.
-                            Actions.alpha(0),
-                            Actions.visible(true),
-                            Actions.fadeIn(0.5f) // Last step of fade in.
-                            )
-                            
-                    ); // End ... Add action to fade out and in the actor.
-                    
-                } // End ... If rendering current gold actor
-                
+
+                    // Actor visible.
+
+                    // Route 1:  Visible.  Fade out first.
+
+                    // If rendering current gold actor, then...
+                    if (this.goldVisibleList[counter])
+                    {
+
+                        // Rendering current gold actor.
+
+                        // Route 1A:  Visible (before and after).  Fade out.  Then, fade in.
+
+                        // Add action to fade out and in the actor.
+                        goldActions.add(
+                            Actions.sequence
+                                (
+                                //Actions.fadeIn(0.0f), // First step of fade out.
+                                //Actions.visible(true),
+                                Actions.delay(0.0f), 
+                                Actions.fadeOut(0.5f), 
+                                Actions.visible(false), // Last step of fade out.
+                                Actions.delay(delayAction), // First step of fade in.
+                                Actions.alpha(0),
+                                Actions.visible(true),
+                                Actions.fadeIn(fadeInAction) // Last step of fade in.
+                                )
+
+                        ); // End ... Add action to fade out and in the actor.
+
+                    } // End ... If rendering current gold actor
+
+                    else
+                    {
+
+                        // Actor no longer visible.
+
+                        // Route 1B:  Visible (before).  Fade out.  Do not fade in.
+
+                        // Add action to fade out the actor.
+                        goldActions.add(
+                            Actions.sequence
+                                (
+                                //Actions.fadeIn(0.0f), // First step of fade out.
+                                //Actions.visible(true),
+                                Actions.delay(0.0f), 
+                                Actions.fadeOut(0.5f), 
+                                Actions.visible(false) // Last step of fade out.
+                                )
+                        ); // End ... Add action to fade out the actor.
+
+                    } // End ... If actor no longer visible.
+
+                } // End ... If actor visible.
+
                 else
                 {
-                    
-                    // Actor no longer visible.
-                    
-                    // Route 1B:  Visible (before).  Fade out.  Do not fade in.
-                    
-                    // Add action to fade out the actor.
-                    goldActions.add(
-                        Actions.sequence
-                            (
-                            //Actions.fadeIn(0.0f), // First step of fade out.
-                            //Actions.visible(true),
-                            Actions.delay(0.0f), 
-                            Actions.fadeOut(0.5f), 
-                            Actions.visible(false) // Last step of fade out.
-                            )
-                    ); // End ... Add action to fade out the actor.
-                    
-                } // End ... If actor no longer visible.
-                
-            } // End ... If actor visible.
+
+                    // Actor not visible.
+
+                    // Route 2:  Not visible (before).  Do NOT fade out first.  Fade in.
+
+                    // If rendering current gold actor, then...
+                    if (this.goldVisibleList[counter])
+                    {
+
+                        // Rendering current gold actor.
+
+                        // Add action to fade in the actor.
+                        goldActions.add(
+                            Actions.sequence
+                                (
+                                Actions.delay(delayAction), // First step of fade in.
+                                Actions.alpha(0),
+                                Actions.visible(true),
+                                Actions.fadeIn(fadeInAction) // Last step of fade in.
+                                )
+                        ); // End ... Add action to fade in the actor.
+
+                    } // End ... If rendering current gold actor.
+
+                    else
+                    {
+
+                        // NOT rendering current gold actor.
+
+                        // Add an empty entry to maintain proper positioning.
+                        goldActions.add(null);
+
+                    }
+
+                } // End ... If actor not visible.
+
+                // Increment counter.
+                counter++;
+
+            } // Loop through actors.
             
-            else
+        } // End ... If using dynamic fading logic.
+            
+        else   
+        {
+            
+            // Simply fade in the actor(s).
+            
+            // Loop through actors.
+            for (BaseActor actor : goldPile)
             {
-                
-                // Actor not visible.
-                
-                // Route 2:  Not visible (before).  Do NOT fade out first.  Fade in.
-                
+
+                // Do NOT fade out first.  Fade in.
+
                 // If rendering current gold actor, then...
                 if (this.goldVisibleList[counter])
                 {
-                    
+
                     // Rendering current gold actor.
-                    
+
                     // Add action to fade in the actor.
                     goldActions.add(
                         Actions.sequence
                             (
-                            Actions.delay(0.0f), // First step of fade in.
+                            Actions.delay(delayAction), // First step of fade in.
                             Actions.alpha(0),
                             Actions.visible(true),
-                            Actions.fadeIn(0.5f) // Last step of fade in.
+                            Actions.fadeIn(fadeInAction) // Last step of fade in.
                             )
                     ); // End ... Add action to fade in the actor.
-                    
+
                 } // End ... If rendering current gold actor.
-                
+
                 else
                 {
-                    
+
                     // NOT rendering current gold actor.
-                    
+
                     // Add an empty entry to maintain proper positioning.
                     goldActions.add(null);
-                    
+
                 }
-                
-            } // End ... If actor not visible.
+
+                // Increment counter.
+                counter++;
+
+            } // Loop through actors.
             
-            // Increment counter.
-            counter++;
-            
-        } // Loop through actors.
+        } // End ... If using simple fading logic -- no fade out, just fade in.
         
         // 4.  Clear and add actions related to fading to the actors.
         
         // Reset counter.
         counter = 0;
-        
+
         // Clear and add actions.
         
         // Loop through actors.
         for (BaseActor actor : goldPile)
         {
-            
+
             // Clear actions from actor.
             actor.clearActions();
             
-            // If new action exist for actor, then...
+            // If new action exists for actor, then...
             if (goldActions.get(counter) != null)
             {
-                // New action exist for actor.
-                
+                // New action exists for actor.
+
                 // Add action to actor.
                 actor.addAction(goldActions.get(counter));
             }
-            
+
             // Increment counter.
             counter++;
-            
+
         } // End ... Loop through actors.
         
     }
@@ -3755,12 +3960,12 @@ public class MazeMap
                 // Chest actor NOT active.
 
                 // Position treasure actor (group) vertically slightly above the bottom.
-                tiles.get(TILE_POS_TREASURE_GROUP).setY( TREASURE_POS_Y * gameHD.getConfig().getScale() );
+                tiles.get(TILE_POS_TREASURE_GROUP).setY(TREASURE_POS_SAME_SQ_Y * gameHD.getConfig().getScale() );
 
             }
             
-            // Redraw / update gold pile and treasure group.
-            render_gold(tiles, goldPile, viewWidth, quantity);
+            // Redraw / update gold pile (treasure group).
+            render_gold(goldPile, quantity, true, null, null);
             
             // Flag treasure image as existing.
             treasureImageInd = true;
@@ -3829,8 +4034,8 @@ public class MazeMap
                     
                     // Position treasure actor at center of stage horizontally and vertically slightly above 
                     // the bottom.
-                    tiles.get(TILE_POS_TREASURE).setPosition( (viewWidth - treasureWidth) / 2, 
-                      TREASURE_POS_Y * gameHD.getConfig().getScale() );
+                    tiles.get(TILE_POS_TREASURE).setPosition((viewWidth - treasureWidth) / 2, 
+                      TREASURE_POS_SAME_SQ_Y * gameHD.getConfig().getScale() );
                     
                 }
                     
@@ -3850,7 +4055,7 @@ public class MazeMap
                 // Only display label.
             }
             
-        }
+        } // End ... If item NOT gold.
         
         // 3.  Perform actions on treasure label.
         
@@ -3895,6 +4100,208 @@ public class MazeMap
         
         // Fade in the next treasure label text.
         treasureLabel.addAction_FadeOutIn_Center_AdjY( 0.00f, 0.50f, 0.50f, treasureText, pos_y );
+        
+    }
+    
+    // map_id = Current map section in which player resides.
+    // viewHeight = Height of the stage.
+    public void reset(int map_id, int viewHeight)
+    {
+        
+        // The function resets the class.
+        // For example, exiting to a new region requires a reset.
+        
+        /*
+        The constructor performs the following actions:
+        
+        1.  Initializes array lists and hash maps and allocate space for arrays.
+        2.  Sets starting region / map location.
+        3.  Stores region name.
+        4.  Stores reference to current region / map.
+        5.  Copies tiles for current region to class-level variable.
+        6.  Stores region width and height -- in tiles.
+        7.  Calculates minimap offset (lower left corner) based on scale.
+        8.  Calculates destination coordinates for minimap icons.
+        9.  Adds elements to tile active array list.
+        */
+        
+        ArrayList<Float> tempMinimapDestX; // Holder for x-coordinate values for current row (for placing minimap icons).
+        ArrayList<Float> tempMinimapDestY; // Holder for y-coordinate values for current row (for placing minimap icons).
+        float minimapDestPosX; // X-coordinate at which to place minimap icon.
+        float minimapDestPosY; // Y-coordinate at which to place minimap icon.
+        //int counter; // Used to increment through tile region enumerations.
+        
+        // 1.  Set defaults and initialize array lists and hash maps.
+        
+        // Set basic defaults.
+        encounter_chance = 0;
+        goldPileActiveInd = false;
+        
+        // Reset gold actor visible list.
+        for(int counter = 0; counter < goldVisibleList.length; counter++)
+        {
+            goldVisibleList[counter] = false;
+        }
+        
+        // Disable events for objects in square in front of player (position 9).
+        bonePileActiveInd = false;
+        chestActiveInd = false;
+        lockedDoorActiveInd = false;
+        
+        // Clear array lists.
+        goldActions.clear();
+        regionTiles.clear();
+        minimapDestX.clear();
+        minimapDestY.clear();
+        chestOtherItems.clear();
+        chestOtherItemsQty.clear();
+        tileActiveInd.clear();
+        
+        // 2.  Set current region / map location.
+        this.map_id = map_id;
+        
+        // 3.  Get region name.
+        regionName = atlas.mapIdentifiersRev.get(this.map_id);
+        
+        // 4.  Store reference to current region / map.
+        this.currentRegion = atlas.maps.get(regionName);
+        
+        System.out.println("Current region: " + regionName);
+        
+        // 5.  Copy tiles for current region. -- Actually, stores references.
+        regionTiles.addAll(currentRegion.getRegionTiles());
+        
+        // 6.  Copy current region width and height -- in tiles.
+        regionWidth = currentRegion.getRegionWidth();
+        regionHeight = currentRegion.getRegionHeight();
+        
+        System.out.println("Region size: " + regionWidth + " by " + regionHeight);
+        
+        // 7.  Calculate minimap offset (lower left corner) based on scale.
+        minimapOffsetX = 2f * gameHD.getConfig().getScale();
+        minimapOffsetY = viewHeight - (regionHeight * minimapIconSize) - (2f * gameHD.getConfig().getScale()); // 106f * gameHD.getConfig().getScale();
+        
+        // 8.  Calculate destination coordinates for minimap icons.
+        
+        // Set starting y-coordinate at which to place minimap icon (bottom of lowest icon).
+        minimapDestPosY = 0f; // minimapOffsetY;
+        
+        // Loop through vertical tiles.
+        for (int counterY = regionHeight - 1; counterY >= 0; counterY--)
+        {
+            
+            // Reset x-coordinate at which to place minimap icon (left edge).
+            minimapDestPosX = 0f; // minimapOffsetX;
+            
+            // Reinitialize array lists.
+            tempMinimapDestX = new ArrayList<>();
+            tempMinimapDestY = new ArrayList<>();
+            
+            // Loop through horizontal tiles.
+            for (int counterX = 0; counterX < regionWidth; counterX++)
+            {
+                
+                // Add location to array lists for current row.
+                tempMinimapDestX.add(minimapDestPosX);
+                tempMinimapDestY.add(minimapDestPosY);
+                
+                // Move to the right one icon.
+                minimapDestPosX += minimapIconSize;
+                
+            } // End ... Loop through horizontal tiles.
+            
+            // Add array lists for current row to sets for all rows.
+            minimapDestX.add(tempMinimapDestX);
+            minimapDestY.add(tempMinimapDestY);
+            
+            // Move up one icon.
+            minimapDestPosY += minimapIconSize;
+            
+        } // End ... Loop through vertical tiles.
+        
+        // Reverse rows in top-level array lists.
+        Collections.reverse(minimapDestX);
+        Collections.reverse(minimapDestY);
+        
+        // 9.  Add elements to active tile list.
+        
+        // Loop through and add elements to active tile list, defaulting to false.
+        for (int tileCounter = 0; tileCounter <= TILE_COUNT_BASE_0; tileCounter++)
+        {
+            // Add tile active indicator -- default to false.
+            tileActiveInd.add(false);
+        }
+        
+    }
+    
+    // goldQuantity = Amount of gold to give to player and show.
+    // goldLabel = Label showing player gold.
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
+    // victoryLabel = Label showing victory text -- used after winning a combat.
+    // combatRewardLabel = Label showing combat reward -- in relation to winning.
+    public void show_gold_pile_no_chest(int goldQuantity, CustomLabel goldLabel, ArrayList<BaseActor> tiles,
+      ArrayList<BaseActor> goldPile, CustomLabel victoryLabel, CustomLabel combatRewardLabel)
+    {
+        
+        /*
+        The function gives the passed amount of gold to the player and shows the related image.
+        
+        The following actions occur:
+        
+        1.  Play coin sound.
+        2.  Give player the gold.
+        3.  Position treasure actor (group) vertically slightly above the bottom.
+        4.  Draw gold pile (treasure group), fading in over one second.
+        5.  Add events to treasure actor / group / labels to fade out upon click.
+        6.  Set treasure group tile as active.
+        7.  Fade in the victory label.
+        8.  Update the text for and fade in the combat reward label.
+        */
+        
+        // 1.  Play coin sound.
+        gameHD.getSounds().playSound( HeroineEnum.SoundEnum.SOUND_COIN );
+        
+        // 2.  Give player the gold.
+        gameHD.getAvatar().takeItem( HeroineEnum.ItemEnum.ITEM_GOLD, null, null, null, null, goldQuantity, 
+          gameHD.getAssetMgr(), null, null, goldLabel );
+        
+        // 3.  Position treasure actor (group) vertically slightly above the bottom.
+        // Same position as when player moves into a square with a treasure and shows the related gold pile.
+        tiles.get(TILE_POS_TREASURE_GROUP).setY( TREASURE_POS_SAME_SQ_Y * gameHD.getConfig().getScale() );
+        
+        // 4.  Draw gold pile (treasure group), fading in over one second.
+        
+        // Fade in the actors in the treasure group.
+        render_gold( goldPile, goldQuantity, false, 0.50f, 0.50f );
+        
+        // Display the treasure group -- the fading will occur through the actors within the group.
+        tiles.get(TILE_POS_TREASURE_GROUP).setVisible( true );
+        
+        // 5.  Add events to treasure actor / group / labels to fade out upon click.
+        addEvent_TreasureActor( tiles, goldPile, victoryLabel, combatRewardLabel );
+        
+        // 6.  Set treasure group tile as active.
+        tileActiveInd.set( TILE_POS_TREASURE_GROUP, true );
+        
+        // 7.  Fade in the victory label.
+        
+        // Remove existing actions for victory label.
+        victoryLabel.removeActions();
+        
+        // Fade in the victory label.
+        victoryLabel.addAction_FadeIn( 0.50f, 0.50f );
+        
+        // 8.  Update the text for and fade in the combat reward label.
+        
+        // Update text for combat reward label.
+        combatRewardLabel.setLabelText_Center( "+" + Integer.toString(goldQuantity) + " GOLD!" );
+        
+        // Remove existing actions for combat reward label.
+        combatRewardLabel.removeActions();
+        
+        // Fade in the combat reward label.
+        combatRewardLabel.addAction_FadeIn( 0.50f, 0.50f );
         
     }
     

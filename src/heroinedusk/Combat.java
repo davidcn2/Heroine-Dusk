@@ -13,6 +13,7 @@ import screens.ExploreScreen;
 
 // Java imports.
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +57,7 @@ public class Combat
     private final Avatar avatar; // Reference to player information class.
     private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled_Start; // Hash map containing 
       // enabled status of action buttons.  Copy of values from start of current combat.
+    private MazeMap mazemap; // Stores data for the current active region / map.
     
     // Declare regular variables.
     private boolean boneshield_active; // Whether bone shield power (of enemy) active.
@@ -75,8 +77,9 @@ public class Combat
     // Constructors below...
     
     // avatar = Reference to player information class.
+    // mazemap = Reference to data for the current active region / map.
     // scale = Output scale factor -- multiple of 160 and 120.
-    public Combat(Avatar avatar, int scale)
+    public Combat(Avatar avatar, MazeMap mazemap, int scale)
     {
         
         // The constructor initializes the combat engine and stores the parameters in their related class
@@ -94,6 +97,9 @@ public class Combat
         
         // Store reference to player information class.
         this.avatar = avatar;
+        
+        // Store reference to current active region data class.
+        this.mazemap = mazemap;
         
         // Calculate selector position adjustment.
         this.selectorAdjPos = scale * 2;
@@ -919,24 +925,31 @@ public class Combat
         
     }
     
+    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
+    // goldPile = List of gold actors.
     // enemy = ShakyActor object that acts as the enemy.
     // enemyLabel = Reference to label showing enemy type.
     // infoButton = BaseActor object that acts as the information button.
     // infoButtonSelector = BaseActor object that acts as the selector for the current action button.
     // hpLabel = Label showing player hit points.
     // mpLabel = Label showing player magic points.
+    // goldLabel = Label showing player gold.
     // facingLabel = Label showing direction player is facing.
     // powerSourceLabel = Label showing the source of the power (player or object).
     // powerActionLabel = Label showing the first line -- power action.
     // powerResultLabel = Label showing the second line -- power result.
+    // victoryLabel = Label showing victory text -- used after winning a combat.
+    // combatRewardLabel = Label showing combat reward -- in relation to winning.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
     // mapSelectorPosY = List of y-positions to place selector -- related to buttons.
-    public boolean offense_finish(ShakyActor enemy, CustomLabel enemyLabel, BaseActor infoButton,
-      BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel facingLabel, 
-      CustomLabel powerSourceLabel, CustomLabel powerActionLabel, 
-      CustomLabel powerResultLabel, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+    public boolean offense_finish(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+      ShakyActor enemy, CustomLabel enemyLabel, BaseActor infoButton, BaseActor infoButtonSelector, 
+      CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel, CustomLabel facingLabel, 
+      CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
+      CustomLabel victoryLabel, CustomLabel combatRewardLabel,
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
@@ -955,6 +968,7 @@ public class Combat
 
         boolean basicFinishInd; // Whether to perform basic logic related to conclusion of combat.
         boolean enableButtons; // Whether to enable action buttons after function finishes.
+        int goldQuantity; // Number of gold won from combat victory.
         
         // Set defaults.
         basicFinishInd = false;
@@ -969,13 +983,13 @@ public class Combat
             
             // Enemy defeated -- at or below zero hit points.
             
-            // Render the interface for the ending of combat.
-            render_interface_end(enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, mpLabel, 
-              facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
-              mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
+            // Determine amount of gold to reward player.
+            goldQuantity = UtilityRoutines.generateStandardRnd( number, enemyEnum.getValue_GoldMin(), 
+              enemyEnum.getValue_GoldMax() );
             
-            // Flag to enable action buttons after function finishes.
-            enableButtons = true;
+            // Provide reward to player for winning combat (and display related image).
+            mazemap.show_gold_pile_no_chest( goldQuantity, goldLabel, tiles, goldPile, victoryLabel, 
+              combatRewardLabel );
             
             // Flag to perform basic logic to conclude combat.
             basicFinishInd = true;
@@ -987,14 +1001,6 @@ public class Combat
         {
             
             // Successful running away from enemy.
-            
-            // Render the interface for the ending of combat.
-            render_interface_end(enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, mpLabel, 
-              facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
-              mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
-            
-            // Flag to enable action buttons after function finishes.
-            enableButtons = true;
             
             // Flag to perform basic logic to conclude combat.
             basicFinishInd = true;
@@ -1017,6 +1023,14 @@ public class Combat
         {
             
             // Perform basic logic to conclude combat.
+            
+            // Flag to enable action buttons after function finishes.
+            enableButtons = true;
+            
+             // Render the interface for the ending of combat.
+            render_interface_end(enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, mpLabel, 
+              facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
+              mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
             
             // If player has remaining magic points, then...
             if (avatar.getMp() > 0)

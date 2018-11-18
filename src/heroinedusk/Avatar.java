@@ -69,7 +69,7 @@ public class Avatar
         armor = HeroineEnum.ArmorEnum.ARMOR_SERF_RAGS;
         hp = 5; //25;
         max_hp = 25;
-        mp = 1; //14;
+        mp = 10; //14;
         max_mp = 14;
         gold = 80000; // 0;
         bonus_atk = 0;

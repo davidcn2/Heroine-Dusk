@@ -1,6 +1,7 @@
 package screens;
 
 // LibGDX imports.
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -8,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 
 // Local project imports.
 import core.BaseActor;
@@ -143,9 +145,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel armorLabel; // Label showing current player armor.
     private BaseActor background; // BaseActor object that will act as the background.
     private Combat combat; // Reference to the combat engine.
+    private CustomLabel combatRewardLabel; // Label showing combat reward -- in relation to winning.
     private ShakyActor enemy; // ShakyActor object that will act as the enemy.
     private CustomLabel enemyLabel; // Label showing enemy type.
     private CustomLabel facingLabel; // Label showing direction player is facing.
+    private CustomLabel fpsLabel; // Label showing frame rate.
     private final HeroineDuskGame gameHD; // Reference to HeroineDusk (main) game class.
     private CustomLabel goldLabel; // Label showing current player gold.
     private ArrayList<BaseActor> goldPile; // List of gold actors.
@@ -159,7 +163,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private CustomLabel infoLabel; // Label showing "INFO" text.
     private Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons; // Hash map containing
       // BaseActor objects that will act as the action buttons.
-    private MazeMap mazemap; // Stores data for the current active region / map.
+    private MazeMap mazemap; // Reference to data for the current active region / map.
     private Array<Actor> middleStageActors; // List of actors in middle stage used when waking screen.
     private Group minimapGroup; // Group containing minimap actors.
     private ArrayList<BaseActor> minimapIcons; // BaseActor objects associated with minimap.
@@ -176,13 +180,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
       // 17 = Lock.
     private CustomLabel treasureLabel; // Label showing treasure description.
     private Array<Actor> uiStageActors; // List of actors in ui stage used when waking screen.
+    private CustomLabel victoryLabel; // Label showing victory text -- used after winning a combat.
     private CustomLabel weaponLabel; // Label showing current player weapon.
     
     // Declare regular variables.
     private boolean actionButtonsEnabled; // Whether action buttons enabled.  Disable in the middle of a 
       // combat round (after player selects action).
     private HeroineEnum.SelectPosEnum buttonSelected; // Selected button.
+    private float frameRate; // Frames per second.
     private boolean infoButtonSelected; // Whether information button selected and clicked.
+    private long lastTimeCounted; // Difference, measured in milliseconds, between the current time and 
+      // midnight, January 1, 1970 UTC.
     private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled; // Hash map containing enabled 
       // status of action buttons.
     private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX; // X-coordinate of each action button.
@@ -200,9 +208,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX; // List of x-positions to place selector -- related to buttons.
     private HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY; // List of y-positions to place selector -- related to buttons.
     private int selectorAdjPos; // Position adjustment related to selector.
+    private float sinceChange; // Seconds elapsed, resetting every second.
     
     // Declare constants.
     private static final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1); // Disabled color.
+    private final boolean RENDER_FPS = true; // Whether to display frame rate.
     private static final Integer[] GOLD_BASE_POS_X_LIST = new Integer[]{36, 27, 45, 45, 21, 34, 12, 61, 58, 0};
     private static final Integer[] GOLD_BASE_POS_Y_LIST = new Integer[]{17, 20, 19, 10, 4, 2, 16, 0, 18, 1};
     private final int SPELL_SUCCESSFUL = 1;
@@ -273,9 +283,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             Hidden at start.
         24.  Configure and add the label showing the current region name.  Hidden at start.
         25.  Configure and add the label showing the treasure description.  Hidden at start.
-        26.  Configure and add the label showing the enemy type.  Hidden at start.
-        27.  Configure and add the enemy actor to the middle stage.  Hidden at start.
-        28.  Initialize combat engine.
+        26.  Configure and add the labels associated with combat victory.  Hidden at start.
+        27.  Configure and add the label showing the enemy type.  Hidden at start.
+        28.  Configure and add the enemy actor to the middle stage.  Hidden at start.
+        29.  Initialize combat engine.
+        30.  As necessary, shade action buttons to indicate enabled.
+        31.  Configure and add the frame rate label. > If rendering (check RENDER_FPS).
         
         Notes:
         
@@ -289,6 +302,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         actionButtonsEnabled = true;
         infoButtonSelected = false;
         minimapRenderInd = false;
+        lastTimeCounted = TimeUtils.millis();
+        sinceChange = 0;
         buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
         selectorAdjPos = gameHD.getConfig().getScale() * 2;
         actionResult = new ActionResult();
@@ -531,7 +546,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( treasureLabel.getLabel() );
         
-        // 26.  Configure and add the label showing the enemy type.  Hidden at start.
+        // 26.  Configure and add the labels associated with combat victory.  Hidden at start.
+        info_render_victory();
+        
+        // 27.  Configure and add the label showing the enemy type.  Hidden at start.
         enemyLabel = new CustomLabel(game.skin, "NO ENEMY HERE", "enemy name label", "uiLabelStyle", 
           1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, 0f, 
@@ -543,7 +561,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         uiStageActors.add( enemyLabel.getLabel() );
         
-        // 27.  Configure and add the enemy actor to the middle stage.  Hidden at start.
+        // 28.  Configure and add the enemy actor to the middle stage.  Hidden at start.
         enemy = new ShakyActor(viewWidthMain, viewHeightMain);
         
         // Name the actor.
@@ -558,10 +576,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         middleStageActors.add(enemy);
         
-        // 28.  Initialize combat engine.
-        combat = new Combat(gameHD.getAvatar(), gameHD.getConfig().getScale());
+        // 29.  Initialize combat engine.
+        combat = new Combat(gameHD.getAvatar(), mazemap, gameHD.getConfig().getScale());
         
-        // 29.  As necessary, shade action buttons to indicate enabled.
+        // 30.  As necessary, shade action buttons to indicate enabled.
         
         // If bone pile in front of player, then...
         if (mazemap.isBonePileActiveInd())
@@ -600,6 +618,20 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             }
             
         } // End ... If lock in front of player.
+        
+        // 31.  If necessary, configure and add the frame rate label.
+        
+        // If rendering frames per second, then...
+        if (RENDER_FPS)
+        {
+            
+            // Render frames per second.
+            fpsLabel = new CustomLabel(game.skin, "n FPS", "fps label", "uiLabelStyle", 
+          1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_LEFT, 
+          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
+          (float)(gameHD.getConfig().getScale() * -2), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+            
+        }
         
     }
     
@@ -2931,7 +2963,14 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 mazemap.setLockedDoorActiveInd(false);
                 
             }
-                
+            
+            // Hide combat victory labels.
+            victoryLabel.applyVisible(false);
+            combatRewardLabel.applyVisible(false);
+            
+            // Hide frame rate label.
+            fpsLabel.applyVisible(false);
+            
         } // End ... If information view selected.
         
         // Otherwise -- switching from information to regular view.
@@ -3023,7 +3062,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 
             }
             
-        }
+            // Show frame rate label.
+            fpsLabel.applyVisible(true);
+            
+        } // End ... If switching to regular view.
         
         // Hide the general status label and remove associated actions.
         statusLabel.removeActions();
@@ -3575,6 +3617,44 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // If necessary, apply fade effect to labels.
         info_update_powerResponseLines(actionResult.getTextSource_Nvl(), actionResult.getTextAction_Nvl(), 
           actionResult.getTextResult_Nvl(), powerSourceLabel, powerActionLabel, powerResultLabel, fadeInd);
+        
+    }
+    
+    private void info_render_victory()
+    {
+        
+        // The function configures and adds the labels associated with combat victory.
+        // Note:  Actors hidden at start.
+        
+        // 1.  Configure and add the label with the text, VICTORY!.  Hidden at start.
+        
+        // Initialize and add label with the text, VICTORY!.
+        victoryLabel = new CustomLabel(game.skin, "VICTORY!", "combat - victory label", "uiLabelStyle", 
+          1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
+          CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, 
+          null, (float)(gameHD.getConfig().getScale() * 62), 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // Hide the label.
+        victoryLabel.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add(victoryLabel.getLabel());
+        
+        // 2.  Configure and add the label with the combat reward text, +n GOLD! (set later).  Hidden at start.
+        
+        // Initialize and add label with the text, +N GOLD! -- set later.
+        combatRewardLabel = new CustomLabel(game.skin, "+N GOLD", "combat reward label", "uiLabelStyle", 
+          1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
+          CoreEnum.PosRelativeEnum.REL_POS_LOWER_LEFT, uiStage, 
+          null, (float)(gameHD.getConfig().getScale() * 52), 
+          HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // Hide the label.
+        combatRewardLabel.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add(combatRewardLabel.getLabel());
         
     }
     
@@ -4563,7 +4643,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Update object storing data for the current active region / map.
         
         // Reinitialize the maze map.
-        mazemap = new MazeMap(gameHD, regionExit.getDest_map(), viewHeightMain);
+        mazemap.reset(regionExit.getDest_map(), viewHeightMain);
+        //mazemap = new MazeMap(gameHD, regionExit.getDest_map(), viewHeightMain);
         
         // Update and display region label.
         regionLabel.setLabelText_Center(mazemap.getCurrentRegion().getRegionName().toUpperCase());
@@ -4717,7 +4798,43 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         /*
         The function occurs during the update phase (render method).
+        
+        The following actions occur:
         */
+        
+        long delta; // Difference, measured in milliseconds, between current and last time check.
+        
+        // If rendering frames per second, then...
+        if (RENDER_FPS)
+        {
+            
+            // Render frames per second.
+            
+            // Get difference, measured in milliseconds, between current and last time check.
+            delta = TimeUtils.timeSinceMillis(lastTimeCounted);
+            
+            // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
+            lastTimeCounted = TimeUtils.millis();
+
+            // Update time elapsed (reset every second).
+            sinceChange += delta;
+            
+            // If one or more seconds, elapsed, then...
+            if(sinceChange >= 1000) 
+            {
+            
+                // Reset elapsed time.
+                sinceChange = 0;
+                
+                // Calculate frame rate.
+                frameRate = Gdx.graphics.getFramesPerSecond();
+            
+            }
+            
+            // Update frames per second label.
+            fpsLabel.setLabelText(Integer.toString(Math.round(frameRate)) + " FPS");
+            
+        } // End ... If rendering frames per second.
         
         // If in combat, then...
         if ( gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT )
@@ -4742,12 +4859,26 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     {
 
                         // Shaking of enemy finished.
-
+                        
                         // Finish offense phase of current round of combat.
-                        combat.offense_finish( enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, 
-                          mpLabel, facingLabel, powerSourceLabel, powerActionLabel, 
-                          powerResultLabel, mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, 
-                          mapSelectorPosY );
+                        // Returns tue when combat complete.
+                        if ( combat.offense_finish( tiles, goldPile, enemy, enemyLabel, infoButton, 
+                          infoButtonSelector, hpLabel, mpLabel, goldLabel, facingLabel, powerSourceLabel, 
+                          powerActionLabel, powerResultLabel, victoryLabel, combatRewardLabel, 
+                          mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY ) )
+                        
+                        {
+                            
+                            // Combat complete.
+                            // Switch to explore mode and re-enable action buttons.
+                            
+                            // Switch to explore mode.
+                            gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+
+                            // Re-enable action buttons when indicated by function.
+                            actionButtonsEnabled = true;
+                            
+                        }
 
                     }
                     
@@ -4762,12 +4893,15 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Example:  Running away from enemy successfully.
                     
                     // Finish offense phase of current round of combat.
-                    if ( combat.offense_finish( enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, 
-                      mpLabel, facingLabel, powerSourceLabel, powerActionLabel, 
-                      powerResultLabel, mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, 
-                      mapSelectorPosY ) )
+                    // Returns true when combat complete.
+                    if ( combat.offense_finish( tiles, goldPile, enemy, enemyLabel, infoButton, 
+                      infoButtonSelector, hpLabel, mpLabel, goldLabel, facingLabel, powerSourceLabel, 
+                      powerActionLabel, powerResultLabel, victoryLabel, combatRewardLabel, mapActionButtons, 
+                      mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY ) )
+                        
                     {
                         
+                        // Combat complete.
                         // Switch to explore mode and re-enable action buttons.
                         
                         // Switch to explore mode.
@@ -4781,29 +4915,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 } // End ... If in offense phase and NOT shaking enemy.
                 
             } // End if in offense phase.
-            
-            // If in offense phase and shaking enemy, then...
-            if ( combat.getCombatPhase() == HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_OFFENSE && 
-                 combat.isShakeActiveInd() )
-            {
-                
-                // In offense phase and shaking enemy.
-                
-                // If shaking of enemy finished, then...
-                if ( !enemy.getShakeInd() )
-                {
-                    
-                    // Shaking of enemy finished.
-                    
-                    // Finish offense phase of current round of combat.
-                    combat.offense_finish( enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, 
-                      mpLabel, facingLabel, powerSourceLabel, powerActionLabel, 
-                      powerResultLabel, mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, 
-                      mapSelectorPosY );
-                    
-                }
-                
-            } // End ... If in offense phase and shaking enemy.
             
         } // End ... If in combat.
         
