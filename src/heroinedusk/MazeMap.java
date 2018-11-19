@@ -1266,6 +1266,9 @@ public class MazeMap
     // powerSourceLabel = Label showing the source of the power (player or object).
     // powerActionLabel = Label showing the first line -- power action.
     // powerResultLabel = Label showing the second line -- power result.
+    // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
+    // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
+    // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
     // enemy = ShakyActor object that acts as the enemy.
     // assetMgr = Reference to the asset manager class.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
@@ -1275,8 +1278,9 @@ public class MazeMap
     public boolean check_random_encounter(Combat combat, CustomLabel enemyLabel, BaseActor infoButtonSelector, 
       CustomLabel hpLabel, CustomLabel mpLabel, BaseActor infoButton, CustomLabel facingLabel, 
       CustomLabel regionLabel, CustomLabel powerSourceLabel, CustomLabel powerActionLabel, 
-      CustomLabel powerResultLabel, ShakyActor enemy, AssetMgr assetMgr, 
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+      CustomLabel powerResultLabel, CustomLabel powerSourceLabel_Enemy, 
+      CustomLabel powerActionLabel_Enemy, CustomLabel powerResultLabel_Enemy, ShakyActor enemy, 
+      AssetMgr assetMgr, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled,
       Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX,
       Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosY)
@@ -1317,11 +1321,8 @@ public class MazeMap
                 // Set game state as in combat.
                 gameHD.setGameState(HeroineEnum.GameState.STATE_COMBAT);
                 
-                // Generate random number between one and number of enemies in current region.
-                random = UtilityRoutines.generateStandardRnd(number, 0, 1);
-                
-                System.out.println("Enemy count: " + currentRegion.getEnemyCount());
-                System.out.println("Random: " + random);
+                // Generate random number between zero and number of enemies (base 0) in current region.
+                random = UtilityRoutines.generateStandardRnd(number, 0, currentRegion.getEnemyCount() - 1);
                 
                 // Store type of enemy encountered.
                 enemyEnum = currentRegion.getEnemyList().get(random);
@@ -1329,7 +1330,8 @@ public class MazeMap
                 // Initiate combat.
                 combat.initiate_combat(enemyEnum, enemyLabel, infoButtonSelector, hpLabel, mpLabel, 
                   infoButton, facingLabel, regionLabel, powerSourceLabel, powerActionLabel, 
-                  powerResultLabel, enemy, assetMgr, mapActionButtons, mapActionButtonEnabled, 
+                  powerResultLabel, powerSourceLabel_Enemy, powerActionLabel_Enemy, 
+                  powerResultLabel_Enemy, enemy, assetMgr, mapActionButtons, mapActionButtonEnabled, 
                   mapActionButtonPosX, mapActionButtonPosY);
                 
                 // Temp.
@@ -4252,11 +4254,12 @@ public class MazeMap
         1.  Play coin sound.
         2.  Give player the gold.
         3.  Position treasure actor (group) vertically slightly above the bottom.
-        4.  Draw gold pile (treasure group), fading in over one second.
-        5.  Add events to treasure actor / group / labels to fade out upon click.
-        6.  Set treasure group tile as active.
-        7.  Fade in the victory label.
-        8.  Update the text for and fade in the combat reward label.
+        4.  Hide all gold actors in pile.
+        5.  Draw gold pile (treasure group), fading in over one second.
+        6.  Add events to treasure actor / group / labels to fade out upon click.
+        7.  Set treasure group tile as active.
+        8.  Fade in the victory label.
+        9.  Update the text for and fade in the combat reward label.
         */
         
         // 1.  Play coin sound.
@@ -4270,7 +4273,17 @@ public class MazeMap
         // Same position as when player moves into a square with a treasure and shows the related gold pile.
         tiles.get(TILE_POS_TREASURE_GROUP).setY( TREASURE_POS_SAME_SQ_Y * gameHD.getConfig().getScale() );
         
-        // 4.  Draw gold pile (treasure group), fading in over one second.
+        // 4.  Hide all gold actors in pile.
+        
+        // Loop through actors.
+        goldPile.forEach((actor) -> {
+            
+            // Hide actor.
+            actor.setVisible(false);
+            
+        });
+        
+        // 5.  Draw gold pile (treasure group), fading in over one second.
         
         // Fade in the actors in the treasure group.
         render_gold( goldPile, goldQuantity, false, 0.50f, 0.50f );
@@ -4278,13 +4291,13 @@ public class MazeMap
         // Display the treasure group -- the fading will occur through the actors within the group.
         tiles.get(TILE_POS_TREASURE_GROUP).setVisible( true );
         
-        // 5.  Add events to treasure actor / group / labels to fade out upon click.
+        // 6.  Add events to treasure actor / group / labels to fade out upon click.
         addEvent_TreasureActor( tiles, goldPile, victoryLabel, combatRewardLabel );
         
-        // 6.  Set treasure group tile as active.
+        // 7.  Set treasure group tile as active.
         tileActiveInd.set( TILE_POS_TREASURE_GROUP, true );
         
-        // 7.  Fade in the victory label.
+        // 8.  Fade in the victory label.
         
         // Remove existing actions for victory label.
         victoryLabel.removeActions();
@@ -4292,7 +4305,7 @@ public class MazeMap
         // Fade in the victory label.
         victoryLabel.addAction_FadeIn( 0.50f, 0.50f );
         
-        // 8.  Update the text for and fade in the combat reward label.
+        // 9.  Update the text for and fade in the combat reward label.
         
         // Update text for combat reward label.
         combatRewardLabel.setLabelText_Center( "+" + Integer.toString(goldQuantity) + " GOLD!" );

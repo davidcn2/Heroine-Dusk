@@ -13,7 +13,6 @@ import screens.ExploreScreen;
 
 // Java imports.
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -108,6 +107,509 @@ public class Combat
     
     // Methods below...
     
+    // enemy = ShakyActor object that acts as the enemy.
+    // enemyLabel = Reference to label showing enemy type.
+    // infoButton = BaseActor object that acts as the information button.
+    // infoButtonSelector = BaseActor object that acts as the selector for the current action button.
+    // hpLabel = Label showing player hit points.
+    // mpLabel = Label showing player magic points.
+    // facingLabel = Label showing direction player is facing.
+    // powerSourceLabel = Label showing the source of the power (player or object).
+    // powerActionLabel = Label showing the first line -- power action.
+    // powerResultLabel = Label showing the second line -- power result.
+    // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
+    // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
+    // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
+    // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
+    // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
+    // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
+    // mapSelectorPosY = List of y-positions to place selector -- related to buttons.
+    public boolean conclude_combat(ShakyActor enemy, CustomLabel enemyLabel, BaseActor infoButton, 
+      BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel facingLabel, 
+      CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
+      CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
+      CustomLabel powerResultLabel_Enemy, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
+      HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
+      HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
+    {
+        
+        // The function encapsulates logic related to concluding combat.
+        // Combat can end, for example, after defeating an enemy or successfully fleeing.
+        
+        // The function returns whether to enable action buttons and switch to explore mode after 
+        // function finishes.
+        
+        boolean enableButtons; // Whether to enable action buttons and switch to explore mode after 
+          // function finishes.
+        
+        // Flag to enable action buttons after function finishes.
+        enableButtons = true;
+
+         // Render the interface for the ending of combat.
+        render_interface_end(enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, mpLabel, 
+          facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, powerSourceLabel_Enemy,
+          powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, mapActionButtonEnabled, 
+          mapSelectorPosX, mapSelectorPosY);
+
+        // If player has remaining magic points, then...
+        if (avatar.getMp() > 0)
+        {
+
+            // Player has remaining magic points.
+
+            // Restore action buttons associated with spells.
+            ExploreScreen.restoreButtons_Spell(mapActionButtons, mapActionButtonEnabled,
+              mapActionButtonEnabled_Start);
+
+        }
+        
+        // Return whether to enable action buttons and switch to explore mode after function finishes.
+        return enableButtons;
+        
+    }
+    
+    public boolean defense_finish()
+    {
+        
+        /*
+        The function encapsulates display logic related to the last segment of the defensive portion
+        of a round of combat.  The segment includes support for:
+        
+        1.  Checking for and handling a victory or a defeat.
+        2.  Moving to the next combat phase -- COMBAT_PHASE_INPUT -- enemy and player both still alive.
+        
+        The function returns whether to enable the action buttons.
+        */
+        
+        boolean enableButtons; // Whether to enable action buttons after function finishes.
+        
+        // Set defaults.
+        enableButtons = false;
+        
+        // Flag shake as inactive.
+        shakeActiveInd = false;
+        
+        // 1.  Handle hit points reaching zero -- enemy and, or player.
+        // Phases:  COMBAT_PHASE_VICTORY, COMBAT_PHASE_DEFEAT.
+
+        // If enemy defeated (at or below zero hit points) and player still alive, then...
+        if ( enemyHp <= 0 && avatar.getHp() > 0 )
+        {
+
+            // Enemy defeated -- at or below zero hit points -- and player still alive.
+
+            // Move to victory phase.
+            combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_VICTORY;
+
+        }
+
+        // Otherwise, if player dead, then...
+        else if ( avatar.getHp() <= 0 )
+        {
+
+            // Player dead.
+
+            // Move to defeat phase.
+            combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_DEFEAT;
+
+            // To Do:  Add defeat logic.
+
+        }
+        
+        // Otherwise
+        else
+        {
+            
+            // Neither enemy nor player dead.
+            
+            // Move to input phase.
+            combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_INPUT;
+            
+            // Flag to enable buttons.
+            enableButtons = true;
+            
+        }
+        
+        // Return whether to enable buttons.
+        return enableButtons;
+        
+    }
+    
+    // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
+    // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
+    // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
+    // tileGroup = ShakyActor object that will act as the group containing the tiles.
+    private void defense_start(CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
+      CustomLabel powerResultLabel_Enemy, ShakyActor tileGroup)
+    {
+        
+        // The function encapsulates display logic related to the first segment of the enemy portion
+        // of a round of combat.  The first segment includes setting the power labels and (possibly)
+        // shaking the tiles.
+        
+        // Note that the variables used to set the text of the labels get set in the parent function.
+        
+        // Store next combat phase.
+        combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_DEFENSE;
+        
+        // Display results of enemy actions in power labels.
+        ExploreScreen.info_update_powerResponseLines(actionResultEnemy, powerSourceLabel_Enemy, 
+          powerActionLabel_Enemy, powerResultLabel_Enemy, false);
+        
+        // If player damaged, then...
+        if (actionResultEnemy.getOpponentHurt())
+        {
+            
+            // Player damaged.
+            
+            // Shake the tiles five times to indicate enemy caused damage to player.
+            tileGroup.startShake(5);
+            
+            // Flag shake as active.
+            shakeActiveInd = true;
+            
+        }
+        
+    }
+    
+    // sounds = Reference to sounds class.
+    private void enemy_attack(Sounds sounds)
+    {
+        
+        /*
+        The function encapsulates non-visual logic related to the enemy attacking the player.
+        The function excludes visual results.
+        
+        The function updates the action results related to the enemy-related labels.
+        The function does not update the enemy-related labels or shake the screen.
+        
+        Other functions handle:
+        1.  The visual results of the enemy action, including shaking the screen.
+        2.  Victory conditions.
+        3.  Loss conditions.
+        */
+        
+        int attack_damage; // Amount of damage caused by enemy in current round.
+        int crit_chance; // Whether enemy caused a critical hit to the player.
+        int hit_chance; // Random number indicating whether enemy hit player.
+        
+        HeroineEnum.EnemyPowerEnum enemyPower; // Type of enemy attack.
+        
+        // 1.  Determine type of enemy attack.
+        enemyPower = enemyEnum.getValue_RandomPower(number);
+        
+        // 2.  Use enemy "power" against player.
+        
+        // Depending on enemy power used, ...
+        switch (enemyPower) {
+            
+            case ENEMY_POWER_ATTACK:
+                
+                // Enemy performs standard physical attack.
+                
+                // "Roll" to determine if enemy hit player -- 1 to 100.
+                hit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
+
+                // If miss occurred, then...
+                if (hit_chance <= 30)
+                {
+
+                    // Miss occurred.
+
+                    // Set action text to ATTACK!.
+                    actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_ATTACK);
+                    
+                    // Store defense result.
+                    actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_MISS);
+                    
+                    // Play miss sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
+
+                } // End ... If miss occurred.
+                
+                else
+                
+                // Otherwise, ...
+                {
+                    
+                    // Enemy successfully hit player.
+                    
+                    // Flag player as hit.
+                    actionResultEnemy.setOpponentHurt(true);
+
+                    // Randomly determine damage based on enemy minimum and maximum.
+                    attack_damage = UtilityRoutines.generateStandardRnd(number, enemyEnum.getValue_AtkMin(), 
+                      enemyEnum.getValue_AtkMax());
+
+                    // Check for critical hit.
+                    // A critical hit adds the minimum possible damage (ignoring bonuses) to what
+                    // was already "rolled".
+
+                    // "Roll" for critical hit.
+                    crit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
+
+                    // If critical hit occurred, then...
+                    if (crit_chance <= 5)
+                    {
+
+                        // Critical hit occurred.
+
+                        // Add minimum possible damage to current.
+                        attack_damage += enemyEnum.getValue_AtkMin();
+
+                        // Set action text to CRITICAL!.
+                        actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_CRITICAL);
+
+                        // Play critical hit sound.
+                        sounds.playSound(HeroineEnum.SoundEnum.SOUND_CRITICAL);
+
+                    }
+
+                    else
+                    {
+
+                        // Normal hit occured.
+
+                        // Set action text to ATTACK!.
+                        actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_ATTACK);
+                        
+                        // Play normal hit sound.
+                        sounds.playSound(HeroineEnum.SoundEnum.SOUND_ATTACK);
+
+                    }
+
+                    // Allow for player armor to absorb some of the damage.
+                    attack_damage -= avatar.getArmor().getValue_Def();
+                    attack_damage -= avatar.getBonus_def();
+
+                    // Ensure that at least one hit point of damage occurs.
+                    if (attack_damage < 1)
+                        attack_damage = 1;
+                    
+                    // Reduce player hit points.
+                    avatar.adjHp(-attack_damage);
+                    
+                    // Store defense result.
+                    actionResultEnemy.setTextResult_Damage(attack_damage);
+                
+                } // End ... If hit occurred.
+                
+                // Exit selector.
+                break;
+                
+            case ENEMY_POWER_SCORCH:
+                
+                // Enemy performs scorch attack (another version of burn).
+                
+                // Set action text to SCORCH!.
+                actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_SCORCH);
+                
+                // "Roll" to determine if enemy hit player -- 1 to 100.
+                hit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
+
+                // If miss occurred, then...
+                if (hit_chance <= 30)
+                {
+
+                    // Miss occurred.
+                    
+                    // Store defense result.
+                    actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_MISS);
+
+                    // Play miss sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
+
+                } // End ... If miss occurred.
+                
+                else
+                
+                // Otherwise, ...
+                {
+                    
+                    // Enemy successfully hit player.
+                    
+                    // Play fire sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_FIRE);
+                    
+                    // Flag player as hit.
+                    actionResultEnemy.setOpponentHurt(true);
+
+                    // Randomly determine damage based on enemy minimum and maximum.
+                    attack_damage = UtilityRoutines.generateStandardRnd(number, enemyEnum.getValue_AtkMin(), 
+                      enemyEnum.getValue_AtkMax());
+
+                    // Scorch always causes a critical hit.
+                    
+                    // Add minimum possible damage to current.
+                    attack_damage += enemyEnum.getValue_AtkMin();
+                    
+                    // Allow for player armor to absorb some of the damage.
+                    attack_damage -= avatar.getArmor().getValue_Def();
+                    attack_damage -= avatar.getBonus_def();
+
+                    // Ensure that at least one hit point of damage occurs.
+                    if (attack_damage < 1)
+                        attack_damage = 1;
+                    
+                    // Reduce player hit points.
+                    avatar.adjHp(-attack_damage);
+
+                    // Store defense result.
+                    actionResultEnemy.setTextResult_Damage(attack_damage);
+                
+                } // End ... If hit occurred.
+                
+                // Exit selector.
+                break;
+                
+            case ENEMY_POWER_HPDRAIN:
+                
+                // Enemy performs hit point drain attack.
+                
+                // Set action text to HP DRAIN!.
+                actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_HP_DRAIN);
+                
+                // "Roll" to determine if enemy hit player -- 1 to 100.
+                hit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
+
+                // If miss occurred, then...
+                if (hit_chance <= 30)
+                {
+
+                    // Miss occurred.
+
+                    // Store defense result.
+                    actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_MISS);
+
+                    // Play miss sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
+
+                } // End ... If miss occurred.
+                
+                else
+                
+                // Otherwise, ...
+                {
+                    
+                    // Enemy successfully hit player.
+                    
+                    // Play hit point drain sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_HP_DRAIN);
+                    
+                    // Flag player as hit.
+                    actionResultEnemy.setOpponentHurt(true);
+
+                    // Randomly determine damage based on enemy minimum and maximum.
+                    attack_damage = UtilityRoutines.generateStandardRnd(number, enemyEnum.getValue_AtkMin(), 
+                      enemyEnum.getValue_AtkMax());
+
+                    // Hit point drain never causes a critical hit.
+                    
+                    // Allow for player armor to absorb some of the damage.
+                    attack_damage -= avatar.getArmor().getValue_Def();
+                    attack_damage -= avatar.getBonus_def();
+
+                    // Ensure that at least one hit point of damage occurs.
+                    if (attack_damage < 1)
+                        attack_damage = 1;
+                    
+                    // Reduce player hit points.
+                    avatar.adjHp(-attack_damage);
+
+                    // Add to enemy hit points.
+                    enemyHp += attack_damage;
+                    
+                    // Store defense result.
+                    actionResultEnemy.setTextResult_Damage(attack_damage);
+                
+                } // End ... If hit occurred.
+                
+                // Exit selector.
+                break;
+                
+            case ENEMY_POWER_MPDRAIN:
+                
+                // power_mpdrain();
+                
+                // Enemy performs magic point drain attack.
+                
+                // Set action text to MP DRAIN!.
+                actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_MP_DRAIN);
+                
+                // "Roll" to determine if enemy hit player -- 1 to 100.
+                hit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
+
+                // If miss occurred, then...
+                if (hit_chance <= 30)
+                {
+
+                    // Miss occurred.
+
+                    // Store defense result.
+                    actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_MISS);
+
+                    // Play miss sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
+
+                } // End ... If miss occurred.
+                
+                else
+                
+                // Otherwise, ...
+                {
+                    
+                    // Enemy successfully hit player.
+                    
+                    // Play magic point drain sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_MP_DRAIN);
+                    
+                    // Flag player as hit.
+                    actionResultEnemy.setOpponentHurt(true);
+
+                    // If player has one or more magic points, then...
+                    if (avatar.getMp() > 0)
+                    {
+                        
+                        // Player has one or more magic points.
+                        
+                        // Reduce player magic points by one.
+                        avatar.decrement_mp();
+                        
+                        // Store defense result.
+                        actionResultEnemy.setTextResult("-1 MP");
+                        
+                    }
+                    
+                    else
+                    {
+                        
+                        // Player has no remaining magic points.
+                        
+                        // Store defense result.
+                        actionResultEnemy.setTextResult("No effect");
+                        
+                    }
+                
+                } // End ... If hit occurred.
+                
+                // Exit selector.
+                break;
+                
+            default:
+                
+                // Unknown enemy power.
+                
+                // Display warning.
+                System.out.println("Warning:  Enemy used unknown power!");
+                
+                // Exit selector.
+                break;
+            
+        } // End ... Depending on enemy power used.
+        
+    }
+    
     // fightEnum = Enumerated value related to player fighting action.
     // sounds = Reference to sounds class.
     // avatar = Reference to player class.
@@ -129,13 +631,14 @@ public class Combat
     {
         
         /*
-        The function encapsulates logic related to a round of combat.
-        The function contains logic to handle player actions, other than related visual results.
+        The function encapsulates logic related to the player action in a round of combat.
+        The function excludes visual results.
         
         The function returns whether to enable the action buttons immediately.
+        Enabling of action buttons immediately occurs, for example, when a spell cannot be cast.
         
         Other functions handle:
-        1.  The visual results of the player action.
+        1.  The visual results of the player action, including shaking the enemy.
         2.  Enemy action (and related display and consequences).
         3.  Victory conditions.
         4.  Loss conditions.
@@ -220,8 +723,6 @@ public class Combat
                         // Play miss sound.
                         sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
                         
-                        System.out.println("Miss");
-                        
                     } // End ... If miss occurred.
                     
                     // Otherwise, ... > Hit occurred.
@@ -239,9 +740,6 @@ public class Combat
                         
                         // Randomly determine damage based on player minimum and maximum.
                         attack_damage = UtilityRoutines.generateStandardRnd(number, atk_min, atk_max);
-                        
-                        System.out.println("Dmg: " + atk_min + " to " + atk_max);
-                        System.out.println("Attack caused " + attack_damage + " damage to enemy.");
                         
                         // Check for critical hit.
                         // A critical hit adds the maximum possible damage (ignoring bonuses) to what
@@ -535,7 +1033,8 @@ public class Combat
             
             // Proceed to next phase (offense) in current combat round.
             
-            // Call function to handle logic related to offense phase.
+            // Call function to handle logic related to start of offense phase.
+            // The function displays the results of the player attack, shaking the enemy if hit.
             offense_start(powerSourceLabel, powerActionLabel, powerResultLabel, enemy);
             
         }
@@ -570,6 +1069,9 @@ public class Combat
     // powerSourceLabel = Label showing the source of the power (player or object).
     // powerActionLabel = Label showing the first line -- power action.
     // powerResultLabel = Label showing the second line -- power result.
+    // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
+    // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
+    // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
     // enemy = ShakyActor object that acts as the enemy.
     // assetMgr = Reference to the asset manager class.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
@@ -579,8 +1081,9 @@ public class Combat
     public void initiate_combat(HeroineEnum.EnemyEnum enemyEnum, CustomLabel enemyLabel, 
       BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, BaseActor infoButton, 
       CustomLabel facingLabel, CustomLabel regionLabel, CustomLabel powerSourceLabel, 
-      CustomLabel powerActionLabel, CustomLabel powerResultLabel, ShakyActor enemy, AssetMgr assetMgr,
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+      CustomLabel powerActionLabel, CustomLabel powerResultLabel, CustomLabel powerSourceLabel_Enemy, 
+      CustomLabel powerActionLabel_Enemy, CustomLabel powerResultLabel_Enemy, ShakyActor enemy, 
+      AssetMgr assetMgr, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX,
       Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosY)
@@ -609,7 +1112,8 @@ public class Combat
         
         // Render starting interface.
         render_interface_start(enemyEnum, enemyLabel, infoButtonSelector, hpLabel, mpLabel, infoButton, 
-          facingLabel, regionLabel, powerSourceLabel, powerActionLabel, powerResultLabel, mapActionButtons, 
+          facingLabel, regionLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
+          powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
           mapActionButtonEnabled, mapActionButtonPosX, mapActionButtonPosY);
         
         // Render enemy.
@@ -628,6 +1132,9 @@ public class Combat
     // powerSourceLabel = Label showing the source of the power (player or object).
     // powerActionLabel = Label showing the first line -- power action.
     // powerResultLabel = Label showing the second line -- power result.
+    // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
+    // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
+    // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
@@ -635,7 +1142,8 @@ public class Combat
     private void render_interface_end(ShakyActor enemy, CustomLabel enemyLabel, BaseActor infoButton,
       BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel facingLabel, 
       CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+      CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
+      CustomLabel powerResultLabel_Enemy, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
@@ -652,7 +1160,7 @@ public class Combat
         6.  Show the information button after slight delay.
         7.  Show the facing label after slight delay.
         8.  Fade out the player power labels.
-        9.  To Do:  Fade out the enemy power labels.
+        9.  Fade out the enemy power labels.
         */
 
         HeroineEnum.ActionButtonEnum actionButtonEnum; // Enumeration value related to current action button 
@@ -730,13 +1238,24 @@ public class Combat
         // 8.  Fade out the player power labels.
         
         // Remove existing actions and fade out labels over the course of 1.00 seconds.
-        // Wait 0.50 seconds before starting the fade.
+        // Wait 1.00 seconds before starting the fade.
         powerSourceLabel.removeActions();
-        powerSourceLabel.addAction_FadeOut(1.00f, 1.00f);
+        powerSourceLabel.addAction_FadeOut(2.00f, 1.00f);
         powerActionLabel.removeActions();
-        powerActionLabel.addAction_FadeOut(1.00f, 1.00f);
+        powerActionLabel.addAction_FadeOut(2.00f, 1.00f);
         powerResultLabel.removeActions();
-        powerResultLabel.addAction_FadeOut(1.00f, 1.00f);
+        powerResultLabel.addAction_FadeOut(2.00f, 1.00f);
+        
+        // 9.  Fade out the enemy power labels.
+        
+        // Remove existing actions and fade out labels over the course of 1.00 seconds.
+        // Wait 1.00 seconds before starting the fade.
+        powerSourceLabel_Enemy.removeActions();
+        powerSourceLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
+        powerActionLabel_Enemy.removeActions();
+        powerActionLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
+        powerResultLabel_Enemy.removeActions();
+        powerResultLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
         
     }
     
@@ -751,14 +1270,18 @@ public class Combat
     // powerSourceLabel = Label showing the source of the power (player or object).
     // powerActionLabel = Label showing the first line -- power action.
     // powerResultLabel = Label showing the second line -- power result.
+    // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
+    // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
+    // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapActionButtonPosX = X-coordinate of each action button.
     // mapActionButtonPosY = Y-coordinate of bottom of each action button.
     private void render_interface_start(HeroineEnum.EnemyEnum enemyEnum, CustomLabel enemyLabel, 
       BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, BaseActor infoButton, 
-      CustomLabel facingLabel, CustomLabel regionLabel, 
-      CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel,
+      CustomLabel facingLabel, CustomLabel regionLabel, CustomLabel powerSourceLabel, 
+      CustomLabel powerActionLabel, CustomLabel powerResultLabel, CustomLabel powerSourceLabel_Enemy, 
+      CustomLabel powerActionLabel_Enemy, CustomLabel powerResultLabel_Enemy,
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX,
@@ -777,6 +1300,9 @@ public class Combat
         7.  Hide facing label.
         8.  Hide region name label.
         9.  Remove actions from player power labels.
+        10.  Displays enemy power labels.
+        11.  Reset shading (to none) for power labels, to eliminate issues with fading out.
+        12.  Clear power labels.
         */
 
         HeroineEnum.ActionButtonEnum actionButtonEnum; // Enumeration value related to current action button 
@@ -923,52 +1449,73 @@ public class Combat
         powerActionLabel.removeActions();
         powerResultLabel.removeActions();
         
+        // 10.  Display enemy power labels.
+        powerSourceLabel_Enemy.applyVisible(true);
+        powerActionLabel_Enemy.applyVisible(true);
+        powerResultLabel_Enemy.applyVisible(true);
+        
+        // 11.  Reset shading (to none) for power labels, to eliminate issues with fading out.
+        powerSourceLabel.getLabel().setColor(Color.WHITE);
+        powerActionLabel.getLabel().setColor(Color.WHITE);
+        powerResultLabel.getLabel().setColor(Color.WHITE);
+        powerSourceLabel_Enemy.getLabel().setColor(Color.WHITE);
+        powerActionLabel_Enemy.getLabel().setColor(Color.WHITE);
+        powerResultLabel_Enemy.getLabel().setColor(Color.WHITE);
+        
+        // 12.  Clear power labels.
+        powerSourceLabel.setLabelText("");
+        powerActionLabel.setLabelText("");
+        powerResultLabel.setLabelText("");
+        powerSourceLabel_Enemy.setLabelText("");
+        powerActionLabel_Enemy.setLabelText("");
+        powerResultLabel_Enemy.setLabelText("");
+        
     }
     
-    // tiles = BaseActor objects associated with tiles.  0 to 12 = Background tiles.  13 and beyond for others.
-    // goldPile = List of gold actors.
     // enemy = ShakyActor object that acts as the enemy.
     // enemyLabel = Reference to label showing enemy type.
+    // tileGroup = ShakyActor object that will act as the group containing the tiles.
     // infoButton = BaseActor object that acts as the information button.
     // infoButtonSelector = BaseActor object that acts as the selector for the current action button.
     // hpLabel = Label showing player hit points.
     // mpLabel = Label showing player magic points.
-    // goldLabel = Label showing player gold.
     // facingLabel = Label showing direction player is facing.
     // powerSourceLabel = Label showing the source of the power (player or object).
     // powerActionLabel = Label showing the first line -- power action.
     // powerResultLabel = Label showing the second line -- power result.
-    // victoryLabel = Label showing victory text -- used after winning a combat.
-    // combatRewardLabel = Label showing combat reward -- in relation to winning.
+    // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
+    // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
+    // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
     // mapSelectorPosY = List of y-positions to place selector -- related to buttons.
-    public boolean offense_finish(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
-      ShakyActor enemy, CustomLabel enemyLabel, BaseActor infoButton, BaseActor infoButtonSelector, 
-      CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel goldLabel, CustomLabel facingLabel, 
-      CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
-      CustomLabel victoryLabel, CustomLabel combatRewardLabel,
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+    // sounds = Reference to sounds class.
+    public boolean offense_finish(ShakyActor enemy, CustomLabel enemyLabel, ShakyActor tileGroup,
+      BaseActor infoButton, BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, 
+      CustomLabel facingLabel, CustomLabel powerSourceLabel, CustomLabel powerActionLabel, 
+      CustomLabel powerResultLabel, CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
+      CustomLabel powerResultLabel_Enemy, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
-      HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
+      HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY,
+      Sounds sounds)
     {
         
         /*
-        The function encapsulates display logic related to the last segment of the player portion
+        The function encapsulates display logic related to the last segment of the offensive portion
         of a round of combat.  The segment includes support for:
         
-        1.  Checking for and handling a victory,
+        1.  Processing an enemy attack -- occurs when not running away or flee fails.
         2.  Successfully running away.
-        3.  Moving to the next combat phase (enemy still alive or failed to run away from enemy).
+        3.  Concluding combat without a victory -- due to successfully fleeing the enemy.
         
         The function returns whether to enable the action buttons and switch to explore mode.
         */
 
         boolean basicFinishInd; // Whether to perform basic logic related to conclusion of combat.
-        boolean enableButtons; // Whether to enable action buttons after function finishes.
-        int goldQuantity; // Number of gold won from combat victory.
+        boolean enableButtons; // Whether to enable action buttons and switch to explore mode after 
+          // function finishes.
         
         // Set defaults.
         basicFinishInd = false;
@@ -977,76 +1524,57 @@ public class Combat
         // Flag shake as inactive.
         shakeActiveInd = false;
         
-        // If enemy defeated (at or below zero hit points), then...
-        if ( enemyHp <= 0 )
+        // 1.  Handle successful run or allow an enemy attack.
+        // Phases:  COMBAT_PHASE_DEFENSE, COMBAT_PHASE_RUN.
+        
+        // If player successfully ran away from enemy, then...
+        if (fightEnum == HeroineEnum.FightEnum.FIGHT_RUN && actionResultPlayer.getResult())
         {
             
-            // Enemy defeated -- at or below zero hit points.
+            // Player successfully ran away from enemy.
             
-            // Determine amount of gold to reward player.
-            goldQuantity = UtilityRoutines.generateStandardRnd( number, enemyEnum.getValue_GoldMin(), 
-              enemyEnum.getValue_GoldMax() );
+            // No need to implement enemy attack.
             
-            // Provide reward to player for winning combat (and display related image).
-            mazemap.show_gold_pile_no_chest( goldQuantity, goldLabel, tiles, goldPile, victoryLabel, 
-              combatRewardLabel );
+            // Move to combat phase representing successful evasion of enemy.
+            combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_RUN;
             
             // Flag to perform basic logic to conclude combat.
             basicFinishInd = true;
             
         }
         
-        // Otherwise, if successful running away from enemy, then...
-        else if ( fightEnum == HeroineEnum.FightEnum.FIGHT_RUN && actionResultPlayer.getResult() )
-        {
-            
-            // Successful running away from enemy.
-            
-            // Flag to perform basic logic to conclude combat.
-            basicFinishInd = true;
-            
-        }
-        
-        // Otherwise, ...
         else
         {
             
-            // Otherwise, move to next combat phase.
+            // Player either failed to run from enemy or engaged in other action.
             
-            // Move to next combat phase.
+            // Implement an enemy attack on the player -- updates action results for labels.
+            enemy_attack(sounds);
             
+            // Call function to handle logic related to start of defense phase.
+            // The function displays the results of the enemy attack, shaking the tiles if player is hit.
+            defense_start(powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, 
+              tileGroup);
             
         }
+        
+        // 2.  Handle conclusion of combat -- occurs when successful evading enemy.
         
         // If performing basic logic to conclude combat, then...
         if (basicFinishInd)
         {
             
             // Perform basic logic to conclude combat.
-            
-            // Flag to enable action buttons after function finishes.
-            enableButtons = true;
-            
-             // Render the interface for the ending of combat.
-            render_interface_end(enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, mpLabel, 
-              facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
-              mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
-            
-            // If player has remaining magic points, then...
-            if (avatar.getMp() > 0)
-            {
-                
-                // Player has remaining magic points.
-                
-                // Restore action buttons associated with spells.
-                ExploreScreen.restoreButtons_Spell(mapActionButtons, mapActionButtonEnabled,
-                  mapActionButtonEnabled_Start);
-                
-            }
+            enableButtons = conclude_combat(enemy, enemyLabel, infoButton, infoButtonSelector, 
+              hpLabel, mpLabel, facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
+              powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
+              mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
             
         }
         
-        // Return whether to enable action buttons.
+        // 3.  Finish function.
+        
+        // Return whether to enable action buttons and switch to explore mode after function finishes.
         return enableButtons;
         
     }

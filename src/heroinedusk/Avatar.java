@@ -96,6 +96,13 @@ public class Avatar
         gold += amount;
     }
     
+    // amount = Number of hit points to add to or subtract from player health.
+    public void adjHp(int amount)
+    {
+        // The function adjusts the player health (hit points) by the passed amount.
+        hp += amount;
+    }
+    
     // forwardInd = Whether moving foward.  true = Forward, false = Backward.  Examples:  true, false.
     // mazemap = Reference to active region / map information.
     // gameHD = Reference to HeroineDusk (main) game class.

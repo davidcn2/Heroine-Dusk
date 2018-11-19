@@ -2,10 +2,12 @@ package heroinedusk;
 
 // Local project imports.
 import core.TextureRect;
+import java.security.SecureRandom;
 
 // Java imports.
 import java.util.HashMap;
 import java.util.Map;
+import routines.UtilityRoutines;
 
 public class HeroineEnum 
 {
@@ -577,7 +579,8 @@ public class HeroineEnum
         COMBAT_PHASE_OFFENSE (2), // Handle offense actions (or running) for the current round.
         COMBAT_PHASE_DEFENSE (3), // Handle player defense for the current round.
         COMBAT_PHASE_VICTORY (4), // Handle player victory.
-        COMBAT_PHASE_DEFEAT (5) // Handle defeat of player.
+        COMBAT_PHASE_DEFEAT (5), // Handle defeat of player.
+        COMBAT_PHASE_RUN (6) // Handle player successfully fleeing from enemy.
         ; // semicolon needed when fields / methods follow
 
         private final int combatPhaseEnum; // Enumerations related to combat phases.
@@ -777,6 +780,8 @@ public class HeroineEnum
         private final int enemyGoldMin; // Enemy minimum gold value.
         private final ImgEnemyEnum imgEnemyEnum; // Enumerated value for image.
         private final String imageFile; // Image filename (just name and extension, no path).
+        private final int powerCount_Base0; // Number of enemy powers, base 0.
+        private final int powerCount_Base1; // Number of enemy powers, base 1.
         private final EnemyPowerEnum[] powers; // Enemy powers.
         
         // enemyEnum = Enumerations related to enemies.
@@ -805,6 +810,8 @@ public class HeroineEnum
             this.enemyGoldMax = enemyGoldMax;
             this.imageFile = imageFile;
             this.powers = powers;
+            this.powerCount_Base0 = powers.length - 1;
+            this.powerCount_Base1 = powers.length;
             this.imgEnemyEnum = imgEnemyEnum;
         }
         
@@ -884,15 +891,6 @@ public class HeroineEnum
             return enemyHP;
         }
         
-        public String getValue_Name() 
-        {
-            // The function returns the enemy name.
-            // Example for use:  String x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Name();
-            
-            // Return the enemy name.
-            return enemyName;
-        }
-        
         public ImgEnemyEnum getValue_ImageEnum() 
         {
             // The function returns the enumerated value for the image for the enemy.
@@ -909,6 +907,27 @@ public class HeroineEnum
             
             // Return the image filename.
             return imageFile;
+        }
+        
+        public String getValue_Name() 
+        {
+            // The function returns the enemy name.
+            // Example for use:  String x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_Name();
+            
+            // Return the enemy name.
+            return enemyName;
+        }
+        
+        // number = Used for generating random numbers.
+        public EnemyPowerEnum getValue_RandomPower(SecureRandom number)
+        {
+            
+            // The function returns a random enemy power.
+            // Example for use:  EnemyPowerEnum x = HeroineEnum.EnemyEnum.ENEMY_SHADOW_TENDRILS.getValue_RandomPower(number);
+            
+            // Return a random enemy power.
+            return powers[UtilityRoutines.generateStandardRnd(number, 0, this.powerCount_Base0)];
+            
         }
         
         // enemy = Numeric value to convert to text.

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import routines.UtilityRoutines;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -168,9 +169,12 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private Group minimapGroup; // Group containing minimap actors.
     private ArrayList<BaseActor> minimapIcons; // BaseActor objects associated with minimap.
     private CustomLabel mpLabel; // Label showing player magic points.
-    private CustomLabel powerActionLabel; // Label showing the first line -- power action.
-    private CustomLabel powerResultLabel; // Label showing the second line -- power result.
+    private CustomLabel powerActionLabel; // Label showing the first line -- power action (player or object).
+    private CustomLabel powerActionLabel_Enemy; // Label showing the first line -- power action (enemy).
+    private CustomLabel powerResultLabel; // Label showing the second line -- power result (player or object).
+    private CustomLabel powerResultLabel_Enemy; // Label showing the second line -- power result (enemy).
     private CustomLabel powerSourceLabel; // Label showing the source of the power (player or object).
+    private CustomLabel powerSourceLabel_Enemy; // Label showing the source of the power (enemy).
     private CustomLabel regionLabel; // Label showing the current region name.
     private CustomLabel spellsLabel; // Label showing "SPELLS" text.
     private CustomLabel statusLabel; // General status label.
@@ -187,10 +191,13 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private boolean actionButtonsEnabled; // Whether action buttons enabled.  Disable in the middle of a 
       // combat round (after player selects action).
     private HeroineEnum.SelectPosEnum buttonSelected; // Selected button.
+    private boolean delayInd; // Whether combat delay active.
     private float frameRate; // Frames per second.
     private boolean infoButtonSelected; // Whether information button selected and clicked.
     private long lastTimeCounted; // Difference, measured in milliseconds, between the current time and 
       // midnight, January 1, 1970 UTC.
+    private long lastTimeDelay; // Difference, measured in milliseconds, between the current time and 
+      // midnight, January 1, 1970 UTC.  Used to provide a delay during combat.
     private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled; // Hash map containing enabled 
       // status of action buttons.
     private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX; // X-coordinate of each action button.
@@ -279,8 +286,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         20.  Configure and add the label for the current player gold.  Hidden at start.
         21.  Populate hash map with starting enabled statuses for action buttons.
         22.  Populate hash map with starting ignore next exit event flags for action buttons. 
-        23.  Configure and add the labels for the two lines for responses to spells / powers / actions.
-            Hidden at start.
+        23.  Configure and add the labels for the three lines for responses to spells / powers / actions.
+             Hidden at start.
         24.  Configure and add the label showing the current region name.  Hidden at start.
         25.  Configure and add the label showing the treasure description.  Hidden at start.
         26.  Configure and add the labels associated with combat victory.  Hidden at start.
@@ -300,6 +307,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 1.  Set defaults and perform empty initializations.
         actionButtonsEnabled = true;
+        delayInd = false;
         infoButtonSelected = false;
         minimapRenderInd = false;
         lastTimeCounted = TimeUtils.millis();
@@ -460,8 +468,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add position information related to the selector for the information button.
         mapSelectorPosX.put( HeroineEnum.SelectPosEnum.BUTTON_POS_INFO, infoButtonSelector.getX() );
         mapSelectorPosY.put( HeroineEnum.SelectPosEnum.BUTTON_POS_INFO, infoButtonSelector.getY() );
-        System.out.println("sel x: " + infoButtonSelector.getX());
-        System.out.println("sel y: " + infoButtonSelector.getY());
+        
         // 16.  Configure and add the label with the "SPELLS" text.  Hidden at start.
         
         // Initialize and add label with the "SPELLS" text.
@@ -516,9 +523,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         }
         
-        // 23.  Configure and add the labels for the two lines for responses to spells / powers / actions.
+        // 23.  Configure and add the labels for the three lines for responses to spells / powers / actions.
+        //      Three lines each for player / object and enemy.
         //      Hidden at start.
         info_render_powerResponseLines();
+        info_render_powerResponseLines_enemy();
         
         // 24.  Configure and add the label showing the current region name.  Hidden at start.
         
@@ -808,8 +817,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Flag to ignore next exit event.
                     ignoreNextExitEvent = true;
                     
-                    // Toggle information button.
-                    processAction_Info();
+                    // If in explore mode, then...
+                    if (gameHD.getGameState() == HeroineEnum.GameState.STATE_EXPLORE ||
+                        gameHD.getGameState() == HeroineEnum.GameState.STATE_INFO)
+                    {
+                        
+                        // In explore mode.
+                        
+                        // Toggle information button.
+                        processAction_Info();
+                        
+                    }
                     
                 }
                 
@@ -2532,7 +2550,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         */
                         if ( mazemap.check_random_encounter(combat, enemyLabel, infoButtonSelector, hpLabel, 
                           mpLabel, infoButton, facingLabel, regionLabel, powerSourceLabel, powerActionLabel, 
-                          powerResultLabel, enemy, gameHD.getAssetMgr(), mapActionButtons, 
+                          powerResultLabel, powerSourceLabel_Enemy, powerActionLabel_Enemy, 
+                          powerResultLabel_Enemy, enemy, gameHD.getAssetMgr(), mapActionButtons, 
                           mapActionButtonEnabled, mapActionButtonPosX, mapActionButtonPosY) )
                         {
                             
@@ -2591,8 +2610,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function encapsulates logic related to key presses when in information mode.
-        
-        // System.out.println("In information mode");
             
         // Depending on key pressed, ...
         switch (keycode) {
@@ -2755,10 +2772,14 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Clear text from the power action and result labels.
         powerActionLabel.setLabelText("");
         powerResultLabel.setLabelText("");
+        powerActionLabel_Enemy.setLabelText("");
+        powerResultLabel_Enemy.setLabelText("");
         
         // Remove any existing actions on the power action and result labels.
         powerActionLabel.removeActions();
         powerResultLabel.removeActions();
+        powerActionLabel_Enemy.removeActions();
+        powerResultLabel_Enemy.removeActions();
         
     }
     
@@ -2836,16 +2857,25 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             powerSourceLabel.applyVisible(false);
             powerActionLabel.applyVisible(false);
             powerResultLabel.applyVisible(false);
+            powerSourceLabel_Enemy.applyVisible(false);
+            powerActionLabel_Enemy.applyVisible(false);
+            powerResultLabel_Enemy.applyVisible(false);
             
             // Remove actions from power-related labels.
             powerSourceLabel.removeActions();
             powerActionLabel.removeActions();
             powerResultLabel.removeActions();
+            powerSourceLabel_Enemy.removeActions();
+            powerActionLabel_Enemy.removeActions();
+            powerResultLabel_Enemy.removeActions();
             
             // Remove alpha from power-related labels, in case fading out occurring.
             powerSourceLabel.getLabel().setColor(Color.WHITE);
             powerActionLabel.getLabel().setColor(Color.WHITE);
             powerResultLabel.getLabel().setColor(Color.WHITE);
+            powerSourceLabel_Enemy.getLabel().setColor(Color.WHITE);
+            powerActionLabel_Enemy.getLabel().setColor(Color.WHITE);
+            powerResultLabel_Enemy.getLabel().setColor(Color.WHITE);
             
             // Display the (available) action buttons.
             
@@ -3422,7 +3452,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private void info_render_powerResponseLines()
     {
         
-        // The function configures and adds the labels for the power source, action, and result lines.
+        // The function configures and adds the labels for the power source, action, and result lines for
+        // the player / object.
         // Note:  Actors hidden at start.
         
         // 1.  Configure and add the label with the power source text.  Hidden at start.
@@ -3469,12 +3500,64 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    private void info_render_powerResponseLines_enemy()
+    {
+        
+        // The function configures and adds the labels for the power source, action, and result lines for
+        // the enemy.
+        // Note:  Actors hidden at start.
+        
+        // 1.  Configure and add the label with the power source text.  Hidden at start.
+        
+        // Initialize and add the label with the power action.
+        powerSourceLabel_Enemy = new CustomLabel(game.skin, "", "power source label - enemy",
+          "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
+          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
+          (float)(gameHD.getConfig().getScale() * -60), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // Hide the label.
+        powerSourceLabel_Enemy.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( powerSourceLabel_Enemy.getLabel() );
+        
+        // 2.  Configure and add the label with the power action text.  Hidden at start.
+        
+        // Initialize and add the label with the power action.
+        powerActionLabel_Enemy = new CustomLabel(game.skin, "", "power action label - enemy",
+          "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
+          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
+          (float)(gameHD.getConfig().getScale() * -70), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // Hide the label.
+        powerActionLabel_Enemy.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( powerActionLabel_Enemy.getLabel() );
+        
+        // 3.  Configure and add the label with the power result text.  Hidden at start.
+        
+        // Initialize and add label with the power result.
+        powerResultLabel_Enemy = new CustomLabel(game.skin, "", "power result label - enemy",
+          "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), null, 
+          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
+          (float)(gameHD.getConfig().getScale() * -80), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+        
+        // Hide the label.
+        powerResultLabel_Enemy.applyVisible(false);
+        
+        // Add the actor to the list for use when waking the screen.
+        uiStageActors.add( powerResultLabel_Enemy.getLabel() );
+        
+    }
+    
     // powerAction = Text to show for the first line -- power action.
     // powerResult = Text to show for the second line -- power result.
     private void info_update_powerResponseLines(String powerAction, String powerResult)
     {
         
         // The function updates the power action and result labels to display the passed messages.
+        // The function works with the player / object labels.
         // The function fades the messages after displaying them.
         
         // Update power action and result labels.
@@ -3498,6 +3581,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function updates the power action and result labels to display the passed messages.
+        // The function works with the player / object labels.
         // The function fades the messages after displaying them.
         
         // Update power source, action, and result labels.
@@ -3527,6 +3611,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function updates the power action and result labels to display the passed messages.
+        // The function works with the player / object and enemy related labels (since the objects are passed).
         // If specified, the function fades the messages after displaying them.
         
         // Update power action and result labels.
@@ -3564,6 +3649,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function updates the power source, action, and result labels to display the passed messages.
+        // The function works with the player / object and enemy related labels (since the objects are passed).
         // If specified, the function fades the messages after displaying them.
         
         // Update power source, action, and result labels.
@@ -3602,6 +3688,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function updates the power source, action, and result labels to display the passed messages.
+        // The function works with the player / object and enemy related labels (since the objects are passed).
         // The function fades the messages after displaying them.
         
         // Get pieces of action result and convert nulls to "".
@@ -4680,6 +4767,376 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    private void process_update_combat_defense()
+    {
+        
+        // The function encapsulates logic related to the update method for the defense phase of combat.
+        
+        long delta; // Difference, measured in milliseconds, between current and last time check.
+        
+        // If shaking tile group, then...
+        if ( combat.isShakeActiveInd() )
+        {
+
+            // In offense phase and shaking tile group.
+            
+            // Occurs when round ends due to enemy hitting player.
+            // Example 1:  Enemy attacks player successfully.
+            
+            // If shaking of tile group finished, then...
+            if ( !tileGroup.getShakeInd() )
+            {
+
+                // Shaking of tile group finished.
+                
+                // If delay active, then...
+                if ( delayInd )
+                {
+
+                    // Delay active.
+
+                    // Get difference, measured in milliseconds, between current and last time check.
+                    delta = TimeUtils.timeSinceMillis(lastTimeDelay);
+
+                    // If 0.50 seconds passed, then...
+                    if ( delta >= 500 )
+                    {
+
+                        // 0.50 seconds passed.
+                        
+                        // Flag delay as inactive.
+                        delayInd = false;
+                        
+                        // Finish defense phase of current round of combat.
+                        // Returns true when combat finished -- excludes victories with treasure.
+                        if ( combat.defense_finish( ) )
+
+                        {
+
+                            // Combat finished -- excludes victories with treasure.
+                            // Switch to explore mode and re-enable action buttons.
+                            
+                            // Switch to explore mode.
+                            gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+
+                            // Re-enable action buttons when indicated by function.
+                            actionButtonsEnabled = true;
+
+                        }
+
+                    } // End ... If 0.50 seconds passed.
+
+                } // End ... If delay active.
+
+                else
+                {
+
+                    // Delay not started yet.
+
+                    // Flag delay as active.
+                    delayInd = true;
+
+                    // Store initial timer value.
+                    // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
+                    lastTimeDelay = TimeUtils.millis();
+
+                }
+
+            } // End ... If shaking of tile group finished..
+
+        } // End ... If in defense phase and shaking tile group.
+
+        else
+        {
+
+            // Otherwise, ... (In defense phase and NOT shaking tile group).
+
+            // Occurs when round ends due to something other enemy hitting player.
+            // Example 1:  Enemy attacks and misses player.
+            
+            // If delay active, then...
+            if ( delayInd )
+            {
+
+                // Delay active.
+
+                // Get difference, measured in milliseconds, between current and last time check.
+                delta = TimeUtils.timeSinceMillis(lastTimeDelay);
+
+                // If 0.50 seconds passed, then...
+                if ( delta >= 500 )
+                {
+
+                    // 0.50 seconds passed.
+
+                    // Flag delay as inactive.
+                    delayInd = false;
+                    
+                    // Finish defense phase of current round of combat.
+                    // If finishing combat, then...
+                    if ( combat.defense_finish( ) )
+
+                    {
+                        
+                        // Combat finished.
+                        // Switch to explore mode and re-enable action buttons.
+
+                        // Switch to explore mode.
+                        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+
+                        // Re-enable action buttons when indicated by function.
+                        actionButtonsEnabled = true;
+
+                    }
+
+                } // End ... If 0.50 seconds passed.
+
+            } // End ... If delay active.
+
+            else
+            {
+
+                // Delay not started yet.
+
+                // Flag delay as active.
+                delayInd = true;
+
+                // Store initial timer value.
+                // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
+                lastTimeDelay = TimeUtils.millis();
+
+            }
+
+        } // End ... If in defense phase and NOT shaking tile group.
+        
+    }
+    
+    private void process_update_combat_offense()
+    {
+        
+        // The function encapsulates logic related to the update method for the offense phase of combat.
+        
+        long delta; // Difference, measured in milliseconds, between current and last time check.
+        
+        // If shaking enemy, then...
+        if ( combat.isShakeActiveInd() )
+        {
+
+            // In offense phase and shaking enemy.
+            
+            // Occurs when round ends due to player hitting enemy.
+            // Note:  Victory phase handles treasure related to winning combat and occurs in separate function.
+            // Example 1:  Player attacks enemy successfully.  Enemy may still be alive.
+            // Example 2:  Player defeated, despite successful attack against enemy.
+
+            // If shaking of enemy finished, then...
+            if ( !enemy.getShakeInd() )
+            {
+
+                // Shaking of enemy finished.
+
+                // If delay active, then...
+                if ( delayInd )
+                {
+
+                    // Delay active.
+
+                    // Get difference, measured in milliseconds, between current and last time check.
+                    delta = TimeUtils.timeSinceMillis(lastTimeDelay);
+
+                    // If 0.50 seconds passed, then...
+                    if ( delta >= 500 )
+                    {
+
+                        // 0.50 seconds passed.
+                        
+                        // Flag delay as inactive.
+                        delayInd = false;
+                        
+                        // Finish offense phase of current round of combat.
+                        // Note:  Victory phase handles treasure related to winning combat and occurs in 
+                        // separate function.  Only a combat victory returning no treasure finishes here.
+                        // Returns true when combat finished -- excludes victories with treasure.
+                        if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
+                               infoButtonSelector, hpLabel, mpLabel, facingLabel, powerSourceLabel, 
+                               powerActionLabel, powerResultLabel, powerSourceLabel_Enemy, 
+                               powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
+                               mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY, 
+                               gameHD.getSounds() ) )
+
+                        {
+
+                            // Combat finished -- excludes victories with treasure.
+                            // Switch to explore mode and re-enable action buttons.
+
+                            // Switch to explore mode.
+                            gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+
+                            // Re-enable action buttons when indicated by function.
+                            actionButtonsEnabled = true;
+
+                        }
+
+                    } // End ... If 0.50 seconds passed.
+
+                } // End ... If delay active.
+
+                else
+                {
+
+                    // Delay not started yet.
+
+                    // Flag delay as active.
+                    delayInd = true;
+
+                    // Store initial timer value.
+                    // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
+                    lastTimeDelay = TimeUtils.millis();
+
+                }
+
+            } // End ... If shaking of enemy finished..
+
+        } // End ... If in offense phase and shaking enemy.
+
+        else
+        {
+
+            // Otherwise, ... (In offense phase and NOT shaking enemy).
+
+            // Occurs when round ends due to something other player hitting enemy.
+            // Example 1:  Player runs away from enemy successfully.
+            // Example 2:  Player fails to run away from enemy.
+            // Example 3:  Player attacks and misses enemy.
+
+            // If delay active, then...
+            if ( delayInd )
+            {
+
+                // Delay active.
+
+                // Get difference, measured in milliseconds, between current and last time check.
+                delta = TimeUtils.timeSinceMillis(lastTimeDelay);
+
+                // If 0.50 seconds passed, then...
+                if ( delta >= 500 )
+                {
+
+                    // 0.50 seconds passed.
+
+                    // Flag delay as inactive.
+                    delayInd = false;
+                    
+                    // Finish offense phase of current round of combat.
+                    // If finishing combat, then...
+                    if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
+                           infoButtonSelector, hpLabel, mpLabel, facingLabel, powerSourceLabel, 
+                           powerActionLabel, powerResultLabel, powerSourceLabel_Enemy, 
+                           powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
+                           mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY, 
+                           gameHD.getSounds() ) )
+
+                    {
+                        
+                        // Combat finished.
+                        // Switch to explore mode and re-enable action buttons.
+
+                        // Switch to explore mode.
+                        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+
+                        // Re-enable action buttons when indicated by function.
+                        actionButtonsEnabled = true;
+
+                    }
+
+                } // End ... If 0.50 seconds passed.
+
+            } // End ... If delay active.
+
+            else
+            {
+
+                // Delay not started yet.
+
+                // Flag delay as active.
+                delayInd = true;
+
+                // Store initial timer value.
+                // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
+                lastTimeDelay = TimeUtils.millis();
+
+            }
+
+        } // End ... If in offense phase and NOT shaking enemy.
+        
+    }
+    
+    private void process_update_combat_victory()
+    {
+        
+        // The function encapsulates logic related to the update method for the victory phase of combat.
+        
+        long delta; // Difference, measured in milliseconds, between current and last time check.
+        int goldQuantity; // Number of gold won from combat victory.
+        
+        // If delay active, then...
+        if ( delayInd )
+        {
+            
+            // Delay active.
+
+            // Get difference, measured in milliseconds, between current and last time check.
+            delta = TimeUtils.timeSinceMillis(lastTimeDelay);
+            
+            // If 0.75 seconds passed, then...
+            if ( delta >= 750 )
+            {
+
+                // 0.75 seconds passed.
+                
+                // Flag delay as inactive.
+                delayInd = false;
+                
+                // Determine amount of gold to reward player.
+                goldQuantity = UtilityRoutines.generateStandardRnd( number, 
+                  combat.getEnemyEnum().getValue_GoldMin(), combat.getEnemyEnum().getValue_GoldMax() );
+
+                // Provide reward to player for winning combat (and display related image).
+                mazemap.show_gold_pile_no_chest( goldQuantity, goldLabel, tiles, goldPile, victoryLabel, 
+                  combatRewardLabel );
+                
+                // Perform basic logic to conclude combat.
+                combat.conclude_combat(enemy, enemyLabel, infoButton, infoButtonSelector, 
+                  hpLabel, mpLabel, facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
+                  powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
+                  mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
+                
+                // Switch to explore mode.
+                gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+
+                // Re-enable action buttons when indicated by function.
+                actionButtonsEnabled = true;
+
+            } // End ... If 0.75 seconds passed.
+
+        } // End ... If delay active.
+
+        else
+        {
+
+            // Delay not started yet.
+
+            // Flag delay as active.
+            delayInd = true;
+
+            // Store initial timer value.
+            // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
+            lastTimeDelay = TimeUtils.millis();
+
+        }
+        
+    }
+    
     // turnInd = Whether movement involved turning.
     // redrawInd = Whether redraw occurring -- like when waking screen or loading a game.
     private void renderCurrentView(boolean turnInd, boolean redrawInd)
@@ -4696,6 +5153,10 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         4.  Hide any treasure text.
         5.  Render current map location / tiles.
         6.  Reset flag for minimap rendering, indicating regeneration necessary.
+        7.  Remove actions from power labels.
+        8.  Hide power labels.
+        9.  Remove actions from combat victory and reward labels.
+        10.  Hide combat victory and reward labels.
         */
         
         // 1.  Initialize array lists.
@@ -4720,6 +5181,30 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 6.  Reset flag for minimap rendering, indicating regeneration necessary.
         minimapRenderInd = false;
+        
+        // 7.  Remove actions form power labels.
+        powerSourceLabel.removeActions();
+        powerActionLabel.removeActions();
+        powerResultLabel.removeActions();
+        powerSourceLabel_Enemy.removeActions();
+        powerActionLabel_Enemy.removeActions();
+        powerResultLabel_Enemy.removeActions();
+        
+        // 8.  Hide power labels.
+        powerSourceLabel.applyVisible(false);
+        powerActionLabel.applyVisible(false);
+        powerResultLabel.applyVisible(false);
+        powerSourceLabel_Enemy.applyVisible(false);
+        powerActionLabel_Enemy.applyVisible(false);
+        powerResultLabel_Enemy.applyVisible(false);
+        
+        // 9.  Remove actions from combat victory and reward labels.
+        victoryLabel.removeActions();
+        combatRewardLabel.removeActions();
+        
+        // 10.  Hide combat victory and reward labels.
+        victoryLabel.applyVisible(false);
+        combatRewardLabel.applyVisible(false);
         
     }
     
@@ -4831,8 +5316,24 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
             }
             
-            // Update frames per second label.
-            fpsLabel.setLabelText(Integer.toString(Math.round(frameRate)) + " FPS");
+            // If frame rate available, then...
+            if (frameRate > 0)   
+            {
+                
+                // Frame rate available.
+                
+                // Update frames per second label.
+                fpsLabel.setLabelText(Integer.toString(Math.round(frameRate)) + " FPS");
+                
+            }
+            
+            else
+            {
+                
+                // Frame rate not available yet.
+                fpsLabel.setLabelText("");
+                
+            }
             
         } // End ... If rendering frames per second.
         
@@ -4842,79 +5343,47 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
             // In combat.
             
-            // If in offense phase, then...
-            if ( combat.getCombatPhase() == HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_OFFENSE )
-            {
+            // Depending on combat phase, ...
+            switch ( combat.getCombatPhase() ) {
                 
-                // In offense phase.
+                case COMBAT_PHASE_OFFENSE:
+                    
+                    // In offense phase.
+                    
+                    // Process logic related to offense phase of combat.
+                    process_update_combat_offense();
+                    
+                    // Exit selector.
+                    break;
+                    
+                case COMBAT_PHASE_DEFENSE:
+                    
+                    // In defense phase.
+                    
+                    // Process logic related to defense phase of combat.
+                    process_update_combat_defense();
+                    
+                    // Exit selector.
+                    break;
+                    
+                case COMBAT_PHASE_VICTORY:
+                    
+                    // In victory phase.
+                    
+                    // Process logic related to victory phase of combat.
+                    process_update_combat_victory();
+                    
+                    // Exit selector.
+                    break;
+                    
+                default:
+                    
+                    // Otherwise...
+                    
+                    // Exit selector.
+                    break;
                 
-                // If shaking enemy, then...
-                if ( combat.isShakeActiveInd() )
-                {
-                    
-                    // In offense phase and shaking enemy.
-                    
-                    // If shaking of enemy finished, then...
-                    if ( !enemy.getShakeInd() )
-                    {
-
-                        // Shaking of enemy finished.
-                        
-                        // Finish offense phase of current round of combat.
-                        // Returns tue when combat complete.
-                        if ( combat.offense_finish( tiles, goldPile, enemy, enemyLabel, infoButton, 
-                          infoButtonSelector, hpLabel, mpLabel, goldLabel, facingLabel, powerSourceLabel, 
-                          powerActionLabel, powerResultLabel, victoryLabel, combatRewardLabel, 
-                          mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY ) )
-                        
-                        {
-                            
-                            // Combat complete.
-                            // Switch to explore mode and re-enable action buttons.
-                            
-                            // Switch to explore mode.
-                            gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
-
-                            // Re-enable action buttons when indicated by function.
-                            actionButtonsEnabled = true;
-                            
-                        }
-
-                    }
-                    
-                } // End ... If in offense phase and shaking enemy.
-                
-                else
-                {
-                    
-                    // Otherwise, ... (In offense phase and NOT shaking enemy).
-                    
-                    // Occurs when combat ends due to something other than a victory or failure.
-                    // Example:  Running away from enemy successfully.
-                    
-                    // Finish offense phase of current round of combat.
-                    // Returns true when combat complete.
-                    if ( combat.offense_finish( tiles, goldPile, enemy, enemyLabel, infoButton, 
-                      infoButtonSelector, hpLabel, mpLabel, goldLabel, facingLabel, powerSourceLabel, 
-                      powerActionLabel, powerResultLabel, victoryLabel, combatRewardLabel, mapActionButtons, 
-                      mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY ) )
-                        
-                    {
-                        
-                        // Combat complete.
-                        // Switch to explore mode and re-enable action buttons.
-                        
-                        // Switch to explore mode.
-                        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
-                        
-                        // Re-enable action buttons when indicated by function.
-                        actionButtonsEnabled = true;
-                        
-                    }
-                    
-                } // End ... If in offense phase and NOT shaking enemy.
-                
-            } // End if in offense phase.
+            } // End ... Depending on combat phase.
             
         } // End ... If in combat.
         
