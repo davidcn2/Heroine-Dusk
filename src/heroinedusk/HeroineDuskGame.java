@@ -122,8 +122,10 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         ProgressBarStyle barStyle; // Style associated with progress bar.
         Pixmap pixmap; // Used for images, such as for the progress bar.
         TextureRegionDrawable textureBar; // Drawable object to use for background of progress bar.
-        BitmapFont uiFont; // Reference to BitmapFont resource providing bitmapped font and associated details.
-        Label.LabelStyle uiLabelStyle; // Reference to BitmapFont resource with a color specified.
+        BitmapFont uiFont; // Reference to normal BitmapFont resource providing bitmapped font and associated details.
+        BitmapFont uiFontRed; // Reference to red BitmapFont resource providing bitmapped font and associated details.
+        Label.LabelStyle uiLabelStyle; // Reference to normal BitmapFont resource with no color specified.
+        Label.LabelStyle uiLabelStyleRed; // Reference to red BitmapFont resource with no color specified.
         
         // 1a.  Set up the background for the progress bar.
         
@@ -220,13 +222,42 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // Add the uiFont object to the Skin.  Skins allow for storing resources common to multiple screens.
         skin.add("uiFont", uiFont);
         
-        // 2b.  Initialize Label style.
+        // 2b.  Initialize regular Label style.
         
         // Create resource with the BitmapFont just produced and no color.
         uiLabelStyle = new LabelStyle(uiFont, null);
         
         // Add the LabelStyle object to the Skin.
         skin.add("uiLabelStyle", uiLabelStyle);
+        
+        // 2c.  Set up the red (ui) font.
+        
+        // Initialize the BitmapFont object with a FileHandle to the FNT file.
+        //uiFont = new BitmapFont(Gdx.files.internal("assets/interface/Roboto.fnt"));
+        uiFontRed = new BitmapFont(Gdx.files.internal(config.getPrescaleFolder_Interface() + "boxy_bold_red.fnt"));
+        
+        // Store text line height.
+        config.setTextLineHeight(uiFontRed.getXHeight());
+        
+        /*
+        Access the Texture data contained within the BitmapFont object.  Getting a reference to the
+        Texture data allows actions like setting a filter to obtain a smoother appearance when scaling images.
+        
+        Set filter type -- controlling how pixel colors are interpolated when image is
+        rotated or stretched.
+        */
+        uiFontRed.getRegion().getTexture().setFilter(TextureFilter.Linear, TextureFilter.Linear);
+        
+        // Add the uiFont object to the Skin.  Skins allow for storing resources common to multiple screens.
+        skin.add("uiFontRed", uiFontRed);
+        
+        // 2d.  Initialize red Label style.
+        
+        // Create resource with the BitmapFont just produced and no (added) color.
+        uiLabelStyleRed = new LabelStyle(uiFont, null);
+        
+        // Add the LabelStyle object to the Skin.
+        skin.add("uiLabelStyleRed", uiLabelStyleRed);
         
     }
     

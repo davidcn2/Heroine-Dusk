@@ -862,11 +862,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         // Button other than information selected.
                         
+                        System.out.println("Game State before error: " + gameHD.getGameState());
+                        
                         // If in explore mode, then...
                         if ( gameHD.getGameState() == HeroineEnum.GameState.STATE_EXPLORE )
                         {
                             
                             // In explore mode.
+                            
+                            System.out.println("Button selected: " + buttonSelected);
+                            System.out.println("Value of: " + 
+                              HeroineEnum.ActionButtonExploreEnum.valueOf_xRef(buttonSelected).getValue_ActionButtonEnum());
                             
                             // Apply a dark shade to the selected button.
                             mapActionButtons.get(
@@ -4808,18 +4814,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         delayInd = false;
                         
                         // Finish defense phase of current round of combat.
-                        // Returns true when combat finished -- excludes victories with treasure.
-                        if ( combat.defense_finish( ) )
+                        // Combats truly ending (victory) have logic processed in other functions.
+                        // If finishing combat round, then...
+                        if ( combat.defense_finish( infoButtonSelector, mapActionButtons, 
+                             mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY ) )
 
                         {
 
-                            // Combat finished -- excludes victories with treasure.
-                            // Switch to explore mode and re-enable action buttons.
-                            
-                            // Switch to explore mode.
-                            gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+                            // Combat round finished -- excludes victories with treasure.
+                            // Stay in combat mode and re-enable action buttons.
 
-                            // Re-enable action buttons when indicated by function.
+                            // Re-enable action buttons.
                             actionButtonsEnabled = true;
 
                         }
@@ -4873,18 +4878,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     delayInd = false;
                     
                     // Finish defense phase of current round of combat.
-                    // If finishing combat, then...
-                    if ( combat.defense_finish( ) )
+                    // Combats truly ending (victory, default) have logic processed in other functions.
+                    // If finishing combat round, then...
+                    if ( combat.defense_finish( infoButtonSelector, mapActionButtons, mapActionButtonEnabled,
+                         mapSelectorPosX, mapSelectorPosY) )
 
                     {
                         
-                        // Combat finished.
-                        // Switch to explore mode and re-enable action buttons.
+                        // Combat round finished -- excludes victories with treasure.
+                        // Stay in combat mode and re-enable action buttons.
 
-                        // Switch to explore mode.
-                        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
-
-                        // Re-enable action buttons when indicated by function.
+                        // Re-enable action buttons.
                         actionButtonsEnabled = true;
 
                     }
@@ -4953,6 +4957,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Flag delay as inactive.
                         delayInd = false;
                         
+                        System.out.println("Mode before offense_finish: " + gameHD.getGameState());
+                        
                         // Finish offense phase of current round of combat.
                         // Note:  Victory phase handles treasure related to winning combat and occurs in 
                         // separate function.  Only a combat victory returning no treasure finishes here.
@@ -4969,6 +4975,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             // Combat finished -- excludes victories with treasure.
                             // Switch to explore mode and re-enable action buttons.
 
+                            System.out.println("Setting to explore mode3");
+                            
                             // Switch to explore mode.
                             gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
 
@@ -5027,6 +5035,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Flag delay as inactive.
                     delayInd = false;
                     
+                    System.out.println("Mode before offense_finish: " + gameHD.getGameState());
+                    
                     // Finish offense phase of current round of combat.
                     // If finishing combat, then...
                     if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
@@ -5041,9 +5051,14 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Combat finished.
                         // Switch to explore mode and re-enable action buttons.
 
+                        System.out.println("Setting to explore mode4");
+                        
                         // Switch to explore mode.
                         gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
 
+                        // Select the information button.
+                        buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
+                        
                         // Re-enable action buttons when indicated by function.
                         actionButtonsEnabled = true;
 
@@ -5108,8 +5123,13 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Perform basic logic to conclude combat.
                 combat.conclude_combat(enemy, enemyLabel, infoButton, infoButtonSelector, 
                   hpLabel, mpLabel, facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
-                  powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
-                  mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
+                  powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, false,
+                  mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
+                
+                // Select the information button.
+                buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
+                
+                System.out.println("Setting to explore mode5");
                 
                 // Switch to explore mode.
                 gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
@@ -5452,10 +5472,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         armorLabel.setLabelText( gameHD.getAvatar().getArmorText() );
         weaponLabel.setLabelText( gameHD.getAvatar().getWeaponText() );
         goldLabel.setLabelText( Integer.toString(gameHD.getAvatar().getGold()) + " GOLD" );
-        hpLabel.setLabelText( "HP " + Integer.toString(gameHD.getAvatar().getHp()) + "/" + 
-          Integer.toString(gameHD.getAvatar().getMax_hp()) );
-        mpLabel.setLabelText( "MP " + Integer.toString(gameHD.getAvatar().getMp()) + "/" + 
-          Integer.toString(gameHD.getAvatar().getMax_mp()) );
+        hpLabel.setLabelText( gameHD.getAvatar().getHpText() );
+        mpLabel.setLabelText( gameHD.getAvatar().getMpText() );
         statusLabel.setLabelText( "" );
         treasureLabel.setLabelText( "" );
         
@@ -5524,7 +5542,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         }
         
         // TESTING
-        
+        System.out.println("Mode: " + gameHD.getGameState());
         // Depending on game state...
         switch (gameHD.getGameState()) {
             

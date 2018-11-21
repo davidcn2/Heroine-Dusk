@@ -1334,9 +1334,6 @@ public class MazeMap
                   powerResultLabel_Enemy, enemy, assetMgr, mapActionButtons, mapActionButtonEnabled, 
                   mapActionButtonPosX, mapActionButtonPosY);
                 
-                // Temp.
-                //gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
-                
             } // End ... If random number in range of encounter.
             
             else

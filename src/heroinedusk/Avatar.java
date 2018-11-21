@@ -67,7 +67,7 @@ public class Avatar
         map_id = 0; //10; //0;
         weapon = HeroineEnum.WeaponEnum.WEAPON_BARE_FISTS;
         armor = HeroineEnum.ArmorEnum.ARMOR_SERF_RAGS;
-        hp = 5; //25;
+        hp = 15; //25;
         max_hp = 25;
         mp = 10; //14;
         max_mp = 14;

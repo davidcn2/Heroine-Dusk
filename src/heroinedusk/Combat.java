@@ -120,6 +120,7 @@ public class Combat
     // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
     // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
     // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
+    // renderEndBtn = Whether to update interface for buttons.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
@@ -128,7 +129,8 @@ public class Combat
       BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel facingLabel, 
       CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
       CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
-      CustomLabel powerResultLabel_Enemy, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+      CustomLabel powerResultLabel_Enemy, boolean renderEndBtn, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
@@ -149,8 +151,8 @@ public class Combat
          // Render the interface for the ending of combat.
         render_interface_end(enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, mpLabel, 
           facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, powerSourceLabel_Enemy,
-          powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, mapActionButtonEnabled, 
-          mapSelectorPosX, mapSelectorPosY);
+          powerActionLabel_Enemy, powerResultLabel_Enemy, renderEndBtn, mapActionButtons, 
+          mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
 
         // If player has remaining magic points, then...
         if (avatar.getMp() > 0)
@@ -169,7 +171,16 @@ public class Combat
         
     }
     
-    public boolean defense_finish()
+    // infoButtonSelector = BaseActor object that acts as the selector for the current action button.
+    // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
+    // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
+    // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
+    // mapSelectorPosY = List of y-positions to place selector -- related to buttons.
+    public boolean defense_finish(BaseActor infoButtonSelector,
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons,
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled,
+      HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
+      HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
     {
         
         /*
@@ -199,6 +210,16 @@ public class Combat
 
             // Enemy defeated -- at or below zero hit points -- and player still alive.
 
+            System.out.println("Defense Finish:  Enemy dead.");
+            
+            // Perform four immediate interface updates:
+            // 1.  Hide actions buttons.
+            // 2.  Disable attack and run buttons.
+            // 3.  Move selector to information button.
+            // 4.  Hide selector.
+            render_interface_end_btn(infoButtonSelector, mapActionButtons, mapActionButtonEnabled,
+              mapSelectorPosX, mapSelectorPosY);
+            
             // Move to victory phase.
             combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_VICTORY;
 
@@ -210,6 +231,8 @@ public class Combat
 
             // Player dead.
 
+            System.out.println("Defense Finish:  Player dead.");
+            
             // Move to defeat phase.
             combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_DEFEAT;
 
@@ -223,6 +246,8 @@ public class Combat
             
             // Neither enemy nor player dead.
             
+            System.out.println("Defense Finish:  Neither enemy nor player dead.");
+            
             // Move to input phase.
             combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_INPUT;
             
@@ -230,7 +255,7 @@ public class Combat
             enableButtons = true;
             
         }
-        
+        System.out.println("Defense finish: " + enableButtons);
         // Return whether to enable buttons.
         return enableButtons;
         
@@ -240,8 +265,10 @@ public class Combat
     // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
     // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
     // tileGroup = ShakyActor object that will act as the group containing the tiles.
+    // hpLabel = Label showing player hit points.
+    // mpLabel = Label showing player magic points.
     private void defense_start(CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
-      CustomLabel powerResultLabel_Enemy, ShakyActor tileGroup)
+      CustomLabel powerResultLabel_Enemy, ShakyActor tileGroup, CustomLabel hpLabel, CustomLabel mpLabel)
     {
         
         // The function encapsulates display logic related to the first segment of the enemy portion
@@ -249,6 +276,8 @@ public class Combat
         // shaking the tiles.
         
         // Note that the variables used to set the text of the labels get set in the parent function.
+        
+        System.out.println("Function: defense_start");
         
         // Store next combat phase.
         combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_DEFENSE;
@@ -265,6 +294,10 @@ public class Combat
             
             // Shake the tiles five times to indicate enemy caused damage to player.
             tileGroup.startShake(5);
+            
+            // Update the hit and magic points of the player.
+            hpLabel.setLabelText( avatar.getHpText() );
+            mpLabel.setLabelText( avatar.getMpText() );
             
             // Flag shake as active.
             shakeActiveInd = true;
@@ -1135,6 +1168,7 @@ public class Combat
     // powerSourceLabel_Enemy = Label showing the source of the power (enemy).
     // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
     // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
+    // renderEndBtn = Whether to update interface for buttons.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
@@ -1143,7 +1177,8 @@ public class Combat
       BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel facingLabel, 
       CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
       CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
-      CustomLabel powerResultLabel_Enemy, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
+      CustomLabel powerResultLabel_Enemy, boolean renderEndBtn, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
@@ -1154,19 +1189,20 @@ public class Combat
         
         1.  Fade out the enemy name.
         2.  Fade out the enemy.
-        3.  Hide attack, run, and other action buttons.  Update enabled status of attack and run.
-        4.  Move selector to information button.  Hide selector.
-        5.  Fade out the hp and mp labels (in standard locations).
-        6.  Show the information button after slight delay.
-        7.  Show the facing label after slight delay.
-        8.  Fade out the player power labels.
-        9.  Fade out the enemy power labels.
+        3.  (Optional) Hide action buttons.  Disable attack and run buttons.  Move selector to information 
+            button.  Hide selector.
+        4.  Fade out the hp and mp labels (in standard locations).
+        5.  Show the information button after slight delay.
+        6.  Show the facing label after slight delay.
+        
+        When ending combat in victory or defeat, ...
+        7.  Fade out the player power labels.
+        8.  Fade out the enemy power labels.
+        
+        When ending combat due to fleeing successfully, ...
+        7.  Hide player power labels.
+        8.  Hide enemy power labels.
         */
-
-        HeroineEnum.ActionButtonEnum actionButtonEnum; // Enumeration value related to current action button 
-          // in loop.
-        Set<Map.Entry<HeroineEnum.ActionButtonEnum, BaseActor>> entrySetActionButtons; // Set view of the 
-          // action buttons in the hash map.
         
         // 1.  Fade out the enemy name.
         
@@ -1180,16 +1216,118 @@ public class Combat
         enemy.removeActions();
         enemy.addAction_FadeOut(0.00f, 0.50f);
         
-        // 3.  Hide attack, run, and other action buttons.  Update enabled status of attack and run.
+        // 3.  (Optional) Hide attack, run, and other action buttons.  Update enabled status of attack and run.
         
-        // Hide action buttons.
+        // If updating interface for buttons, then...
+        if (renderEndBtn)
+        {
+            
+            // Update interface for buttons.
+            render_interface_end_btn(infoButtonSelector, mapActionButtons, mapActionButtonEnabled, 
+              mapSelectorPosX, mapSelectorPosY);
+            
+        }
         
-        // Store a set view of the spellbook mappings for the hash map.
-        entrySetActionButtons = mapActionButtons.entrySet();
+        // 4.  Fade out hp and mp labels (in standard locations).
         
-        // Disable attack and run buttons.
+        // Remove existing actions and fade out labels over the course of 0.50 seconds.
+        hpLabel.removeActions();
+        hpLabel.addAction_FadeOut(0.00f, 0.50f);
+        mpLabel.removeActions();
+        mpLabel.addAction_FadeOut(0.00f, 0.50f);
+        
+        // 5.  Show the information button after 0.50 seconds elapse.
+        infoButton.removeActions();
+        infoButton.addAction_FadeIn(0.50f, 0.00f);
+        
+        // Remove existing actions and fade in the information button.
+        
+        // 6.  Show the facing label after 0.50 seconds elapse.
+        
+        // Remove existing actions and show the facing label after 0.50 seconds elapse.
+        facingLabel.removeActions();
+        facingLabel.addAction_FadeIn(0.50f, 0.00f);
+        
+        // If running away from enemy successfully, then...
+        if (combatPhase == HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_RUN)
+        {
+            
+            // Running away from enemy successfully.
+            
+            // 7.  Hide player power labels.
+            powerSourceLabel.applyVisible(false);
+            powerActionLabel.applyVisible(false);
+            powerResultLabel.applyVisible(false);
+
+            // 8.  Hide enemy power labels.
+            powerSourceLabel_Enemy.applyVisible(false);
+            powerActionLabel_Enemy.applyVisible(false);
+            powerResultLabel_Enemy.applyVisible(false);
+            
+        }
+        
+        else
+        {
+            
+            // Victory or defeat occurred.
+            
+            // 7.  Fade out the player power labels.
+        
+            // Remove existing actions and fade out labels over the course of 1.00 seconds.
+            // Wait 1.00 seconds before starting the fade.
+            powerSourceLabel.removeActions();
+            powerSourceLabel.addAction_FadeOut(2.00f, 1.00f);
+            powerActionLabel.removeActions();
+            powerActionLabel.addAction_FadeOut(2.00f, 1.00f);
+            powerResultLabel.removeActions();
+            powerResultLabel.addAction_FadeOut(2.00f, 1.00f);
+
+            // 8.  Fade out the enemy power labels.
+
+            // Remove existing actions and fade out labels over the course of 1.00 seconds.
+            // Wait 1.00 seconds before starting the fade.
+            powerSourceLabel_Enemy.removeActions();
+            powerSourceLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
+            powerActionLabel_Enemy.removeActions();
+            powerActionLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
+            powerResultLabel_Enemy.removeActions();
+            powerResultLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
+            
+        } // End ... If victory or defeat occurred.
+        
+    }
+    
+    // infoButtonSelector = BaseActor object that acts as the selector for the current action button.
+    // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
+    // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
+    // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
+    // mapSelectorPosY = List of y-positions to place selector -- related to buttons.
+    private void render_interface_end_btn(BaseActor infoButtonSelector, 
+      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons,
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled,
+      HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
+      HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
+    {
+        
+        // The function performs display-related logic related to buttons at the conclusion of combat.
+        
+        // 1.  Hide attack, run, and other action buttons.
+        // 2.  Disable attack and run buttons.
+        // 3.  Move selector to information button.  Hide selector.
+        
+        HeroineEnum.ActionButtonEnum actionButtonEnum; // Enumeration value related to current action button 
+          // in loop.
+        Set<Map.Entry<HeroineEnum.ActionButtonEnum, BaseActor>> entrySetActionButtons; // Set view of the 
+          // action buttons in the hash map.
+        
+        // 1.  Disable attack and run buttons.
         mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, false);
         mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, false);
+        
+        // 2.  Hide action buttons.
+        
+        // Store a set view of the action button mappings for the hash map.
+        entrySetActionButtons = mapActionButtons.entrySet();
         
         // Loop through action buttons.
         for (Map.Entry entryActionButton : entrySetActionButtons)
@@ -1198,15 +1336,12 @@ public class Combat
             // Store enumeration value for current action button in loop.
             actionButtonEnum = (HeroineEnum.ActionButtonEnum)entryActionButton.getKey();
             
-            // Return button to normal color.
-            //mapActionButtons.get(actionButtonEnum).setColor(Color.WHITE);
-            
             // Hide current button.
             mapActionButtons.get(actionButtonEnum).setVisible(false);
             
         } // End ... Loop through action buttons.
         
-        // 4.  Move selector to information button.  Hide selector.
+        // 3.  Move selector to information button.  Hide selector.
         
         // Position the selector around the information button.
         infoButtonSelector.setPosition(mapSelectorPosX.get(HeroineEnum.SelectPosEnum.BUTTON_POS_INFO), 
@@ -1214,48 +1349,6 @@ public class Combat
         
         // Hide selector.
         infoButtonSelector.setVisible(false);
-        
-        // 5.  Fade out hp and mp labels (in standard locations).
-        
-        // Remove existing actions and fade out labels over the course of 0.50 seconds.
-        hpLabel.removeActions();
-        hpLabel.addAction_FadeOut(0.00f, 0.50f);
-        mpLabel.removeActions();
-        mpLabel.addAction_FadeOut(0.00f, 0.50f);
-        
-        // 6.  Show the information button after 0.50 seconds elapse.
-        infoButton.removeActions();
-        infoButton.addAction_FadeIn(0.50f, 0.00f);
-        
-        // Remove existing actions and fade in the information button.
-        
-        // 7.  Show the facing label after 0.50 seconds elapse.
-        
-        // Remove existing actions and show the facing label after 0.50 seconds elapse.
-        facingLabel.removeActions();
-        facingLabel.addAction_FadeIn(0.50f, 0.00f);
-        
-        // 8.  Fade out the player power labels.
-        
-        // Remove existing actions and fade out labels over the course of 1.00 seconds.
-        // Wait 1.00 seconds before starting the fade.
-        powerSourceLabel.removeActions();
-        powerSourceLabel.addAction_FadeOut(2.00f, 1.00f);
-        powerActionLabel.removeActions();
-        powerActionLabel.addAction_FadeOut(2.00f, 1.00f);
-        powerResultLabel.removeActions();
-        powerResultLabel.addAction_FadeOut(2.00f, 1.00f);
-        
-        // 9.  Fade out the enemy power labels.
-        
-        // Remove existing actions and fade out labels over the course of 1.00 seconds.
-        // Wait 1.00 seconds before starting the fade.
-        powerSourceLabel_Enemy.removeActions();
-        powerSourceLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
-        powerActionLabel_Enemy.removeActions();
-        powerActionLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
-        powerResultLabel_Enemy.removeActions();
-        powerResultLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
         
     }
     
@@ -1395,6 +1488,9 @@ public class Combat
                 // Current action is NOT for a spell.
                 // Used for attack, run, ...
                 
+                // Restore shading of current button to normal (white).
+                mapActionButtons.get(actionButtonEnum).setColor(Color.WHITE);
+                
                 // Display related button -- even if disabled.
                 mapActionButtons.get(actionButtonEnum).setVisible(true);
                 
@@ -1524,6 +1620,8 @@ public class Combat
         // Flag shake as inactive.
         shakeActiveInd = false;
         
+        System.out.println("Function: offense_finish");
+        
         // 1.  Handle successful run or allow an enemy attack.
         // Phases:  COMBAT_PHASE_DEFENSE, COMBAT_PHASE_RUN.
         
@@ -1554,7 +1652,7 @@ public class Combat
             // Call function to handle logic related to start of defense phase.
             // The function displays the results of the enemy attack, shaking the tiles if player is hit.
             defense_start(powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, 
-              tileGroup);
+              tileGroup, hpLabel, mpLabel);
             
         }
         
@@ -1567,8 +1665,8 @@ public class Combat
             // Perform basic logic to conclude combat.
             enableButtons = conclude_combat(enemy, enemyLabel, infoButton, infoButtonSelector, 
               hpLabel, mpLabel, facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
-              powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
-              mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
+              powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, true, 
+              mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
             
         }
         
