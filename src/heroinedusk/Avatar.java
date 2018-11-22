@@ -445,6 +445,10 @@ public class Avatar
           (bonus_def > 0 ? " +" + Integer.toString(bonus_def) : "");
     }
     
+    public boolean getBadlyHurtInd() {
+        return hp <= (max_hp / 3);
+    }
+    
     public int getBonus_atk() {
         return bonus_atk;
     }

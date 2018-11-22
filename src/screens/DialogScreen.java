@@ -133,6 +133,7 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
         4.  Renders the title label.
         5.  Renders the buttons and associated labels.
         6.  Renders the dialog message.
+        7.  Adjust label style if player if player at less than or equal to one third of maximum hit points.
         */
         
         // Declare object variables.
@@ -201,6 +202,30 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
           "uiLabelStyle", 1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_CENTER, 
           CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, mainStage, null, adjPosY, 
           HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0, viewWidthMain);
+        
+        // 7.  Adjust label style if player if player at less than or equal to one third of maximum hit points.
+        
+        // If player badly hurt, then...
+        if (gameHD.getAvatar().getBadlyHurtInd())
+        {
+            
+            // Player badly hurt.
+            // Update labels to show red font.
+            
+            // Loop through button labels.
+            buttonLabels.forEach((buttonLabel) -> {
+            
+                // Update current button label to show red font.
+                buttonLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+                
+            });
+            
+            // Update remaining labels.
+            titleLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+            dialogMsgLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+            goldLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+            
+        } // End ... If player badly hurt.
         
     }
     
@@ -676,8 +701,21 @@ public class DialogScreen extends BaseScreen { // Extends the BaseScreen class.
     public void wakeScreen()
     {
         
-        // The method gets called when redisplaying the already initialized screen.
+        /*
+        The method gets called when redisplaying the already initialized screen.
         
+        The following actions occur:
+        
+        1.  Wake up the base screen, setting up viewports, input multiplexer, ....
+        2.  Sets defaults.
+        3.  Initializes arrays and array lists.
+        4.  Configures and adds the background Actor.
+        5.  Renders the title label.
+        6.  Renders the buttons and associated labels.
+        7.  Renders the dialog message.
+        8.  Adjust label style if player if player at less than or equal to one third of maximum hit points.
+        */
+
         // Wake up the base screen, setting up viewports, input multiplexer, ....
         wakeBaseScreen();
         

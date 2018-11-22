@@ -214,6 +214,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private final SecureRandom number; // Used for generating random numbers.
     private HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX; // List of x-positions to place selector -- related to buttons.
     private HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY; // List of y-positions to place selector -- related to buttons.
+    private boolean redFont; // Whether labels set to use red font.
     private int selectorAdjPos; // Position adjustment related to selector.
     private float sinceChange; // Seconds elapsed, resetting every second.
     
@@ -310,6 +311,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         delayInd = false;
         infoButtonSelected = false;
         minimapRenderInd = false;
+        redFont = false;
         lastTimeCounted = TimeUtils.millis();
         sinceChange = 0;
         buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
@@ -862,17 +864,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         // Button other than information selected.
                         
-                        System.out.println("Game State before error: " + gameHD.getGameState());
-                        
                         // If in explore mode, then...
                         if ( gameHD.getGameState() == HeroineEnum.GameState.STATE_EXPLORE )
                         {
                             
                             // In explore mode.
-                            
-                            System.out.println("Button selected: " + buttonSelected);
-                            System.out.println("Value of: " + 
-                              HeroineEnum.ActionButtonExploreEnum.valueOf_xRef(buttonSelected).getValue_ActionButtonEnum());
                             
                             // Apply a dark shade to the selected button.
                             mapActionButtons.get(
@@ -4476,6 +4472,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         } // End ... If player NOT in combat.
         
+        // If player health at normal level, then...
+        if (!gameHD.getAvatar().getBadlyHurtInd())
+        {
+            
+            // Player health at normal level.
+            
+            // Restore labels to normal style.  No effect if already at normal level.
+            show_normal_labels();
+            
+        }
+        
     }
     
     private void processAction_Info()
@@ -4957,8 +4964,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Flag delay as inactive.
                         delayInd = false;
                         
-                        System.out.println("Mode before offense_finish: " + gameHD.getGameState());
-                        
                         // Finish offense phase of current round of combat.
                         // Note:  Victory phase handles treasure related to winning combat and occurs in 
                         // separate function.  Only a combat victory returning no treasure finishes here.
@@ -4974,8 +4979,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
 
                             // Combat finished -- excludes victories with treasure.
                             // Switch to explore mode and re-enable action buttons.
-
-                            System.out.println("Setting to explore mode3");
                             
                             // Switch to explore mode.
                             gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
@@ -4983,6 +4986,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             // Re-enable action buttons when indicated by function.
                             actionButtonsEnabled = true;
 
+                        }
+                        
+                        // If player has less than or equal to one third of maximum hit points, then...
+                        if (gameHD.getAvatar().getBadlyHurtInd())
+                        {
+                            
+                            // Player has less or equal to one third of maximum hit points.
+                            
+                            // Set font of labels to red.
+                            show_badly_hurt();
+                            
                         }
 
                     } // End ... If 0.50 seconds passed.
@@ -5035,8 +5049,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Flag delay as inactive.
                     delayInd = false;
                     
-                    System.out.println("Mode before offense_finish: " + gameHD.getGameState());
-                    
                     // Finish offense phase of current round of combat.
                     // If finishing combat, then...
                     if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
@@ -5050,8 +5062,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         // Combat finished.
                         // Switch to explore mode and re-enable action buttons.
-
-                        System.out.println("Setting to explore mode4");
                         
                         // Switch to explore mode.
                         gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
@@ -5061,6 +5071,17 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         // Re-enable action buttons when indicated by function.
                         actionButtonsEnabled = true;
+
+                    }
+                    
+                    // If player at less than or equal to one third of maximum hit points, then...
+                    if (gameHD.getAvatar().getBadlyHurtInd())
+                    {
+
+                        // Player has less or equal to one third of maximum hit points.
+
+                        // Set font of labels to red.
+                        show_badly_hurt();
 
                     }
 
@@ -5129,8 +5150,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Select the information button.
                 buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
                 
-                System.out.println("Setting to explore mode5");
-                
                 // Switch to explore mode.
                 gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
 
@@ -5177,6 +5196,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         8.  Hide power labels.
         9.  Remove actions from combat victory and reward labels.
         10.  Hide combat victory and reward labels.
+        11.  If player health at adequate level, update labels to normal style (as necessary).
         */
         
         // 1.  Initialize array lists.
@@ -5225,6 +5245,19 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // 10.  Hide combat victory and reward labels.
         victoryLabel.applyVisible(false);
         combatRewardLabel.applyVisible(false);
+        
+        // 11.  If player health at adequate level, update labels to normal style (as necessary).
+        
+        // If player health at normal level, then...
+        if (!gameHD.getAvatar().getBadlyHurtInd())
+        {
+            
+            // Player health at normal level.
+            
+            // Restore labels to normal style.  No effect if already at normal level.
+            show_normal_labels();
+            
+        }
         
     }
     
@@ -5293,6 +5326,78 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             } // End ... If current action is spell-related.
             
         } // End ... Loop through action buttons.
+        
+    }
+    
+    private void show_badly_hurt()
+    {
+        
+        // The function updates labels to show the player condition as badly hurt.
+        
+        // Flag red font as in use.
+        redFont = true;
+        
+        // Update labels to show red font.
+        armorLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        combatRewardLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        enemyLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        facingLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        goldLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        hpLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        infoLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        mpLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        powerActionLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        powerResultLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        powerSourceLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        powerActionLabel_Enemy.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        powerResultLabel_Enemy.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        powerSourceLabel_Enemy.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        regionLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        spellsLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        statusLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        treasureLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        victoryLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        weaponLabel.setLabelStyle(gameHD.skin, "uiLabelStyleRed");
+        
+    }
+    
+    private void show_normal_labels()
+    {
+        
+        // The function updates labels to show the player condition as normal (NOT badly hurt).
+        
+        // If red font in use, then...
+        if (redFont)
+        {
+            
+            // Red font in use.
+            
+            // Flag red font as no longer in use.
+            redFont = false;
+            
+            // Update labels to show normal font.
+            armorLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            combatRewardLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            enemyLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            facingLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            goldLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            hpLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            infoLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            mpLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            powerActionLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            powerResultLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            powerSourceLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            powerActionLabel_Enemy.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            powerResultLabel_Enemy.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            powerSourceLabel_Enemy.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            regionLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            spellsLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            statusLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            treasureLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            victoryLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+            weaponLabel.setLabelStyle(gameHD.skin, "uiLabelStyle");
+
+            }
         
     }
     

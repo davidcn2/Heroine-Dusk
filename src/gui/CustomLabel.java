@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 // Local project imports.
@@ -80,6 +81,7 @@ public class CustomLabel
     displayLabelCenterX:  Centers the label at the passed Y coordinate.
     removeActions:  Removes all actions from the label.
     removeActor:  Removes the actor associated with the label.
+    setLabelStyle:  Updates the style of the label, based on the passed parameters.
     setLabelText:  Updates the text of the label, using the existing bitmap font.
     setLabelTextCenter:  Updates the text of the label and centers the revised object across the screen.
     setPosX:  Sets the x-position of the left edge of the label.
@@ -979,6 +981,21 @@ public class CustomLabel
         
         // Remove actor.
         customLabel.remove();
+        
+    }
+    
+    // gameSkin = Reference to skin used with the game.
+    // labelStyle = Name of the style to use.
+    public void setLabelStyle(Skin gameSkin, String labelStyle)
+    {
+        
+        // The function updates the style of the label, based on the passed parameters.
+        
+        // Update class-level variable with style.
+        this.labelStyle = labelStyle;
+        
+        // Update style of label.
+        customLabel.setStyle(gameSkin.get(labelStyle, LabelStyle.class));
         
     }
     

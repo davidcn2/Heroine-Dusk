@@ -254,7 +254,7 @@ public class HeroineDuskGame extends BaseGame // Extends the BaseGame class.
         // 2d.  Initialize red Label style.
         
         // Create resource with the BitmapFont just produced and no (added) color.
-        uiLabelStyleRed = new LabelStyle(uiFont, null);
+        uiLabelStyleRed = new LabelStyle(uiFontRed, null);
         
         // Add the LabelStyle object to the Skin.
         skin.add("uiLabelStyleRed", uiLabelStyleRed);
