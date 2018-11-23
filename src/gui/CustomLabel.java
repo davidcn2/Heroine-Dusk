@@ -924,7 +924,7 @@ public class CustomLabel
         // Example for use:  mainStage.addActor(labelTitle.displayLabelAlignRight(384f, 300f));
         
         // Store location of label.
-        this.posX = posX - Math.round(customLabel.getWidth());
+        this.posX = posX - Math.round(customLabel.getWidth() * this.labelScale);
         this.posY = posY;
         
         // Set the location of the label.
@@ -953,6 +953,30 @@ public class CustomLabel
         // Return the label.
         return customLabel;
         
+    }
+    
+    // x = Amount by which to move the label horizontally.
+    public final void movePosX(float x)
+    {
+        // The method moves the label horizontally the specified amount.
+        
+        // Store updated x-coordinate.
+        this.posX += x;
+        
+        // Call method in actor.
+        customLabel.setX(x);
+    }
+    
+    // y = Amount by which to move the label vertically.
+    public final void movePosY(float y)
+    {
+        // The method moves the label vertically the specified amount.
+        
+        // Store updated y-coordinate.
+        this.posY += y;
+        
+        // Call method in actor.
+        customLabel.setY(y);
     }
     
     public void removeActions()
@@ -1077,6 +1101,25 @@ public class CustomLabel
         
         // Update and recenter label text.
         setLabelText_Center(labelText, bitmapFont, this.stageWidth);
+        
+    }
+    
+    // labelText = Text to display in label.
+    public void setLabelText_Right(String labelText)
+    {
+        
+        // The function updates the text (and width) of the label and keeps its right edge at the same location.
+        
+        float posX_Right; // Rightmost position / edge of label.
+        
+        // Store right edge of label.
+        posX_Right = posX + (customLabel.getWidth() * this.labelScale);
+        
+        // Update text of the label.
+        setLabelText(labelText, bitmapFont);
+        
+        // Set new left position of label.
+        setPosX(posX_Right - Math.round(customLabel.getWidth() * this.labelScale));
         
     }
     

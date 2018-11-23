@@ -172,12 +172,14 @@ public class Combat
     }
     
     // infoButtonSelector = BaseActor object that acts as the selector for the current action button.
+    // goldLabel = Label showing player gold.
+    // gfxScale = Output scale factor.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
     // mapSelectorPosY = List of y-positions to place selector -- related to buttons.
-    public boolean defense_finish(BaseActor infoButtonSelector,
-      Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons,
+    public boolean defense_finish(BaseActor infoButtonSelector, CustomLabel goldLabel,
+      float gfxScale, Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons,
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled,
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY)
@@ -187,8 +189,9 @@ public class Combat
         The function encapsulates display logic related to the last segment of the defensive portion
         of a round of combat.  The segment includes support for:
         
-        1.  Checking for and handling a victory or a defeat.
-        2.  Moving to the next combat phase -- COMBAT_PHASE_INPUT -- enemy and player both still alive.
+        1.  Moving to the next combat phase -- COMBAT_PHASE_INPUT -- enemy and player both still alive.
+        2.  Concluding combat with a victory -- enemy at 0 or fewer hit points and player at greater than 0.
+        3.  Concluding combat with a defeat -- player at 0 or fewer hit points.
         
         The function returns whether to enable the action buttons.
         */
@@ -230,8 +233,25 @@ public class Combat
         {
 
             // Player dead.
-
+            
             System.out.println("Defense Finish:  Player dead.");
+            
+            // Perform four immediate interface updates:
+            // 1.  Hide actions buttons.
+            // 2.  Disable attack and run buttons.
+            // 3.  Move selector to information button.
+            // 4.  Hide selector.
+            render_interface_end_btn(infoButtonSelector, mapActionButtons, mapActionButtonEnabled,
+              mapSelectorPosX, mapSelectorPosY);
+            
+            // Shift gold label slightly to the right.
+            goldLabel.movePosX(gfxScale * 1);
+            
+            // Update text/ position / alignment of gold label to show player defeated text.
+            goldLabel.setLabelText_Right("YOU ARE DEFEATED...");
+            
+            // Show gold label.
+            goldLabel.applyVisible(true);
             
             // Move to defeat phase.
             combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_DEFEAT;
@@ -640,6 +660,9 @@ public class Combat
                 break;
             
         } // End ... Depending on enemy power used.
+        
+        // Ensure that player hit points at least zero (avoid negatives).
+        avatar.setHp_Min();
         
     }
     
@@ -1201,7 +1224,6 @@ public class Combat
         
         When ending combat due to fleeing successfully, ...
         7.  Hide player power labels.
-        8.  Hide enemy power labels.
         */
         
         // 1.  Fade out the enemy name.
@@ -1283,7 +1305,7 @@ public class Combat
             powerResultLabel.addAction_FadeOut(2.00f, 1.00f);
 
             // 8.  Fade out the enemy power labels.
-
+System.out.println("Fading enemy labels");
             // Remove existing actions and fade out labels over the course of 1.00 seconds.
             // Wait 1.00 seconds before starting the fade.
             powerSourceLabel_Enemy.removeActions();
@@ -1313,7 +1335,8 @@ public class Combat
         
         // 1.  Hide attack, run, and other action buttons.
         // 2.  Disable attack and run buttons.
-        // 3.  Move selector to information button.  Hide selector.
+        // 3.  Move selector to information button.
+        // 4.  Hide selector.
         
         HeroineEnum.ActionButtonEnum actionButtonEnum; // Enumeration value related to current action button 
           // in loop.
@@ -1347,7 +1370,7 @@ public class Combat
         infoButtonSelector.setPosition(mapSelectorPosX.get(HeroineEnum.SelectPosEnum.BUTTON_POS_INFO), 
           mapSelectorPosY.get(HeroineEnum.SelectPosEnum.BUTTON_POS_INFO));
         
-        // Hide selector.
+        // 4.  Hide selector.
         infoButtonSelector.setVisible(false);
         
     }
@@ -1626,7 +1649,7 @@ public class Combat
         // Phases:  COMBAT_PHASE_DEFENSE, COMBAT_PHASE_RUN.
         
         // If player successfully ran away from enemy, then...
-        if (fightEnum == HeroineEnum.FightEnum.FIGHT_RUN && actionResultPlayer.getResult())
+        if (isRunSuccessful())
         {
             
             // Player successfully ran away from enemy.
@@ -1738,12 +1761,24 @@ public class Combat
         return combatPhase;
     }
     
+    public boolean isEnemyAlive() {
+        return this.enemyHp > 0;
+    }
+    
     public HeroineEnum.EnemyEnum getEnemyEnum() {
         return enemyEnum;
     }
 
+    public boolean isEnemyDead() {
+        return this.enemyHp <= 0;
+    }
+    
     public void setEnemyEnum(HeroineEnum.EnemyEnum enemyEnum) {
         this.enemyEnum = enemyEnum;
+    }
+    
+    public boolean isRunSuccessful() {
+        return fightEnum == HeroineEnum.FightEnum.FIGHT_RUN && actionResultPlayer.getResult();
     }
     
     public boolean isShakeActiveInd() {

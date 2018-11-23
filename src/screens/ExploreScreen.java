@@ -25,6 +25,7 @@ import heroinedusk.MazeMap;
 import heroinedusk.RegionMap;
 import heroinedusk.Sounds;
 import heroinedusk.Spells;
+import routines.UtilityRoutines;
 
 // Java imports.
 import java.security.SecureRandom;
@@ -32,7 +33,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import routines.UtilityRoutines;
 
 /*
 Interface (implements) vs Sub-Class (extends)...
@@ -159,7 +159,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private BaseActor heroineWeapon; // BaseActor object that will act as the player weapon.
     private CustomLabel hpLabel; // Label showing player hit points.
     private BaseActor infoButton; // BaseActor object that will act as the information button.
-    private BaseActor infoButtonSelector; // BaseActor object that will act as the selector for the
+    private BaseActor infoButtonSelector; // BaseActor object that acts as the selector for the
       // information and other buttons.
     private CustomLabel infoLabel; // Label showing "INFO" text.
     private Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons; // Hash map containing
@@ -828,6 +828,18 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         
                         // Toggle information button.
                         processAction_Info();
+                        
+                    }
+                    
+                    // Otherwise, if in combat mode, then...
+                    else if (gameHD.getGameState() == HeroineEnum.GameState.STATE_COMBAT)
+                    {
+                        
+                        // In combat mode.
+                        
+                        // Process logic related to pressing the selection button during combat.
+                        // If action buttons enabled, activates the currently selected one.
+                        process_selected_action_button_combat();
                         
                     }
                     
@@ -2235,130 +2247,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
 
                 // The user pressed the enter / return key.
 
-                // If action buttons enabled, then...
-                if (actionButtonsEnabled)
-                {
-
-                    // Action buttons enabled.
-
-                    // Disable action buttons.
-                    actionButtonsEnabled = false;
-                
-                    // Depending on active action button, ...
-                    switch (buttonSelected) {
-
-                        case BUTTON_POS_ATTACK:
-
-                            // The user pressed enter on the attack button.
-
-                            // Process attack action.
-                            processAction_Attack();
-
-                            // Exit selector.
-                            break;
-
-                        case BUTTON_POS_BURN:
-
-                            // The user pressed enter on the burn button.
-
-                            // Process burn action.
-                            processAction_Burn();
-
-                            // Exit selector.
-                            break;
-
-                        case BUTTON_POS_FREEZE:
-
-                            // The user pressed enter on the freeze button.
-
-                            // Process freeze action.
-                            processAction_Freeze();
-
-                            // To Do:  Remove later when implementing power functionality.
-                            actionButtonsEnabled = true;
-                            
-                            // Exit selector.
-                            break;
-
-                        case BUTTON_POS_HEAL:
-
-                            // The user pressed enter on the heal button.
-
-                            // Process heal action.
-                            processAction_Heal();
-
-                            // Exit selector.
-                            break;
-
-                        case BUTTON_POS_INFO:
-
-                            // The user pressed enter on the information button.
-
-                            // Toggle information button.
-                            processAction_Info();
-
-                            // Exit selector.
-                            break;
-
-                        case BUTTON_POS_LIGHT:
-
-                            // The user pressed enter on the light button.
-
-                            // Process light action.
-                            processAction_Light();
-
-                            // To Do:  Remove later when implementing power functionality.
-                            actionButtonsEnabled = true;
-                            
-                            // Exit selector.
-                            break;
-
-                        case BUTTON_POS_REFLECT:
-
-                            // The user pressed enter on the reflect button.
-
-                            // Process reflect action.
-                            processAction_Reflect();
-
-                            // To Do:  Remove later when implementing power functionality.
-                            actionButtonsEnabled = true;
-                            
-                            // Exit selector.
-                            break;
-
-                        case BUTTON_POS_RUN:
-
-                            // The user pressed enter on the run button.
-
-                            // Process run action.
-                            processAction_Run();
-
-                            // Exit selector.
-                            break;
-
-                        case BUTTON_POS_UNLOCK:
-
-                            // The user pressed enter on the unlock button.
-
-                            // Process unlock action.
-                            processAction_Unlock();
-
-                            // Exit selector.
-                            break;
-
-                        default:
-
-                            // The user pressed enter on an unknown button.
-
-                            // Display warning.
-                            System.out.println("Warning:  Pressing enter in combat mode with unknown button selected.");
-
-                            // Exit selector.
-                            break;
-
-                    } // End ... Depending on active action button.
-
-                } // End ... If action buttons enabled.
+                // Process logic related to pressing the enter / return key during combat.
+                // If action buttons enabled, activates the currently selected one.
+                process_selected_action_button_combat();
 
                 // Exit selector.
                 break;
@@ -4780,6 +4671,140 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
     }
     
+    private void process_selected_action_button_combat()
+    {
+        
+        // The function processes logic for the selected action button (when actions enabled).
+        // The function is called in combat when pressing the enter key or clicking on the selection button.
+        // The function is only used during combat.
+
+        // If action buttons enabled, then...
+        if (actionButtonsEnabled)
+        {
+        
+            // Action buttons enabled.
+            
+            // Disable action buttons.
+            actionButtonsEnabled = false;
+
+            // Depending on active action button, ...
+            switch (buttonSelected) {
+
+                case BUTTON_POS_ATTACK:
+
+                    // The user pressed enter on the attack button.
+
+                    // Process attack action.
+                    processAction_Attack();
+
+                    // Exit selector.
+                    break;
+
+                case BUTTON_POS_BURN:
+
+                    // The user pressed enter on the burn button.
+
+                    // Process burn action.
+                    processAction_Burn();
+
+                    // Exit selector.
+                    break;
+
+                case BUTTON_POS_FREEZE:
+
+                    // The user pressed enter on the freeze button.
+
+                    // Process freeze action.
+                    processAction_Freeze();
+
+                    // To Do:  Remove later when implementing power functionality.
+                    actionButtonsEnabled = true;
+
+                    // Exit selector.
+                    break;
+
+                case BUTTON_POS_HEAL:
+
+                    // The user pressed enter on the heal button.
+
+                    // Process heal action.
+                    processAction_Heal();
+
+                    // Exit selector.
+                    break;
+
+                case BUTTON_POS_INFO:
+
+                    // The user pressed enter on the information button.
+
+                    // Toggle information button.
+                    processAction_Info();
+
+                    // Exit selector.
+                    break;
+
+                case BUTTON_POS_LIGHT:
+
+                    // The user pressed enter on the light button.
+
+                    // Process light action.
+                    processAction_Light();
+
+                    // To Do:  Remove later when implementing power functionality.
+                    actionButtonsEnabled = true;
+
+                    // Exit selector.
+                    break;
+
+                case BUTTON_POS_REFLECT:
+
+                    // The user pressed enter on the reflect button.
+
+                    // Process reflect action.
+                    processAction_Reflect();
+
+                    // To Do:  Remove later when implementing power functionality.
+                    actionButtonsEnabled = true;
+
+                    // Exit selector.
+                    break;
+
+                case BUTTON_POS_RUN:
+
+                    // The user pressed enter on the run button.
+
+                    // Process run action.
+                    processAction_Run();
+
+                    // Exit selector.
+                    break;
+
+                case BUTTON_POS_UNLOCK:
+
+                    // The user pressed enter on the unlock button.
+
+                    // Process unlock action.
+                    processAction_Unlock();
+
+                    // Exit selector.
+                    break;
+
+                default:
+
+                    // The user pressed enter on an unknown button.
+
+                    // Display warning.
+                    System.out.println("Warning:  Pressing enter in combat mode with unknown button selected.");
+
+                    // Exit selector.
+                    break;
+
+            } // End ... Depending on active action button.
+            
+        } // End ... If action buttons enabled.
+        
+    }
+    
     private void process_update_combat_defense()
     {
         
@@ -4811,11 +4836,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Get difference, measured in milliseconds, between current and last time check.
                     delta = TimeUtils.timeSinceMillis(lastTimeDelay);
 
-                    // If 0.50 seconds passed, then...
-                    if ( delta >= 500 )
+                    // If 0.50 seconds passed or enemy dead, then...
+                    if ( delta >= 500 || combat.isEnemyDead() )
                     {
 
-                        // 0.50 seconds passed.
+                        // 0.50 seconds passed or enemy dead.
                         
                         // Flag delay as inactive.
                         delayInd = false;
@@ -4823,7 +4848,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                         // Finish defense phase of current round of combat.
                         // Combats truly ending (victory) have logic processed in other functions.
                         // If finishing combat round, then...
-                        if ( combat.defense_finish( infoButtonSelector, mapActionButtons, 
+                        if ( combat.defense_finish( infoButtonSelector, goldLabel, 
+                             (float)(gameHD.getConfig().getScale()), mapActionButtons, 
                              mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY ) )
 
                         {
@@ -4866,7 +4892,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             // Occurs when round ends due to something other enemy hitting player.
             // Example 1:  Enemy attacks and misses player.
             
-            // If delay active, then...
+            // If delay active , then...
             if ( delayInd )
             {
 
@@ -4875,11 +4901,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Get difference, measured in milliseconds, between current and last time check.
                 delta = TimeUtils.timeSinceMillis(lastTimeDelay);
 
-                // If 0.50 seconds passed, then...
-                if ( delta >= 500 )
+                // If 0.50 seconds passed or enemy dead, then...
+                if ( delta >= 500 || combat.isEnemyDead() )
                 {
 
-                    // 0.50 seconds passed.
+                    // 0.50 seconds passed or enemy dead.
 
                     // Flag delay as inactive.
                     delayInd = false;
@@ -4887,8 +4913,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Finish defense phase of current round of combat.
                     // Combats truly ending (victory, default) have logic processed in other functions.
                     // If finishing combat round, then...
-                    if ( combat.defense_finish( infoButtonSelector, mapActionButtons, mapActionButtonEnabled,
-                         mapSelectorPosX, mapSelectorPosY) )
+                    if ( combat.defense_finish( infoButtonSelector, goldLabel, 
+                         (float)(gameHD.getConfig().getScale()), mapActionButtons, 
+                         mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY) )
 
                     {
                         
@@ -4955,11 +4982,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     // Get difference, measured in milliseconds, between current and last time check.
                     delta = TimeUtils.timeSinceMillis(lastTimeDelay);
 
-                    // If 0.50 seconds passed, then...
-                    if ( delta >= 500 )
+                    // If 0.50 seconds passed or player fled enemy successfully, then...
+                    if ( delta >= 500 || combat.isRunSuccessful() )
                     {
 
-                        // 0.50 seconds passed.
+                        // 0.50 seconds passed or player fled enemy successfully.
                         
                         // Flag delay as inactive.
                         delayInd = false;
@@ -5040,11 +5067,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Get difference, measured in milliseconds, between current and last time check.
                 delta = TimeUtils.timeSinceMillis(lastTimeDelay);
 
-                // If 0.50 seconds passed, then...
-                if ( delta >= 500 )
+                // If 0.50 seconds passed or player fled enemy successfully, then...
+                if ( delta >= 500 || combat.isRunSuccessful() )
                 {
 
-                    // 0.50 seconds passed.
+                    // 0.50 seconds passed or player fled enemy successfully.
 
                     // Flag delay as inactive.
                     delayInd = false;
@@ -5136,9 +5163,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                 // Determine amount of gold to reward player.
                 goldQuantity = UtilityRoutines.generateStandardRnd( number, 
                   combat.getEnemyEnum().getValue_GoldMin(), combat.getEnemyEnum().getValue_GoldMax() );
-
+                
                 // Provide reward to player for winning combat (and display related image).
-                mazemap.show_gold_pile_no_chest( goldQuantity, goldLabel, tiles, goldPile, victoryLabel, 
+                mazemap.show_gold_pile_combat( goldQuantity, goldLabel, tiles, goldPile, victoryLabel, 
                   combatRewardLabel );
                 
                 // Perform basic logic to conclude combat.

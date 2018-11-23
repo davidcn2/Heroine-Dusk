@@ -497,6 +497,11 @@ public class Avatar
         return hp == max_hp;
     }
     
+    public void setHp_Min() {
+        if (hp < 0)
+            hp = 0;
+    }
+    
     public String getHpText() {
         return "HP " + Integer.toString(hp) + "/" + Integer.toString(max_hp);
     }

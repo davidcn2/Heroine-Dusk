@@ -1176,14 +1176,12 @@ public class MazeMap
     // firstLabel = First label associated with treasure.  Supports null.
     // secondLabel = Second label associated with treasure.  Supports null.
     // treasureLabel = Reference to label with the treasure description.
-    private void addEvent_TreasureActor(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+    private void addEvent_TreasureActor_Combat(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
       CustomLabel firstLabel, CustomLabel secondLabel)
     {
         
         // The function adds events to the passed treasure actor / group and label.
-        // The function is used to add events to a treasure actor / group NOT associated with a chest.
-        // Example:  The function is used to add events to a treasure actor / group resulting from winning
-        // a combat.
+        // The function is used to add events to a treasure actor / group associated with a combat victory.
         // Clicking the treasure actor causes the actor and any passed label(s) to fade out.
         // Events include touchDown and touchUp.
         // Note:  No events exist currently for enter or exit.
@@ -1237,14 +1235,14 @@ public class MazeMap
                     gameHD.getSounds().playSound(HeroineEnum.SoundEnum.SOUND_CLICK);
                     
                     // Fade all treasure-related actors (regular, gold, and label(s)).
-                    fade_treasure( tiles, goldPile, firstLabel, secondLabel );
+                    fade_treasure_combat( tiles, goldPile, firstLabel, secondLabel );
                     
                 } // End ... touchUp.
                 
             }; // End ... InputListener.
         
         // Add event to actors.
-        tiles.get(TILE_POS_TREASURE).addListener(treasureEvent);
+        //tiles.get(TILE_POS_TREASURE).addListener(treasureEvent);
         tiles.get(TILE_POS_TREASURE_GROUP).addListener(treasureEvent);
         
         // Add event to passed labels.
@@ -2047,13 +2045,13 @@ public class MazeMap
     // goldPile = List of gold actors.
     // firstLabel = First label associated with treasure.  Supports null.
     // secondLabel = Second label associated with treasure.  Supports null.
-    private void fade_treasure(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
+    private void fade_treasure_combat(ArrayList<BaseActor> tiles, ArrayList<BaseActor> goldPile, 
       CustomLabel firstLabel, CustomLabel secondLabel)
     {
         
         // The function fades all treasure / gold actors (including any passed label(s)) and is called when 
         // clicking on the last item.
-        // The function is NOT associated with a chest.
+        // The function is associated with a combat victory.
         
         // If gold pile active, then...
         if (goldPileActiveInd)
@@ -2068,6 +2066,7 @@ public class MazeMap
 
         }
 
+        /*
         // Otherwise, If texture for treasure actor initialized, then...
         else if (tiles.get(TILE_POS_TREASURE).getRegion().getTexture() != null)
         {
@@ -2076,6 +2075,7 @@ public class MazeMap
             // Fade out the treasure actor.
             tiles.get(TILE_POS_TREASURE).addAction_FadeOut( 0f, 1f );
         }
+        */
 
         // Set up an action to fade out any passed label(s).
         if (firstLabel != null)
@@ -2510,6 +2510,22 @@ public class MazeMap
         {
             
             // Adding actor for chest -- immediately in front of player.
+            
+            // Loop through and perform actions against gold pile actors to help prevent fading issues.
+            
+            // Loop through actors.
+            goldPile.forEach((actor) -> {
+
+                // Hide actor.
+                actor.setVisible(false);
+
+                // Remove actions from actor.
+                actor.removeActions();
+                
+                // Set shading to white.
+                actor.setColor(Color.WHITE);
+
+            });
             
             // Add events to actor.
             addEvent_ChestActor( tiles, goldPile, viewWidth, treasureLabel, heroineWeapon, weaponLabel, 
@@ -3674,6 +3690,17 @@ public class MazeMap
         // Flag gold pile as active.
         goldPileActiveInd = true;
     
+        // Remove actions from all gold pile actors.
+        // Helps prevent fading-related problems.
+        
+        // Loop through actors.
+        goldPile.forEach((actor) -> {
+            
+            // Remove actions from current gold pile actor.
+            actor.removeActions();
+            
+        });
+        
         // If fade in time NOT passed, then...
         if (fadeIn == null)
             fadeInAction = 0.50f;
@@ -3727,7 +3754,7 @@ public class MazeMap
             // Loop through actors.
             for (BaseActor actor : goldPile)
             {
-
+                
                 // If actor visible, then...
                 if (actor.isVisible())  
                 {
@@ -4239,19 +4266,20 @@ public class MazeMap
     // goldPile = List of gold actors.
     // victoryLabel = Label showing victory text -- used after winning a combat.
     // combatRewardLabel = Label showing combat reward -- in relation to winning.
-    public void show_gold_pile_no_chest(int goldQuantity, CustomLabel goldLabel, ArrayList<BaseActor> tiles,
+    public void show_gold_pile_combat(int goldQuantity, CustomLabel goldLabel, ArrayList<BaseActor> tiles,
       ArrayList<BaseActor> goldPile, CustomLabel victoryLabel, CustomLabel combatRewardLabel)
     {
         
         /*
         The function gives the passed amount of gold to the player and shows the related image.
+        The function is associated with winning a gold pile as a result of a combat victory.
         
         The following actions occur:
         
         1.  Play coin sound.
         2.  Give player the gold.
         3.  Position treasure actor (group) vertically slightly above the bottom.
-        4.  Hide all gold actors in pile.
+        4.  Loop through and perform actions against gold actors in pile:  hide and set shading to white.
         5.  Draw gold pile (treasure group), fading in over one second.
         6.  Add events to treasure actor / group / labels to fade out upon click.
         7.  Set treasure group tile as active.
@@ -4270,13 +4298,16 @@ public class MazeMap
         // Same position as when player moves into a square with a treasure and shows the related gold pile.
         tiles.get(TILE_POS_TREASURE_GROUP).setY( TREASURE_POS_SAME_SQ_Y * gameHD.getConfig().getScale() );
         
-        // 4.  Hide all gold actors in pile.
+        // 4.  Loop through and perform actions against gold actors in pile:  hide and set shading to white.
         
         // Loop through actors.
         goldPile.forEach((actor) -> {
             
             // Hide actor.
             actor.setVisible(false);
+            
+            // Set shading to white.
+            actor.setColor(Color.WHITE);
             
         });
         
@@ -4289,7 +4320,7 @@ public class MazeMap
         tiles.get(TILE_POS_TREASURE_GROUP).setVisible( true );
         
         // 6.  Add events to treasure actor / group / labels to fade out upon click.
-        addEvent_TreasureActor( tiles, goldPile, victoryLabel, combatRewardLabel );
+        addEvent_TreasureActor_Combat( tiles, goldPile, victoryLabel, combatRewardLabel );
         
         // 7.  Set treasure group tile as active.
         tileActiveInd.set( TILE_POS_TREASURE_GROUP, true );
