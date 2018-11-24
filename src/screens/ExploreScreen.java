@@ -9,7 +9,6 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.TimeUtils;
 
 // Local project imports.
 import core.BaseActor;
@@ -25,6 +24,7 @@ import heroinedusk.MazeMap;
 import heroinedusk.RegionMap;
 import heroinedusk.Sounds;
 import heroinedusk.Spells;
+import heroinedusk.Timer;
 import routines.UtilityRoutines;
 
 // Java imports.
@@ -182,6 +182,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private ArrayList<BaseActor> tiles; // BaseActor objects associated with tiles.
       // 0 to 12 = Background tiles.  13 = Treasure.  14 = Treasure group.  15 = Chest.  16 = Bone pile.
       // 17 = Lock.
+    private Timer timerCombat; // Timer used in combat for offense and defense.  Discrete.
+    private Timer timerCombatVictory; // Timer used in combat for victory.  Discrete.
+    private Timer timerFrameRate; // Timer used to determine frame rate (FPS).  Continuous.
     private CustomLabel treasureLabel; // Label showing treasure description.
     private Array<Actor> uiStageActors; // List of actors in ui stage used when waking screen.
     private CustomLabel victoryLabel; // Label showing victory text -- used after winning a combat.
@@ -191,13 +194,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private boolean actionButtonsEnabled; // Whether action buttons enabled.  Disable in the middle of a 
       // combat round (after player selects action).
     private HeroineEnum.SelectPosEnum buttonSelected; // Selected button.
-    private boolean delayInd; // Whether combat delay active.
     private float frameRate; // Frames per second.
     private boolean infoButtonSelected; // Whether information button selected and clicked.
-    private long lastTimeCounted; // Difference, measured in milliseconds, between the current time and 
-      // midnight, January 1, 1970 UTC.
-    private long lastTimeDelay; // Difference, measured in milliseconds, between the current time and 
-      // midnight, January 1, 1970 UTC.  Used to provide a delay during combat.
     private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled; // Hash map containing enabled 
       // status of action buttons.
     private Map<HeroineEnum.ActionButtonEnum, Float> mapActionButtonPosX; // X-coordinate of each action button.
@@ -216,7 +214,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY; // List of y-positions to place selector -- related to buttons.
     private boolean redFont; // Whether labels set to use red font.
     private int selectorAdjPos; // Position adjustment related to selector.
-    private float sinceChange; // Seconds elapsed, resetting every second.
     
     // Declare constants.
     private static final Color COLOR_MED_GRAY = new Color(0.50f, 0.50f, 0.50f, 1); // Disabled color.
@@ -296,7 +293,8 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         28.  Configure and add the enemy actor to the middle stage.  Hidden at start.
         29.  Initialize combat engine.
         30.  As necessary, shade action buttons to indicate enabled.
-        31.  Configure and add the frame rate label. > If rendering (check RENDER_FPS).
+        31.  Configure and add the frame rate label.  Initialize the timer. > If rendering (check RENDER_FPS).
+        32.  Initialize combat timers.
         
         Notes:
         
@@ -308,12 +306,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // 1.  Set defaults and perform empty initializations.
         actionButtonsEnabled = true;
-        delayInd = false;
         infoButtonSelected = false;
         minimapRenderInd = false;
         redFont = false;
-        lastTimeCounted = TimeUtils.millis();
-        sinceChange = 0;
         buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
         selectorAdjPos = gameHD.getConfig().getScale() * 2;
         actionResult = new ActionResult();
@@ -630,19 +625,29 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         } // End ... If lock in front of player.
         
-        // 31.  If necessary, configure and add the frame rate label.
+        // 31.  If necessary, configure and add the frame rate label and initialize the related timer.
         
         // If rendering frames per second, then...
         if (RENDER_FPS)
         {
             
             // Render frames per second.
-            fpsLabel = new CustomLabel(game.skin, "n FPS", "fps label", "uiLabelStyle", 
-          1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_LEFT, 
-          CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, (float)(gameHD.getConfig().getScale() * 2), 
-          (float)(gameHD.getConfig().getScale() * -2), HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+            fpsLabel = new CustomLabel(game.skin, "", "fps label", "uiLabelStyle", 
+              1.0f, gameHD.getConfig().getTextLineHeight(), CoreEnum.AlignEnum.ALIGN_LEFT, 
+              CoreEnum.PosRelativeEnum.REL_POS_UPPER_LEFT, uiStage, 
+              (float)(gameHD.getConfig().getScale() * 2), (float)(gameHD.getConfig().getScale() * -2), 
+              HeroineEnum.FontEnum.FONT_UI.getValue_Key(), 0f);
+            
+            // Initialize the frame rate timer.
+            timerFrameRate = new Timer(1000, true);
             
         }
+        
+        // 32.  Initialize combat timers.
+        
+        // Initialize combat timers.
+        timerCombat = new Timer(500); // Used for offense and defense.
+        timerCombatVictory = new Timer(750); // Used for victory.
         
     }
     
@@ -4810,8 +4815,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // The function encapsulates logic related to the update method for the defense phase of combat.
         
-        long delta; // Difference, measured in milliseconds, between current and last time check.
-        
         // If shaking tile group, then...
         if ( combat.isShakeActiveInd() )
         {
@@ -4827,58 +4830,30 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
 
                 // Shaking of tile group finished.
                 
-                // If delay active, then...
-                if ( delayInd )
+                // If delay finished (starts one if inactive) OR enemy dead, then...
+                if ( timerCombat.checkDelay() || combat.isEnemyDead() )
                 {
+                    
+                    // Delay finished OR enemy dead.
+                        
+                    // Finish defense phase of current round of combat.
+                    // Combats truly ending (victory) have logic processed in other functions.
+                    // If finishing combat round, then...
+                    if ( combat.defense_finish( infoButtonSelector, goldLabel, 
+                         (float)(gameHD.getConfig().getScale()), mapActionButtons, 
+                         mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY ) )
 
-                    // Delay active.
-
-                    // Get difference, measured in milliseconds, between current and last time check.
-                    delta = TimeUtils.timeSinceMillis(lastTimeDelay);
-
-                    // If 0.50 seconds passed or enemy dead, then...
-                    if ( delta >= 500 || combat.isEnemyDead() )
                     {
 
-                        // 0.50 seconds passed or enemy dead.
-                        
-                        // Flag delay as inactive.
-                        delayInd = false;
-                        
-                        // Finish defense phase of current round of combat.
-                        // Combats truly ending (victory) have logic processed in other functions.
-                        // If finishing combat round, then...
-                        if ( combat.defense_finish( infoButtonSelector, goldLabel, 
-                             (float)(gameHD.getConfig().getScale()), mapActionButtons, 
-                             mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY ) )
+                        // Combat round finished -- excludes victories with treasure.
+                        // Stay in combat mode and re-enable action buttons.
 
-                        {
+                        // Re-enable action buttons.
+                        actionButtonsEnabled = true;
 
-                            // Combat round finished -- excludes victories with treasure.
-                            // Stay in combat mode and re-enable action buttons.
+                    }
 
-                            // Re-enable action buttons.
-                            actionButtonsEnabled = true;
-
-                        }
-
-                    } // End ... If 0.50 seconds passed.
-
-                } // End ... If delay active.
-
-                else
-                {
-
-                    // Delay not started yet.
-
-                    // Flag delay as active.
-                    delayInd = true;
-
-                    // Store initial timer value.
-                    // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
-                    lastTimeDelay = TimeUtils.millis();
-
-                }
+                } // End ... If delay finished OR enemy dead.
 
             } // End ... If shaking of tile group finished..
 
@@ -4892,58 +4867,30 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             // Occurs when round ends due to something other enemy hitting player.
             // Example 1:  Enemy attacks and misses player.
             
-            // If delay active , then...
-            if ( delayInd )
+            // If delay finished (starts one if inactive) OR enemy dead, then...
+            if ( timerCombat.checkDelay() || combat.isEnemyDead() )
             {
 
-                // Delay active.
+                // Delay finished OR enemy dead.
+                    
+                // Finish defense phase of current round of combat.
+                // Combats truly ending (victory, default) have logic processed in other functions.
+                // If finishing combat round, then...
+                if ( combat.defense_finish( infoButtonSelector, goldLabel, 
+                     (float)(gameHD.getConfig().getScale()), mapActionButtons, 
+                     mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY) )
 
-                // Get difference, measured in milliseconds, between current and last time check.
-                delta = TimeUtils.timeSinceMillis(lastTimeDelay);
-
-                // If 0.50 seconds passed or enemy dead, then...
-                if ( delta >= 500 || combat.isEnemyDead() )
                 {
 
-                    // 0.50 seconds passed or enemy dead.
+                    // Combat round finished -- excludes victories with treasure.
+                    // Stay in combat mode and re-enable action buttons.
 
-                    // Flag delay as inactive.
-                    delayInd = false;
-                    
-                    // Finish defense phase of current round of combat.
-                    // Combats truly ending (victory, default) have logic processed in other functions.
-                    // If finishing combat round, then...
-                    if ( combat.defense_finish( infoButtonSelector, goldLabel, 
-                         (float)(gameHD.getConfig().getScale()), mapActionButtons, 
-                         mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY) )
+                    // Re-enable action buttons.
+                    actionButtonsEnabled = true;
 
-                    {
-                        
-                        // Combat round finished -- excludes victories with treasure.
-                        // Stay in combat mode and re-enable action buttons.
+                }
 
-                        // Re-enable action buttons.
-                        actionButtonsEnabled = true;
-
-                    }
-
-                } // End ... If 0.50 seconds passed.
-
-            } // End ... If delay active.
-
-            else
-            {
-
-                // Delay not started yet.
-
-                // Flag delay as active.
-                delayInd = true;
-
-                // Store initial timer value.
-                // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
-                lastTimeDelay = TimeUtils.millis();
-
-            }
+            } // End ... If delay finished OR enemy dead.
 
         } // End ... If in defense phase and NOT shaking tile group.
         
@@ -4953,8 +4900,6 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     {
         
         // The function encapsulates logic related to the update method for the offense phase of combat.
-        
-        long delta; // Difference, measured in milliseconds, between current and last time check.
         
         // If shaking enemy, then...
         if ( combat.isShakeActiveInd() )
@@ -4973,76 +4918,48 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
 
                 // Shaking of enemy finished.
 
-                // If delay active, then...
-                if ( delayInd )
+                // If delay finished (starts one if inactive), then...
+                if ( timerCombat.checkDelay() )
                 {
+                    
+                    // Delay finished.
+                    
+                    // Finish offense phase of current round of combat.
+                    // Note:  Victory phase handles treasure related to winning combat and occurs in 
+                    // separate function.  Only a combat victory returning no treasure finishes here.
+                    // Returns true when combat finished -- excludes victories with treasure.
+                    if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
+                           infoButtonSelector, hpLabel, mpLabel, facingLabel, powerSourceLabel, 
+                           powerActionLabel, powerResultLabel, powerSourceLabel_Enemy, 
+                           powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
+                           mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY, 
+                           gameHD.getSounds() ) )
 
-                    // Delay active.
-
-                    // Get difference, measured in milliseconds, between current and last time check.
-                    delta = TimeUtils.timeSinceMillis(lastTimeDelay);
-
-                    // If 0.50 seconds passed or player fled enemy successfully, then...
-                    if ( delta >= 500 || combat.isRunSuccessful() )
                     {
 
-                        // 0.50 seconds passed or player fled enemy successfully.
-                        
-                        // Flag delay as inactive.
-                        delayInd = false;
-                        
-                        // Finish offense phase of current round of combat.
-                        // Note:  Victory phase handles treasure related to winning combat and occurs in 
-                        // separate function.  Only a combat victory returning no treasure finishes here.
-                        // Returns true when combat finished -- excludes victories with treasure.
-                        if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
-                               infoButtonSelector, hpLabel, mpLabel, facingLabel, powerSourceLabel, 
-                               powerActionLabel, powerResultLabel, powerSourceLabel_Enemy, 
-                               powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
-                               mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY, 
-                               gameHD.getSounds() ) )
+                        // Combat finished -- excludes victories with treasure.
+                        // Switch to explore mode and re-enable action buttons.
 
-                        {
+                        // Switch to explore mode.
+                        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
 
-                            // Combat finished -- excludes victories with treasure.
-                            // Switch to explore mode and re-enable action buttons.
-                            
-                            // Switch to explore mode.
-                            gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+                        // Re-enable action buttons when indicated by function.
+                        actionButtonsEnabled = true;
 
-                            // Re-enable action buttons when indicated by function.
-                            actionButtonsEnabled = true;
+                    }
 
-                        }
-                        
-                        // If player has less than or equal to one third of maximum hit points, then...
-                        if (gameHD.getAvatar().getBadlyHurtInd())
-                        {
-                            
-                            // Player has less or equal to one third of maximum hit points.
-                            
-                            // Set font of labels to red.
-                            show_badly_hurt();
-                            
-                        }
+                    // If player has less than or equal to one third of maximum hit points, then...
+                    if (gameHD.getAvatar().getBadlyHurtInd())
+                    {
 
-                    } // End ... If 0.50 seconds passed.
+                        // Player has less or equal to one third of maximum hit points.
 
-                } // End ... If delay active.
+                        // Set font of labels to red.
+                        show_badly_hurt();
 
-                else
-                {
-
-                    // Delay not started yet.
-
-                    // Flag delay as active.
-                    delayInd = true;
-
-                    // Store initial timer value.
-                    // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
-                    lastTimeDelay = TimeUtils.millis();
-
-                }
+                    }
+                    
+                } // End ... If delay finished.
 
             } // End ... If shaking of enemy finished..
 
@@ -5058,77 +4975,49 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             // Example 2:  Player fails to run away from enemy.
             // Example 3:  Player attacks and misses enemy.
 
-            // If delay active, then...
-            if ( delayInd )
+            // If delay finished (starts one if inactive) OR player fled enemy successfully, then...
+            if ( timerCombat.checkDelay() || combat.isRunSuccessful() )
             {
 
-                // Delay active.
+                // Delay finished OR player fled enemy successfully.
+                    
+                // Finish offense phase of current round of combat.
+                // If finishing combat, then...
+                if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
+                       infoButtonSelector, hpLabel, mpLabel, facingLabel, powerSourceLabel, 
+                       powerActionLabel, powerResultLabel, powerSourceLabel_Enemy, 
+                       powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
+                       mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY, 
+                       gameHD.getSounds() ) )
 
-                // Get difference, measured in milliseconds, between current and last time check.
-                delta = TimeUtils.timeSinceMillis(lastTimeDelay);
-
-                // If 0.50 seconds passed or player fled enemy successfully, then...
-                if ( delta >= 500 || combat.isRunSuccessful() )
                 {
 
-                    // 0.50 seconds passed or player fled enemy successfully.
+                    // Combat finished.
+                    // Switch to explore mode and re-enable action buttons.
 
-                    // Flag delay as inactive.
-                    delayInd = false;
-                    
-                    // Finish offense phase of current round of combat.
-                    // If finishing combat, then...
-                    if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
-                           infoButtonSelector, hpLabel, mpLabel, facingLabel, powerSourceLabel, 
-                           powerActionLabel, powerResultLabel, powerSourceLabel_Enemy, 
-                           powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
-                           mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY, 
-                           gameHD.getSounds() ) )
+                    // Switch to explore mode.
+                    gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
 
-                    {
-                        
-                        // Combat finished.
-                        // Switch to explore mode and re-enable action buttons.
-                        
-                        // Switch to explore mode.
-                        gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+                    // Select the information button.
+                    buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
 
-                        // Select the information button.
-                        buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
-                        
-                        // Re-enable action buttons when indicated by function.
-                        actionButtonsEnabled = true;
+                    // Re-enable action buttons when indicated by function.
+                    actionButtonsEnabled = true;
 
-                    }
-                    
-                    // If player at less than or equal to one third of maximum hit points, then...
-                    if (gameHD.getAvatar().getBadlyHurtInd())
-                    {
+                }
 
-                        // Player has less or equal to one third of maximum hit points.
+                // If player at less than or equal to one third of maximum hit points, then...
+                if (gameHD.getAvatar().getBadlyHurtInd())
+                {
 
-                        // Set font of labels to red.
-                        show_badly_hurt();
+                    // Player has less or equal to one third of maximum hit points.
 
-                    }
+                    // Set font of labels to red.
+                    show_badly_hurt();
 
-                } // End ... If 0.50 seconds passed.
+                }
 
-            } // End ... If delay active.
-
-            else
-            {
-
-                // Delay not started yet.
-
-                // Flag delay as active.
-                delayInd = true;
-
-                // Store initial timer value.
-                // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
-                lastTimeDelay = TimeUtils.millis();
-
-            }
+            } // End ... If delay finished OR player fled enemy successfully.
 
         } // End ... If in offense phase and NOT shaking enemy.
         
@@ -5139,67 +5028,38 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         
         // The function encapsulates logic related to the update method for the victory phase of combat.
         
-        long delta; // Difference, measured in milliseconds, between current and last time check.
         int goldQuantity; // Number of gold won from combat victory.
         
-        // If delay active, then...
-        if ( delayInd )
-        {
-            
-            // Delay active.
-
-            // Get difference, measured in milliseconds, between current and last time check.
-            delta = TimeUtils.timeSinceMillis(lastTimeDelay);
-            
-            // If 0.75 seconds passed, then...
-            if ( delta >= 750 )
-            {
-
-                // 0.75 seconds passed.
-                
-                // Flag delay as inactive.
-                delayInd = false;
-                
-                // Determine amount of gold to reward player.
-                goldQuantity = UtilityRoutines.generateStandardRnd( number, 
-                  combat.getEnemyEnum().getValue_GoldMin(), combat.getEnemyEnum().getValue_GoldMax() );
-                
-                // Provide reward to player for winning combat (and display related image).
-                mazemap.show_gold_pile_combat( goldQuantity, goldLabel, tiles, goldPile, victoryLabel, 
-                  combatRewardLabel );
-                
-                // Perform basic logic to conclude combat.
-                combat.conclude_combat(enemy, enemyLabel, infoButton, infoButtonSelector, 
-                  hpLabel, mpLabel, facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
-                  powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, false,
-                  mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
-                
-                // Select the information button.
-                buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
-                
-                // Switch to explore mode.
-                gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
-
-                // Re-enable action buttons when indicated by function.
-                actionButtonsEnabled = true;
-
-            } // End ... If 0.75 seconds passed.
-
-        } // End ... If delay active.
-
-        else
+        // If delay finished (starts one if inactive), then...
+        if ( timerCombatVictory.checkDelay() )
         {
 
-            // Delay not started yet.
+            // Delay finished.
+                
+            // Determine amount of gold to reward player.
+            goldQuantity = UtilityRoutines.generateStandardRnd( number, 
+              combat.getEnemyEnum().getValue_GoldMin(), combat.getEnemyEnum().getValue_GoldMax() );
 
-            // Flag delay as active.
-            delayInd = true;
+            // Provide reward to player for winning combat (and display related image).
+            mazemap.show_gold_pile_combat( goldQuantity, goldLabel, tiles, goldPile, victoryLabel, 
+              combatRewardLabel );
 
-            // Store initial timer value.
-            // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
-            lastTimeDelay = TimeUtils.millis();
+            // Perform basic logic to conclude combat.
+            combat.conclude_combat(enemy, enemyLabel, infoButton, infoButtonSelector, 
+              hpLabel, mpLabel, facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
+              powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, false,
+              mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
 
-        }
+            // Select the information button.
+            buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;
+
+            // Switch to explore mode.
+            gameHD.setGameState(HeroineEnum.GameState.STATE_EXPLORE);
+
+            // Re-enable action buttons when indicated by function.
+            actionButtonsEnabled = true;
+
+        } // End ... If delay finished.
         
     }
     
@@ -5439,53 +5299,33 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         The following actions occur:
         */
         
-        long delta; // Difference, measured in milliseconds, between current and last time check.
-        
         // If rendering frames per second, then...
         if (RENDER_FPS)
         {
             
-            // Render frames per second.
+            // Render frames per second -- check once per second.
             
-            // Get difference, measured in milliseconds, between current and last time check.
-            delta = TimeUtils.timeSinceMillis(lastTimeCounted);
-            
-            // Get difference, measured in milliseconds, between the current time and midnight, 01/01/1970 UTC.
-            lastTimeCounted = TimeUtils.millis();
-
-            // Update time elapsed (reset every second).
-            sinceChange += delta;
-            
-            // If one or more seconds, elapsed, then...
-            if(sinceChange >= 1000) 
+            // If current interval complete, then...
+            if (timerFrameRate.checkTimer())
             {
-            
-                // Reset elapsed time.
-                sinceChange = 0;
+                
+                // Current interval complete.
                 
                 // Calculate frame rate.
                 frameRate = Gdx.graphics.getFramesPerSecond();
             
-            }
-            
-            // If frame rate available, then...
-            if (frameRate > 0)   
-            {
+                // If frame rate available, then...
+                if (frameRate > 0)   
+                {
+
+                    // Frame rate available.
+                    
+                    // Update frames per second label.
+                    fpsLabel.setLabelText(Integer.toString(Math.round(frameRate)) + " FPS");
+
+                } // End ... If frame rate available.
                 
-                // Frame rate available.
-                
-                // Update frames per second label.
-                fpsLabel.setLabelText(Integer.toString(Math.round(frameRate)) + " FPS");
-                
-            }
-            
-            else
-            {
-                
-                // Frame rate not available yet.
-                fpsLabel.setLabelText("");
-                
-            }
+            } // End ... If current interval complete.
             
         } // End ... If rendering frames per second.
         
