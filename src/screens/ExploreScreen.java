@@ -145,6 +145,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private ActionResult actionResult; // Result from (usually last) action.
     private CustomLabel armorLabel; // Label showing current player armor.
     private BaseActor background; // BaseActor object that will act as the background.
+    private BaseActor boneshield; // BaseActor object that will act as the death speaker bone shield.
     private Combat combat; // Reference to the combat engine.
     private CustomLabel combatRewardLabel; // Label showing combat reward -- in relation to winning.
     private ShakyActor enemy; // ShakyActor object that will act as the enemy.
@@ -222,6 +223,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
     private static final Integer[] GOLD_BASE_POS_Y_LIST = new Integer[]{17, 20, 19, 10, 4, 2, 16, 0, 18, 1};
     private final int SPELL_SUCCESSFUL = 1;
     private final int TILE_COUNT = 25; // Number of tile actors.
+    private final int TILE_POS_SPECIAL_START = 13; // Starting index of special (constant) tiles.
     private final int TILE_POS_TREASURE = 13; // Tile position of treasure (actor).
     private final int TILE_POS_TREASURE_GROUP = 14; // Tile position of treasure (group).
     private final int TILE_POS_CHEST = 15; // Tile position of chest.
@@ -291,10 +293,11 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         26.  Configure and add the labels associated with combat victory.  Hidden at start.
         27.  Configure and add the label showing the enemy type.  Hidden at start.
         28.  Configure and add the enemy actor to the middle stage.  Hidden at start.
-        29.  Initialize combat engine.
-        30.  As necessary, shade action buttons to indicate enabled.
-        31.  Configure and add the frame rate label.  Initialize the timer. > If rendering (check RENDER_FPS).
-        32.  Initialize combat timers.
+        29.  Configure and add the bone shield actor to the middle stage.  Hidden at start.
+        30.  Initialize combat engine.
+        31.  As necessary, shade action buttons to indicate enabled.
+        32.  Configure and add the frame rate label.  Initialize the timer. > If rendering (check RENDER_FPS).
+        33.  Initialize combat timers.
         
         Notes:
         
@@ -582,10 +585,26 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         // Add the actor to the list for use when waking the screen.
         middleStageActors.add(enemy);
         
-        // 29.  Initialize combat engine.
+        // 29.  Configure and add the bone shield actor to the middle stage.  Hidden at start.
+        
+        // Initialize the actor.
+        boneshield = new BaseActor("Bone Shield", 
+          gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgEnemyEnum.IMG_ENEMY_BONE_SHIELD.getValue_Key()), 
+          0f, 0f);
+        
+        // Hide the actor.
+        boneshield.setVisible(false);
+        
+        // Add the bone shield Actor to the scene graph.
+        middleStage.addActor(boneshield);
+        
+        // Add the actor to the list for use when waking the screen.
+        middleStageActors.add(boneshield);
+        
+        // 30.  Initialize combat engine.
         combat = new Combat(gameHD.getAvatar(), mazemap, gameHD.getConfig().getScale());
         
-        // 30.  As necessary, shade action buttons to indicate enabled.
+        // 31.  As necessary, shade action buttons to indicate enabled.
         
         // If bone pile in front of player, then...
         if (mazemap.isBonePileActiveInd())
@@ -625,7 +644,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         } // End ... If lock in front of player.
         
-        // 31.  If necessary, configure and add the frame rate label and initialize the related timer.
+        // 32.  If necessary, configure and add the frame rate label and initialize the related timer.
         
         // If rendering frames per second, then...
         if (RENDER_FPS)
@@ -643,7 +662,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             
         }
         
-        // 32.  Initialize combat timers.
+        // 33.  Initialize combat timers.
         
         // Initialize combat timers.
         timerCombat = new Timer(500); // Used for offense and defense.
@@ -2465,7 +2484,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                             mapActionButtonVisible.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK, true);
                             mapActionButtonVisible.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN, true);
                             
-                            // Ste available player spells as visible.
+                            // Set available player spells as visible.
                             
                             // Store a set view of the spellbook mappings for the hash map.
                             entrySetSpellList = gameHD.getAvatar().getSpellList().entrySet();
@@ -4176,7 +4195,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         if (combat.fight(HeroineEnum.FightEnum.FIGHT_ATTACK, gameHD.getSounds(), gameHD.getAvatar(),
           powerSourceLabel, powerActionLabel, powerResultLabel, hpLabel, mpLabel, 
           mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_ATTACK), enemy, 
-          mapActionButtons, mapActionButtonEnabled, null))
+          mapActionButtons, mapActionButtonEnabled, null, boneshield))
             
             // Re-enable action buttons when indicated by function.
             actionButtonsEnabled = true;
@@ -4206,7 +4225,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             if(combat.fight(HeroineEnum.FightEnum.FIGHT_BURN, gameHD.getSounds(), gameHD.getAvatar(),
               powerSourceLabel, powerActionLabel, powerResultLabel, hpLabel, mpLabel, 
               mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_BURN), 
-              enemy, mapActionButtons, mapActionButtonEnabled, null))
+              enemy, mapActionButtons, mapActionButtonEnabled, null, boneshield))
                 
                 // Re-enable action buttons when indicated by function.
                 actionButtonsEnabled = true;
@@ -4333,7 +4352,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             if (combat.fight(HeroineEnum.FightEnum.FIGHT_HEAL, gameHD.getSounds(), gameHD.getAvatar(),
               powerSourceLabel, powerActionLabel, powerResultLabel, hpLabel, mpLabel, 
               mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL), enemy,
-              mapActionButtons, mapActionButtonEnabled, null))
+              mapActionButtons, mapActionButtonEnabled, null, boneshield))
                 
                 // Re-enable action buttons when indicated by function.
                 actionButtonsEnabled = true;
@@ -4530,7 +4549,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
         if (combat.fight(HeroineEnum.FightEnum.FIGHT_RUN, gameHD.getSounds(), gameHD.getAvatar(),
           powerSourceLabel, powerActionLabel, powerResultLabel, hpLabel, mpLabel, 
           mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_RUN), enemy, 
-          mapActionButtons, mapActionButtonEnabled, null))
+          mapActionButtons, mapActionButtonEnabled, null, boneshield))
             
             // Re-enable action buttons when indicated by function.
             actionButtonsEnabled = true;
@@ -4560,7 +4579,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             if (combat.fight(HeroineEnum.FightEnum.FIGHT_UNLOCK, gameHD.getSounds(), gameHD.getAvatar(),
               powerSourceLabel, powerActionLabel, powerResultLabel, hpLabel, mpLabel, 
               mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_UNLOCK), 
-              enemy, mapActionButtons, mapActionButtonEnabled, null))
+              enemy, mapActionButtons, mapActionButtonEnabled, null, boneshield))
                 
                 // Re-enable action buttons when indicated by function.
                 actionButtonsEnabled = true;
@@ -4836,6 +4855,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                     
                     // Delay finished OR enemy dead.
                         
+                    // Flag delay as inactive -- necessary when ending early due to dead enemy.
+                    timerCombat.setDelayInd( false );
+                    
                     // Finish defense phase of current round of combat.
                     // Combats truly ending (victory) have logic processed in other functions.
                     // If finishing combat round, then...
@@ -4873,6 +4895,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
 
                 // Delay finished OR enemy dead.
                     
+                // Flag delay as inactive -- necessary when ending early due to dead enemy.
+                timerCombat.setDelayInd( false );
+                
                 // Finish defense phase of current round of combat.
                 // Combats truly ending (victory, default) have logic processed in other functions.
                 // If finishing combat round, then...
@@ -4933,7 +4958,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                            powerActionLabel, powerResultLabel, powerSourceLabel_Enemy, 
                            powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
                            mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY, 
-                           gameHD.getSounds() ) )
+                           boneshield, gameHD.getSounds() ) )
 
                     {
 
@@ -4981,6 +5006,9 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
 
                 // Delay finished OR player fled enemy successfully.
                     
+                // Flag delay as inactive -- necessary when ending early due to fleeing successfully.
+                timerCombat.setDelayInd( false );
+                
                 // Finish offense phase of current round of combat.
                 // If finishing combat, then...
                 if ( combat.offense_finish( enemy, enemyLabel, tileGroup, infoButton, 
@@ -4988,7 +5016,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
                        powerActionLabel, powerResultLabel, powerSourceLabel_Enemy, 
                        powerActionLabel_Enemy, powerResultLabel_Enemy, mapActionButtons, 
                        mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY, 
-                       gameHD.getSounds() ) )
+                       boneshield, gameHD.getSounds() ) )
 
                 {
 
@@ -5048,7 +5076,7 @@ public class ExploreScreen extends BaseScreen { // Extends the BaseScreen class.
             combat.conclude_combat(enemy, enemyLabel, infoButton, infoButtonSelector, 
               hpLabel, mpLabel, facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
               powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, false,
-              mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
+              boneshield, mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
 
             // Select the information button.
             buttonSelected = HeroineEnum.SelectPosEnum.BUTTON_POS_INFO;

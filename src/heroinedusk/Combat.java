@@ -51,15 +51,17 @@ public class Combat
     */
     
     // Declare object variables.
-    private ActionResult actionResultEnemy; // Result from (usually last) enemy action.
-    private ActionResult actionResultPlayer; // Result from (usually last) player action.
+    private final ActionResult actionResultEnemy; // Result from (usually last) enemy action.
+    private final ActionResult actionResultPlayer; // Result from (usually last) player action.
     private final Avatar avatar; // Reference to player information class.
-    private Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled_Start; // Hash map containing 
+    private final Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled_Start; // Hash map containing 
       // enabled status of action buttons.  Copy of values from start of current combat.
-    private MazeMap mazemap; // Stores data for the current active region / map.
+    private final MazeMap mazemap; // Stores data for the current active region / map.
     
     // Declare regular variables.
     private boolean boneshield_active; // Whether bone shield power (of enemy) active.
+    private int boneshield_counter; // Number of times bone shield power used.
+    private boolean boneshield_fade; // Whether to fade bone shield.
     private HeroineEnum.CombatPhaseEnum combatPhase; // Current combat phase.
     private HeroineEnum.EnemyEnum enemyEnum; // Type of enemy involved in combat.
     private int enemyHp; // Current number of hit points of enemy.
@@ -121,6 +123,7 @@ public class Combat
     // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
     // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
     // renderEndBtn = Whether to update interface for buttons.
+    // boneshield = BaseActor object that acts as the death speaker bone shield.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
@@ -129,7 +132,7 @@ public class Combat
       BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel facingLabel, 
       CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
       CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
-      CustomLabel powerResultLabel_Enemy, boolean renderEndBtn, 
+      CustomLabel powerResultLabel_Enemy, boolean renderEndBtn, BaseActor boneshield,
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
@@ -151,7 +154,7 @@ public class Combat
          // Render the interface for the ending of combat.
         render_interface_end(enemy, enemyLabel, infoButton, infoButtonSelector, hpLabel, mpLabel, 
           facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, powerSourceLabel_Enemy,
-          powerActionLabel_Enemy, powerResultLabel_Enemy, renderEndBtn, mapActionButtons, 
+          powerActionLabel_Enemy, powerResultLabel_Enemy, renderEndBtn, boneshield, mapActionButtons, 
           mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
 
         // If player has remaining magic points, then...
@@ -256,8 +259,6 @@ public class Combat
             // Move to defeat phase.
             combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_DEFEAT;
 
-            // To Do:  Add defeat logic.
-
         }
         
         // Otherwise
@@ -267,6 +268,20 @@ public class Combat
             // Neither enemy nor player dead.
             
             System.out.println("Defense Finish:  Neither enemy nor player dead.");
+            
+            // If player below maximum hit points and has sufficient magic points to cast heal spell, then...
+            if (avatar.getHp_BelowMax() && avatar.getMp() > 0)
+            {
+                
+                // Player below maximum hit points and has sufficient magic points to cast heal spell.
+                
+                // Enable heal button.
+                mapActionButtonEnabled.put(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL, true);
+                
+                // Restore normal (enabled) shading of heal button.
+                mapActionButtons.get(HeroineEnum.ActionButtonEnum.ACTION_BUTTON_HEAL).setColor(Color.WHITE);
+                
+            }
             
             // Move to input phase.
             combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_INPUT;
@@ -315,6 +330,9 @@ public class Combat
             // Shake the tiles five times to indicate enemy caused damage to player.
             tileGroup.startShake(5);
             
+            // Ensure player hit points at least zero.
+            avatar.adjHP_Min();
+            
             // Update the hit and magic points of the player.
             hpLabel.setLabelText( avatar.getHpText() );
             mpLabel.setLabelText( avatar.getMpText() );
@@ -344,9 +362,7 @@ public class Combat
         */
         
         int attack_damage; // Amount of damage caused by enemy in current round.
-        int crit_chance; // Whether enemy caused a critical hit to the player.
         int hit_chance; // Random number indicating whether enemy hit player.
-        
         HeroineEnum.EnemyPowerEnum enemyPower; // Type of enemy attack.
         
         // 1.  Determine type of enemy attack.
@@ -360,93 +376,7 @@ public class Combat
             case ENEMY_POWER_ATTACK:
                 
                 // Enemy performs standard physical attack.
-                
-                // "Roll" to determine if enemy hit player -- 1 to 100.
-                hit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
-
-                // If miss occurred, then...
-                if (hit_chance <= 30)
-                {
-
-                    // Miss occurred.
-
-                    // Set action text to ATTACK!.
-                    actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_ATTACK);
-                    
-                    // Store defense result.
-                    actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_MISS);
-                    
-                    // Play miss sound.
-                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
-
-                } // End ... If miss occurred.
-                
-                else
-                
-                // Otherwise, ...
-                {
-                    
-                    // Enemy successfully hit player.
-                    
-                    // Flag player as hit.
-                    actionResultEnemy.setOpponentHurt(true);
-
-                    // Randomly determine damage based on enemy minimum and maximum.
-                    attack_damage = UtilityRoutines.generateStandardRnd(number, enemyEnum.getValue_AtkMin(), 
-                      enemyEnum.getValue_AtkMax());
-
-                    // Check for critical hit.
-                    // A critical hit adds the minimum possible damage (ignoring bonuses) to what
-                    // was already "rolled".
-
-                    // "Roll" for critical hit.
-                    crit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
-
-                    // If critical hit occurred, then...
-                    if (crit_chance <= 5)
-                    {
-
-                        // Critical hit occurred.
-
-                        // Add minimum possible damage to current.
-                        attack_damage += enemyEnum.getValue_AtkMin();
-
-                        // Set action text to CRITICAL!.
-                        actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_CRITICAL);
-
-                        // Play critical hit sound.
-                        sounds.playSound(HeroineEnum.SoundEnum.SOUND_CRITICAL);
-
-                    }
-
-                    else
-                    {
-
-                        // Normal hit occured.
-
-                        // Set action text to ATTACK!.
-                        actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_ATTACK);
-                        
-                        // Play normal hit sound.
-                        sounds.playSound(HeroineEnum.SoundEnum.SOUND_ATTACK);
-
-                    }
-
-                    // Allow for player armor to absorb some of the damage.
-                    attack_damage -= avatar.getArmor().getValue_Def();
-                    attack_damage -= avatar.getBonus_def();
-
-                    // Ensure that at least one hit point of damage occurs.
-                    if (attack_damage < 1)
-                        attack_damage = 1;
-                    
-                    // Reduce player hit points.
-                    avatar.adjHp(-attack_damage);
-                    
-                    // Store defense result.
-                    actionResultEnemy.setTextResult_Damage(attack_damage);
-                
-                } // End ... If hit occurred.
+                enemy_power_attack(sounds);
                 
                 // Exit selector.
                 break;
@@ -454,64 +384,7 @@ public class Combat
             case ENEMY_POWER_SCORCH:
                 
                 // Enemy performs scorch attack (another version of burn).
-                
-                // Set action text to SCORCH!.
-                actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_SCORCH);
-                
-                // "Roll" to determine if enemy hit player -- 1 to 100.
-                hit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
-
-                // If miss occurred, then...
-                if (hit_chance <= 30)
-                {
-
-                    // Miss occurred.
-                    
-                    // Store defense result.
-                    actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_MISS);
-
-                    // Play miss sound.
-                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
-
-                } // End ... If miss occurred.
-                
-                else
-                
-                // Otherwise, ...
-                {
-                    
-                    // Enemy successfully hit player.
-                    
-                    // Play fire sound.
-                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_FIRE);
-                    
-                    // Flag player as hit.
-                    actionResultEnemy.setOpponentHurt(true);
-
-                    // Randomly determine damage based on enemy minimum and maximum.
-                    attack_damage = UtilityRoutines.generateStandardRnd(number, enemyEnum.getValue_AtkMin(), 
-                      enemyEnum.getValue_AtkMax());
-
-                    // Scorch always causes a critical hit.
-                    
-                    // Add minimum possible damage to current.
-                    attack_damage += enemyEnum.getValue_AtkMin();
-                    
-                    // Allow for player armor to absorb some of the damage.
-                    attack_damage -= avatar.getArmor().getValue_Def();
-                    attack_damage -= avatar.getBonus_def();
-
-                    // Ensure that at least one hit point of damage occurs.
-                    if (attack_damage < 1)
-                        attack_damage = 1;
-                    
-                    // Reduce player hit points.
-                    avatar.adjHp(-attack_damage);
-
-                    // Store defense result.
-                    actionResultEnemy.setTextResult_Damage(attack_damage);
-                
-                } // End ... If hit occurred.
+                enemy_power_scorch(sounds);
                 
                 // Exit selector.
                 break;
@@ -666,6 +539,300 @@ public class Combat
         
     }
     
+    // boneshield = BaseActor object that acts as the death speaker bone shield.
+    // sounds = Reference to sounds class.
+    private void enemy_attack_death_speaker(BaseActor boneshield, Sounds sounds)
+    {
+        
+        /*
+        The function encapsulates non-visual logic related to the death speaker enemy attacking the player.
+        The function excludes visual results.
+        
+        The function updates the action results related to the enemy-related labels.
+        The function does not update the enemy-related labels or shake the screen.
+        
+        Other functions handle:
+        1.  Normal power use -- occurs 66% of the time.
+        2.  Scorch power use -- occurs 33% of the time or when bone shield already active or used three times.
+        3.  The visual results of the enemy action, including shaking the screen.
+        4.  Victory conditions.
+        5.  Loss conditions.
+        */
+        
+        int attack_type; // Number determining attack type -- 1 to 66 = Regular, 67 to 100 = Special.
+        int power_roll; // Number determining power used -- 1 to 33 = Scorch, 34 to 100 = Bone Shield.
+        
+        // "Roll" for attack type -- regular or special.
+        attack_type = UtilityRoutines.generateStandardRnd(number, 1, 100);
+        
+        // If regular attack occurring, then...
+        if (attack_type <= 66)
+        {
+            
+            // Regular attack occurring.
+            
+            // Enemy performs standard physical attack.
+            enemy_power_attack(sounds);
+            
+        } // End ... If regular attack occurring.
+        
+        else
+        {
+            
+            // Special attack occurring.
+            
+            // If bone shield active or already used three times in current combat, then...
+            if (boneshield_active || boneshield_counter == 3)
+            {
+                
+                // Bone shield active or already used three times in current combat.
+                
+                // Enemy performs scorch attack (another version of burn).
+                enemy_power_scorch(sounds);
+                
+            }
+            
+            else
+            {
+                
+                // Bone shield inactive and used less than three times in current combat.
+                
+                // "Roll" for power type -- bone shield or scorch.
+                power_roll = UtilityRoutines.generateStandardRnd(number, 1, 100);
+                
+                // If scorch attack occurring, then...
+                if (power_roll <= 33)
+                {
+                    
+                    // Scorch attack occurring.
+                    
+                    // Enemy performs scorch attack (another version of burn).
+                    enemy_power_scorch(sounds);
+                    
+                }
+                
+                else
+                {
+                    
+                    // Bone shield defense occurring.
+                    
+                    // Set enemy action text to BONE SHIELD!.
+                    actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_BONE_SHIELD);
+                    
+                    // Store enemy defense result.
+                    actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_DEF_UP);
+                    
+                    // Show bone shield actor.
+                    boneshield.setVisible(true);
+                    
+                    // Play bone shield sound.
+                    sounds.playSound(HeroineEnum.SoundEnum.SOUND_BONESHIELD);
+                    
+                    // Flag bone shield as active.
+                    boneshield_active = true;
+                    
+                    // Increment bone shield usage counter.
+                    boneshield_counter++;
+                    
+                } // End ... If bone shield defense occurring.
+                
+            } // End ... If bone shield inactive and used less than three times in current combat.
+            
+        } // End ... If special attack occurring.
+        
+    }
+    
+    // sounds = Reference to sounds class.
+    private void enemy_power_attack(Sounds sounds)
+    {
+        
+        /*
+        The function handles the enemy using a physical attack against the player.
+        The function excludes visual results.
+        
+        The function updates the action results related to the enemy-related labels.
+        The function does not update the enemy-related labels or shake the screen.
+        
+        Other functions handle:
+        1.  The visual results of the enemy action, including shaking the screen.
+        2.  Victory conditions.
+        3.  Loss conditions.
+        */
+        
+        int attack_damage; // Amount of damage caused by enemy in current round.
+        int crit_chance; // Whether enemy caused a critical hit to the player.
+        int hit_chance; // Random number indicating whether enemy hit player.
+        
+        // "Roll" to determine if enemy hit player -- 1 to 100.
+        hit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
+
+        // If miss occurred, then...
+        if (hit_chance <= 30)
+        {
+
+            // Miss occurred.
+
+            // Set action text to ATTACK!.
+            actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_ATTACK);
+
+            // Store defense result.
+            actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_MISS);
+
+            // Play miss sound.
+            sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
+
+        } // End ... If miss occurred.
+
+        else
+
+        // Otherwise, ...
+        {
+
+            // Enemy successfully hit player.
+
+            // Flag player as hit.
+            actionResultEnemy.setOpponentHurt(true);
+
+            // Randomly determine damage based on enemy minimum and maximum.
+            attack_damage = UtilityRoutines.generateStandardRnd(number, enemyEnum.getValue_AtkMin(), 
+              enemyEnum.getValue_AtkMax());
+
+            // Check for critical hit.
+            // A critical hit adds the minimum possible damage (ignoring bonuses) to what
+            // was already "rolled".
+
+            // "Roll" for critical hit.
+            crit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
+
+            // If critical hit occurred, then...
+            if (crit_chance <= 5)
+            {
+
+                // Critical hit occurred.
+
+                // Add minimum possible damage to current.
+                attack_damage += enemyEnum.getValue_AtkMin();
+
+                // Set action text to CRITICAL!.
+                actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_CRITICAL);
+
+                // Play critical hit sound.
+                sounds.playSound(HeroineEnum.SoundEnum.SOUND_CRITICAL);
+
+            }
+
+            else
+            {
+
+                // Normal hit occured.
+
+                // Set action text to ATTACK!.
+                actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_ATTACK);
+
+                // Play normal hit sound.
+                sounds.playSound(HeroineEnum.SoundEnum.SOUND_ATTACK);
+
+            }
+
+            // Allow for player armor to absorb some of the damage.
+            attack_damage -= avatar.getArmor().getValue_Def();
+            attack_damage -= avatar.getBonus_def();
+
+            // Ensure that at least one hit point of damage occurs.
+            if (attack_damage < 1)
+                attack_damage = 1;
+
+            // Reduce player hit points.
+            avatar.adjHp(-attack_damage);
+
+            // Store defense result.
+            actionResultEnemy.setTextResult_Damage(attack_damage);
+
+        } // End ... If hit occurred.
+        
+    }
+    
+    // sounds = Reference to sounds class.
+    private void enemy_power_scorch(Sounds sounds)
+    {
+        
+        /*
+        The function handles the enemy using a scorch attack against the player.
+        Scorch represents another version of the burn spell of the player.
+        The function excludes visual results.
+        
+        The function updates the action results related to the enemy-related labels.
+        The function does not update the enemy-related labels or shake the screen.
+        
+        Other functions handle:
+        1.  The visual results of the enemy action, including shaking the screen.
+        2.  Victory conditions.
+        3.  Loss conditions.
+        */
+        
+        int attack_damage; // Amount of damage caused by enemy in current round.
+        int hit_chance; // Random number indicating whether enemy hit player.
+        
+        // Set action text to SCORCH!.
+        actionResultEnemy.setTextAction(HeroineEnum.PowerActionEnum.POWER_ACTION_SCORCH);
+
+        // "Roll" to determine if enemy hit player -- 1 to 100.
+        hit_chance = UtilityRoutines.generateStandardRnd(number, 1, 100);
+
+        // If miss occurred, then...
+        if (hit_chance <= 30)
+        {
+
+            // Miss occurred.
+
+            // Store defense result.
+            actionResultEnemy.setTextResult(HeroineEnum.PowerResultEnum.POWER_RESULT_MISS);
+
+            // Play miss sound.
+            sounds.playSound(HeroineEnum.SoundEnum.SOUND_MISS);
+
+        } // End ... If miss occurred.
+
+        else
+
+        // Otherwise, ...
+        {
+
+            // Enemy successfully hit player.
+
+            // Play fire sound.
+            sounds.playSound(HeroineEnum.SoundEnum.SOUND_FIRE);
+
+            // Flag player as hit.
+            actionResultEnemy.setOpponentHurt(true);
+
+            // Randomly determine damage based on enemy minimum and maximum.
+            attack_damage = UtilityRoutines.generateStandardRnd(number, enemyEnum.getValue_AtkMin(), 
+              enemyEnum.getValue_AtkMax());
+
+            // Scorch always causes a critical hit.
+
+            // Add minimum possible damage to current.
+            attack_damage += enemyEnum.getValue_AtkMin();
+
+            // Allow for player armor to absorb some of the damage.
+            attack_damage -= avatar.getArmor().getValue_Def();
+            attack_damage -= avatar.getBonus_def();
+
+            // Ensure that at least one hit point of damage occurs.
+            if (attack_damage < 1)
+                attack_damage = 1;
+
+            // Reduce player hit points.
+            avatar.adjHp(-attack_damage);
+
+            // Store defense result.
+            actionResultEnemy.setTextResult_Damage(attack_damage);
+
+        } // End ... If hit occurred.
+        
+    }
+    
     // fightEnum = Enumerated value related to player fighting action.
     // sounds = Reference to sounds class.
     // avatar = Reference to player class.
@@ -679,11 +846,13 @@ public class Combat
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // damage = Damage caused by action before calling method (usually base amount).
+    // boneshield = BaseActor object that acts as the death speaker bone shield.
     public boolean fight(HeroineEnum.FightEnum fightEnum, Sounds sounds, Avatar avatar, 
       CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
       CustomLabel hpLabel, CustomLabel mpLabel, BaseActor buttonActor, ShakyActor enemy,
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons,
-      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, Integer damage)
+      Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, Integer damage,
+      BaseActor boneshield)
     {
         
         /*
@@ -975,6 +1144,9 @@ public class Combat
                         // Enemy bone shield is active.
                         // Burn removes enemy bone shield.
 
+                        // Flag to fade out bone shield.
+                        this.boneshield_fade = true;
+                        
                         // Turn off enemy bone shield.
                         this.boneshield_active = false;
 
@@ -1091,7 +1263,7 @@ public class Combat
             
             // Call function to handle logic related to start of offense phase.
             // The function displays the results of the player attack, shaking the enemy if hit.
-            offense_start(powerSourceLabel, powerActionLabel, powerResultLabel, enemy);
+            offense_start(powerSourceLabel, powerActionLabel, powerResultLabel, enemy, boneshield);
             
         }
         
@@ -1150,6 +1322,8 @@ public class Combat
         // Set defaults.
         combatPhase = HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_INTRO;
         boneshield_active = false;
+        boneshield_counter = 0;
+        boneshield_fade = false;
         shakeActiveInd = false;
         
         System.out.println("Encountered enemy of type, " + enemyEnum + ".");
@@ -1192,6 +1366,7 @@ public class Combat
     // powerActionLabel_Enemy = Label showing the first line -- power action (enemy).
     // powerResultLabel_Enemy = Label showing the second line -- power result (enemy).
     // renderEndBtn = Whether to update interface for buttons.
+    // boneshield = BaseActor object that acts as the death speaker bone shield.
     // mapActionButtons = Hash map containing BaseActor objects that act as the action buttons.
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
@@ -1200,7 +1375,7 @@ public class Combat
       BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, CustomLabel facingLabel, 
       CustomLabel powerSourceLabel, CustomLabel powerActionLabel, CustomLabel powerResultLabel, 
       CustomLabel powerSourceLabel_Enemy, CustomLabel powerActionLabel_Enemy, 
-      CustomLabel powerResultLabel_Enemy, boolean renderEndBtn, 
+      CustomLabel powerResultLabel_Enemy, boolean renderEndBtn, BaseActor boneshield,
       Map<HeroineEnum.ActionButtonEnum, BaseActor> mapActionButtons, 
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
@@ -1218,9 +1393,13 @@ public class Combat
         5.  Show the information button after slight delay.
         6.  Show the facing label after slight delay.
         
+        
         When ending combat in victory or defeat, ...
         7.  Fade out the player power labels.
         8.  Fade out the enemy power labels.
+        
+        When ending combat in victory, ...
+        9.  Fade out the bone shield (if active).
         
         When ending combat due to fleeing successfully, ...
         7.  Hide player power labels.
@@ -1305,7 +1484,7 @@ public class Combat
             powerResultLabel.addAction_FadeOut(2.00f, 1.00f);
 
             // 8.  Fade out the enemy power labels.
-System.out.println("Fading enemy labels");
+            
             // Remove existing actions and fade out labels over the course of 1.00 seconds.
             // Wait 1.00 seconds before starting the fade.
             powerSourceLabel_Enemy.removeActions();
@@ -1316,6 +1495,30 @@ System.out.println("Fading enemy labels");
             powerResultLabel_Enemy.addAction_FadeOut(2.00f, 1.00f);
             
         } // End ... If victory or defeat occurred.
+        
+        // If victory occurred, then...
+        if (combatPhase == HeroineEnum.CombatPhaseEnum.COMBAT_PHASE_VICTORY)
+        {
+            
+            // Victory occurred.
+            
+            // If bone shield active, then...
+            if (boneshield_active)
+            {
+                
+                // Bone shield active.
+                
+                // Fade bone shield.
+            
+                // Remove existing actions for bone shield.
+                boneshield.removeActions();
+
+                // Apply fade to bone shield.
+                boneshield.addAction_FadeOut(0f, 0.5f);
+                
+            }
+            
+        }
         
     }
     
@@ -1468,14 +1671,56 @@ System.out.println("Fading enemy labels");
 
                     // Player can cast spell related to current action button in loop.
 
-                    // If player has sufficient magic points to cast spell, then...
-                    if (avatar.getMp() > 0)
-                    {
+                    switch (spellEnum) {
                         
-                        // Player has sufficient magic points to cast spell.
+                        case SPELL_HEAL:
+                            
+                            // Spell:  Heal.
+                            
+                            // If player has sufficient magic points to cast spell and not fully healed, then...
+                            if (avatar.getMp() > 0 && avatar.getHp_BelowMax())
+                            {
+
+                                // Player has sufficient magic points to cast spell and not fully healed.
+
+                                // Enable action button.
+                                mapActionButtonEnabled.put(actionButtonEnum, true);
+
+                            }
+                            
+                            // Exit selector.
+                            break;
                         
-                        // Enable action button.
-                        mapActionButtonEnabled.put(actionButtonEnum, true);
+                        case SPELL_BURN:
+                        case SPELL_UNLOCK:
+                        case SPELL_LIGHT:
+                        case SPELL_FREEZE:
+                        case SPELL_REFLECT:
+                            
+                            // Spell:  Burn, Unlock, Light, Freeze, or Reflect.
+                            // Simply check for sufficient magic points.
+                            
+                            // If player has sufficient magic points to cast spell, then...
+                            if (avatar.getMp() > 0)
+                            {
+
+                                // Player has sufficient magic points to cast spell.
+
+                                // Enable action button.
+                                mapActionButtonEnabled.put(actionButtonEnum, true);
+
+                            }
+                            
+                            // Exit selector.
+                            break;
+                            
+                        default:
+                            
+                            // Display warning.
+                            System.out.println("Warning:  Unknown spell type when checking whether to enable.");
+                            
+                            // Exit selector.
+                            break;
                         
                     }
                     
@@ -1609,6 +1854,7 @@ System.out.println("Fading enemy labels");
     // mapActionButtonEnabled = Hash map containing enabled status of action buttons.
     // mapSelectorPosX = List of x-positions to place selector -- related to buttons.
     // mapSelectorPosY = List of y-positions to place selector -- related to buttons.
+    // boneshield = BaseActor object that acts as the death speaker bone shield.
     // sounds = Reference to sounds class.
     public boolean offense_finish(ShakyActor enemy, CustomLabel enemyLabel, ShakyActor tileGroup,
       BaseActor infoButton, BaseActor infoButtonSelector, CustomLabel hpLabel, CustomLabel mpLabel, 
@@ -1618,7 +1864,7 @@ System.out.println("Fading enemy labels");
       Map<HeroineEnum.ActionButtonEnum, Boolean> mapActionButtonEnabled, 
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosX,
       HashMap<HeroineEnum.SelectPosEnum, Float> mapSelectorPosY,
-      Sounds sounds)
+      BaseActor boneshield, Sounds sounds)
     {
         
         /*
@@ -1669,8 +1915,29 @@ System.out.println("Fading enemy labels");
             
             // Player either failed to run from enemy or engaged in other action.
             
-            // Implement an enemy attack on the player -- updates action results for labels.
-            enemy_attack(sounds);
+            // Implement an enemy attack on the player -- non-visual logic (updates action results for 
+            // labels, ...).
+            
+            // If fighting the death speaker, then...
+            if (enemyEnum == HeroineEnum.EnemyEnum.ENEMY_DEATH_SPEAKER)
+            {
+                
+                // Fighting the death speaker.
+                
+                // Process death speaker attack.
+                enemy_attack_death_speaker(boneshield, sounds);
+                
+            }
+            
+            else
+            {
+                
+                // Fighting an enemy other than the death speaker.
+                
+                // Process standard enemy attack.
+                enemy_attack(sounds);
+                
+            }            
             
             // Call function to handle logic related to start of defense phase.
             // The function displays the results of the enemy attack, shaking the tiles if player is hit.
@@ -1689,7 +1956,7 @@ System.out.println("Fading enemy labels");
             enableButtons = conclude_combat(enemy, enemyLabel, infoButton, infoButtonSelector, 
               hpLabel, mpLabel, facingLabel, powerSourceLabel, powerActionLabel, powerResultLabel, 
               powerSourceLabel_Enemy, powerActionLabel_Enemy, powerResultLabel_Enemy, true, 
-              mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
+              boneshield, mapActionButtons, mapActionButtonEnabled, mapSelectorPosX, mapSelectorPosY);
             
         }
         
@@ -1704,8 +1971,9 @@ System.out.println("Fading enemy labels");
     // powerActionLabel = Label showing the first line -- power action.
     // powerResultLabel = Label showing the second line -- power result.
     // enemy = ShakyActor object that will act as the enemy.
+    // boneshield = BaseActor object that acts as the death speaker bone shield.
     private void offense_start(CustomLabel powerSourceLabel, CustomLabel powerActionLabel, 
-      CustomLabel powerResultLabel, ShakyActor enemy)
+      CustomLabel powerResultLabel, ShakyActor enemy, BaseActor boneshield)
     {
         
         // The function encapsulates display logic related to the first segment of the player portion
@@ -1720,6 +1988,23 @@ System.out.println("Fading enemy labels");
         // Display results of player actions in power labels.
         ExploreScreen.info_update_powerResponseLines(actionResultPlayer, powerSourceLabel, 
           powerActionLabel, powerResultLabel, false);
+        
+        // If fading bone shield, then...
+        if (this.boneshield_fade)
+        {
+            
+            // Fade bone shield.
+            
+            // Remove existing actions for bone shield.
+            boneshield.removeActions();
+            
+            // Apply fade to bone shield.
+            boneshield.addAction_FadeOut(0f, 0.5f);
+            
+            // Flag fade as not necessary.
+            this.boneshield_fade = false;
+            
+        }
         
         // If enemy damaged, then...
         if (actionResultPlayer.getOpponentHurt())

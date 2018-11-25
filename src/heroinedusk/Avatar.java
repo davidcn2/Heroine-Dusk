@@ -103,6 +103,22 @@ public class Avatar
         hp += amount;
     }
     
+    public void adjHP_Min()
+    {
+        // The function adjusts the player health (hit points) to at least equal the minimum -- 0.
+        
+        // If hit points less than zero, then...
+        if (hp < 0)
+        {
+            
+            // Hit points less than zero.
+            
+            // set hit points to zero.
+            hp = 0;
+            
+        }
+    }
+    
     // forwardInd = Whether moving foward.  true = Forward, false = Backward.  Examples:  true, false.
     // mazemap = Reference to active region / map information.
     // gameHD = Reference to HeroineDusk (main) game class.
@@ -495,6 +511,10 @@ public class Avatar
 
     public boolean getHp_AtMax() {
         return hp == max_hp;
+    }
+    
+    public boolean getHp_BelowMax() {
+        return hp < max_hp;
     }
     
     public void setHp_Min() {

@@ -30,7 +30,8 @@ public class Timer
     
     Methods include:
     
-    xyz:
+    checkDelay:  Uses a discrete timing mechanism to check for the (single) next time the delay finishes.
+    checkTimer:  Uses a continuous timing mechanism to check for each instance the time interval finishes.
     */
     
     // Declare regular variables.
@@ -96,7 +97,7 @@ public class Timer
     public boolean checkDelay()
     {
         
-        // The function uses a discrete timing mechanism to check for the (single) next time the time
+        // The function uses a discrete timing mechanism to check for the (single) next time the
         // delay finishes.  Example:  Waiting one time for 0.500 seconds after an event occurs.
         // The function returns true when the timer (delay) finishes.
         
@@ -195,6 +196,10 @@ public class Timer
     
     public void setContinuousInd(boolean continuousInd) {
         this.continuousInd = continuousInd;
+    }
+    
+    public void setDelayInd(boolean delayInd) {
+        this.delayInd = delayInd;
     }
     
     public void setDelayLength(long delayLength) {

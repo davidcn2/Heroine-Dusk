@@ -166,6 +166,7 @@ public class MazeMap
       // format numbers as 000.  Examples:  1 > 001, 2 > 002, ...
     private final int TILE_COUNT = 25; // Number of tile actors.
     private final int TILE_COUNT_BASE_0 = 24; // Number of tile actors, base 0.
+    private final int TILE_POS_SPECIAL_START = 13; // Starting index of special (constant) tiles.
     private final int TILE_POS_TREASURE = 13; // Tile position of treasure (actor).
     private final int TILE_POS_TREASURE_GROUP = 14; // Tile position of treasure (group).
     private final int TILE_POS_CHEST = 15; // Tile position of chest.
@@ -2178,20 +2179,34 @@ public class MazeMap
         bonePileActiveInd = false;
         
         // 2.  Reset properties of actors in array list.
+        
+        // Loop through regular tiles and reset general properties.
+        for (int counter = 0; counter <= TILE_POS_SPECIAL_START; counter++)
+        {
+            
+            // Set general actor properties.
+            tiles.get(counter).setActorName(null);
+            tiles.get(counter).setVirtualInt(null);
+            tiles.get(counter).setVirtualString(null);
+            
+        }
+        
+        // Loop through and set to not visible, reset shading, and remove actions and events from all
+        // tile actors.
         for (BaseActor actor : tiles)
         {
             
-            actor.setActorName(null);
-            actor.setVirtualInt(null);
-            actor.setVirtualString(null);
+            // Set actor to not visible.
             actor.setVisible(false);
-            actor.removeActions();
             
             // Return actor to normal color.
             actor.setColor(Color.WHITE);
             
             // Remove transparency (results from actions).
             actor.getColor().a = 1.0f;
+            
+            // Remove actor actions.
+            actor.removeActions();
             
             // Remove events.
             for (EventListener temp : actor.getListeners())
@@ -2991,7 +3006,7 @@ public class MazeMap
                 // Set actor as visible.
                 temp.setVisible(true);
                 
-                // Update the 
+                // Update the current tile.
                 tiles.set(position, temp);
                 
             } // End ... If tile exists in current region and NOT a placeholder (empty location).
@@ -3604,14 +3619,14 @@ public class MazeMap
     public void prepareSpecialTiles(ArrayList<BaseActor> tiles, int viewWidth)
     {
         
-        // The function configures properties for the special tile actors, such as the chest, bone pile, and 
-        // lock.
+        // The function configures properties for the special tile actors, such as the chest, bone pile, 
+        // and lock.
         
         // 1.  Configure tile (actor) for chest.
         
         // Set actor name.
         tiles.get(TILE_POS_CHEST).setActorName( "Chest" );
-            
+        
         // Set texture of actor.
         tiles.get(TILE_POS_CHEST).setTexture(
           gameHD.getAssetMgr().getImage_xRef(HeroineEnum.ImgOtherEnum.IMG_OTHER_CHEST.getValue_Key()) );
@@ -3660,9 +3675,6 @@ public class MazeMap
 
         // Set origin of actor to center of associated image.
         tiles.get(TILE_POS_LOCK).setOriginCenter();
-
-        // Set lock actor as visible.
-        tiles.get(TILE_POS_LOCK).setVisible(true);
         
     }
     
